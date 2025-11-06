@@ -32,7 +32,7 @@ main().then(()=>{
 async function main() {
     await mongoose.connect(dbUrl);
 }
-// app.use("/api", mapRoutes);
+
 app.set("view engine","ejs");
 app.set("views",path.join(__dirname,"views"));
 app.use(express.urlencoded({ extended: true }));
@@ -40,27 +40,13 @@ app.use(methodOverride("_method"));
 app.engine("ejs",ejsMate); 
 app.use(express.static(path.join(__dirname,"/public")));
 
-// const axios = require("axios");
-
-// async function getCoordinates(location) {
-//   const url = `https://api.tomtom.com/search/2/geocode/${encodeURIComponent(location)}.json?key=YOUR_TOMTOM_API_KEY`;
-
-//   try {
-//     const response = await axios.get(url);
-//     const position = response.data.results[0].position; // { lat, lon }
-//     return position;
-//   } catch (err) {
-//     console.error("Geocoding failed:", err.message);
-//     return null;
-//   }
-// }
 
 const store = MongoStore.create({
     mongoUrl: dbUrl,
     crypto: {
         secret:"mysupersecretcode"
     },
-    touchAfter: 24 * 60 * 60 // time period in seconds
+    touchAfter: 24 * 60 * 60 
 });
 store.on("error",function(e){
     console.log("SESSION STORE ERROR",e);
@@ -77,9 +63,10 @@ const sessionOptions = {
     }
 }
 
-// app.get("/",(req,res)=>{
-//     res.send("Hi,i am root");
-// });
+app.get("/", (req, res) => {
+  res.redirect("/listings"); 
+});
+
 
 
 app.use(session(sessionOptions));
