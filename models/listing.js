@@ -6,7 +6,10 @@ const listingSchema= new Schema({
         type:String,
         required: true,
     },
-    description:String,
+    description:{
+        type:String,
+        required: true,
+    },
     image: {
         filename: { type: String, default: "no-image" },
         url: {
@@ -16,11 +19,17 @@ const listingSchema= new Schema({
     },
     price:{
         type:Number,
+        required: true,
         min:1,
-        
     },
-    location:String,
-    country:String,
+    location:{
+        type:String,
+        required: true,
+    },
+    country:{
+        type:String,
+        required: true,
+    },
     reviews:[
         {
         type: mongoose.Schema.Types.ObjectId,

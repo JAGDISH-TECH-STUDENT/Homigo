@@ -1,10 +1,12 @@
 <% layout("/layouts/boilerplate")%>
+<% if(tomtomApiKey) { %>
 <script>
-    const TOM_API_KEY= "<%= process.env.TOMTOM_API_KEY%>"
+    const TOM_API_KEY= "<%= tomtomApiKey %>"
     const coords = <%- JSON.stringify(coords) %>;
-    const ListingLocation = <%-  JSON.stringify(listing.location)%>; 
+    const ListingLocation = <%- JSON.stringify(listing.location) %>; 
 
 </script>
+<% } %>
 <div class="row mt-3">
     <div class="col-8 offset-3">
          <h3><b><%= listing.title %></b></h3>
@@ -75,27 +77,31 @@
             <% listing.reviews.forEach(review => { %>
                 <div class="card col-5 ms-3 mb-3 ">
                     <div class="card-body">
-                        <h5 class="card-title">@<%=review.author.username%></h5>
+                        <h5 class="card-title">@<%= review.author ? review.author.username : 'Unknown' %></h5>
                         <p class="starability-result" data-rating="<%= review.rating %>"></p>
                         <p class="card-text"><%= review.comment %></p>
                     </div>
 
+                    <% if(currUser && review.author && review.author._id.equals(currUser._id)) { %>
                     <form class="mb-3" method="POST" action="/listings/<%=listing._id%>/reviews/<%=review._id%>?_method=DELETE">
-                        <button class="btn btn-sm btn-dark">Delete</button>
+                        <button class="btn btn-sm btn-dark" onclick="return confirm('Are you sure you want to delete this review?')">Delete</button>
                     </form>
+                    <% } %>
                 </div>
             
             <% }) %>
 
         </div>
     <% } %>
+    <% if(tomtomApiKey) { %>
     <div class="col-8 mb-3">
         <h3>Where you'll be</h3>
-       <div id="map" style="width: 100vh; height: 700px;"></div>
+       <div id="map" style="width: 100%; height: 400px;"></div>
        
 
 
-    </div> 
+    </div>
+    <% } %> 
    
 </div>
 <script src="/js/map.js"></script>

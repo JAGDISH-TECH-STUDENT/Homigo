@@ -11,7 +11,7 @@ module.exports.signUp=async(req,res)=>{
             if(err){
                 return next(err);
             }
-            req.flash("success","Welcome to Wanderlust!");
+            req.flash("success","Welcome to Homigo!");
             res.redirect("/listings");
         });
     } catch(e){
@@ -24,7 +24,7 @@ module.exports.renderLoginForm=(req,res)=>{
     res.render("users/login.ejs");
 };
 module.exports.login=async (req,res)=>{
-    req.flash("success","welcome back to Homigo!");
+    req.flash("success","Welcome back to Homigo!");
     let redirectUrl=res.locals.redirectUrl || "/listings";
     res.redirect(redirectUrl);
 };

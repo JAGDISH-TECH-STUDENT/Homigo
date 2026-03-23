@@ -30,10 +30,20 @@ module.exports.showListing =async (req,res)=>{
         req.flash("error","Listing you requested for does not exist!");
         return res.redirect("/listings");
     }
-    const geoRes = await axios.get(`https://api.tomtom.com/search/2/geocode/${encodeURIComponent(listing.location)}.json?key=${process.env.TOMTOM_API_KEY}`);
-
-    const coords = geoRes.data.results[0]?.position || { lat: 28.6139, lon: 77.2090 };
-    res.render("listings/show.ejs",{listing,coords});
+    let coords = { lat: 28.6139, lon: 77.2090 }; // Default coordinates (Delhi)
+    
+    if (process.env.TOMTOM_API_KEY) {
+        try {
+            const geoRes = await axios.get(`https://api.tomtom.com/search/2/geocode/${encodeURIComponent(listing.location)}.json?key=${process.env.TOMTOM_API_KEY}`);
+            if (geoRes.data.results && geoRes.data.results[0]?.position) {
+                coords = geoRes.data.results[0].position;
+            }
+        } catch (e) {
+            console.error("Geocoding failed:", e.message);
+        }
+    }
+    
+    res.render("listings/show.ejs",{listing,coords,tomtomApiKey: process.env.TOMTOM_API_KEY || ""});
     
 };
 

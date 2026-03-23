@@ -7,8 +7,6 @@ const listingController=require("../controllers/listings.js");
 const multer = require("multer");
 const {storage}=require("../cloudConfig.js");
 const upload = multer({storage  });
-
-//Index Route //create route
 router.route("/")
     .get(wrapAsync(listingController.index))
     .post(
@@ -17,17 +15,14 @@ router.route("/")
     validateListing,
     wrapAsync(listingController.createListing)  
 );
-    
-// create New route..// create crud  opera..
+
 router.get("/new",isLoggedIn, listingController.renderNewForm);
 
-//show Route//read crud opera. // update route // delete router
 router.route("/:id")
     .get(wrapAsync(listingController.showListing))
     .put(isLoggedIn,isOwner,upload.single("listing[image]"),validateListing,wrapAsync(listingController.updateListing))
     .delete(isLoggedInForDelete,isOwner,wrapAsync(listingController.deleteListing));
 
-// Edit Route
 router.get("/:id/edit",
     isLoggedInForEdit,
     isOwner,

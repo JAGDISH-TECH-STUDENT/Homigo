@@ -40,7 +40,7 @@ module.exports.saveRedirectUrl=(req,res,next)=>{
 module.exports.isOwner=async (req,res,next)=>{
     let {id} =req.params;
     let listing =await Listing.findById(id);
-    if(!listing.owner._id.equals(res.locals.currUser._id)){
+    if(!listing || !listing.owner || !listing.owner._id.equals(res.locals.currUser._id)){
         req.flash("error","You are not owner of this listing");
         return res.redirect(`/listings/${id}`);
     }
@@ -72,7 +72,7 @@ module.exports.validateReview= (req,res,next)=>{
 module.exports.isReviewAuthor=async (req,res,next)=>{
     let {id,reviewId} =req.params;
     let review =await Review.findById(reviewId);
-    if(!review.author.equals(res.locals.currUser._id)){
+    if(!review || !review.author || !review.author.equals(res.locals.currUser._id)){
         req.flash("error","You are not author of this review");
         return res.redirect(`/listings/${id}`);
     }
