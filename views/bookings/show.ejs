@@ -1,0 +1,104 @@
+<% layout("/layouts/boilerplate")%>
+
+<div class="row mt-4">
+    <div class="col-10 offset-1">
+        <a href="/bookings" class="booking-action-btn secondary mb-4" style="display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-arrow-left"></i> Back to My Bookings
+        </a>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-10 offset-1">
+        <div class="booking-detail-card">
+            <img src="<%= booking.listing ? booking.listing.image.url : '' %>" class="booking-detail-img" alt="<%= booking.listing ? booking.listing.title : 'Listing' %>">
+            <div class="booking-detail-content">
+                <div class="booking-detail-header">
+                    <div>
+                        <h2 class="booking-detail-title"><%= booking.listing ? booking.listing.title : 'Listing' %></h2>
+                        <p class="booking-detail-location">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <%= booking.listing ? booking.listing.location : '' %>, <%= booking.listing ? booking.listing.country : '' %>
+                        </p>
+                    </div>
+                    <span class="booking-status-badge status-<%= booking.status %>">
+                        <%= booking.status.charAt(0).toUpperCase() + booking.status.slice(1) %>
+                    </span>
+                </div>
+
+                <div class="booking-info-grid">
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Check-in</div>
+                        <div class="booking-info-value">
+                            <i class="fa-solid fa-calendar-check" style="color: #4CAF50; margin-right: 8px;"></i>
+                            <%= new Date(booking.checkIn).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) %>
+                        </div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Check-out</div>
+                        <div class="booking-info-value">
+                            <i class="fa-solid fa-calendar-xmark" style="color: #f44336; margin-right: 8px;"></i>
+                            <%= new Date(booking.checkOut).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) %>
+                        </div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Number of Guests</div>
+                        <div class="booking-info-value">
+                            <i class="fa-solid fa-users" style="color: #2196F3; margin-right: 8px;"></i>
+                            <%= booking.guests %> guest<%= booking.guests > 1 ? 's' : '' %>
+                        </div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Booked On</div>
+                        <div class="booking-info-value">
+                            <i class="fa-solid fa-clock" style="color: #ff9800; margin-right: 8px;"></i>
+                            <%= new Date(booking.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="booking-price-summary">
+                    <h5 style="color: #ffffff; margin-bottom: 16px; font-weight: 600;">Price Details</h5>
+                    <%
+                        const checkInDate = new Date(booking.checkIn);
+                        const checkOutDate = new Date(booking.checkOut);
+                        const nights = Math.round((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+                        const pricePerNight = booking.listing ? booking.listing.price : 0;
+                        const rentalPrice = pricePerNight * nights;
+                        const serviceFee = Math.round(rentalPrice * 0.12);
+                        const calculatedTotal = rentalPrice + serviceFee;
+                    %>
+                    <div class="booking-price-row">
+                        <span class="booking-price-label">&#8377;<%= pricePerNight.toLocaleString("en-IN") %> x <%= nights %> night<%= nights > 1 ? 's' : '' %></span>
+                        <span class="booking-price-value">&#8377;<%= rentalPrice.toLocaleString("en-IN") %></span>
+                    </div>
+                    <div class="booking-price-row">
+                        <span class="booking-price-label">Service Fee (12%)</span>
+                        <span class="booking-price-value">&#8377;<%= serviceFee.toLocaleString("en-IN") %></span>
+                    </div>
+                    <div class="booking-price-divider"></div>
+                    <div class="booking-price-row booking-price-total">
+                        <span class="booking-price-label">Total</span>
+                        <span class="booking-price-value">&#8377;<%= calculatedTotal.toLocaleString("en-IN") %></span>
+                    </div>
+                </div>
+
+                <div class="booking-detail-actions">
+                    <% if(booking.status === 'confirmed') { %>
+                        <form method="POST" action="/bookings/<%= booking._id %>/cancel" class="d-inline">
+                            <button type="submit" class="booking-detail-btn danger" onclick="return confirm('Are you sure you want to cancel this booking?')">
+                                <i class="fa-solid fa-xmark"></i> Cancel Booking
+                            </button>
+                        </form>
+                    <% } %>
+                    <a href="/listings/<%= booking.listing ? booking.listing._id : '' %>" class="booking-detail-btn secondary">
+                        <i class="fa-solid fa-eye"></i> View Listing
+                    </a>
+                    <a href="/bookings" class="booking-detail-btn primary">
+                        <i class="fa-solid fa-list"></i> All Bookings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -79,5 +79,31 @@ module.exports.isReviewAuthor=async (req,res,next)=>{
     next();
 };
 
+module.exports.isHost=(req,res,next)=>{
+    if(!req.isAuthenticated()){
+        req.session.redirectUrl=req.originalUrl;
+        req.flash("error","You must be logged in!");
+        return res.redirect("/login");
+    }
+    if(req.user.role !== 'host'){
+        req.flash("error","Only hosts can perform this action!");
+        return res.redirect("/listings");
+    }
+    next();
+};
+
+module.exports.isAdmin=(req,res,next)=>{
+    if(!req.isAuthenticated()){
+        req.session.redirectUrl=req.originalUrl;
+        req.flash("error","You must be logged in!");
+        return res.redirect("/login");
+    }
+    if(req.user.role !== 'admin'){
+        req.flash("error","Only admins can perform this action!");
+        return res.redirect("/listings");
+    }
+    next();
+};
+
 
 

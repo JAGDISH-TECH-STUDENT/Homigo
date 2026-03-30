@@ -21,6 +21,91 @@
   .search-inp:hover {
     color: white;
   }
+
+  @media (max-width: 768px) {
+    .navbar {
+      padding: 0.5rem 1rem;
+    }
+    
+    .navbar-brand {
+      font-size: 1.5rem;
+    }
+    
+    .navbar-toggler {
+      padding: 0.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .navbar-toggler-icon {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    }
+    
+    .navbar-collapse {
+      background-color: #535050;
+      margin-top: 0.5rem;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    
+    .navbar-nav {
+      padding: 0.5rem 0;
+    }
+    
+    .nav-link {
+      padding: 0.75rem 1rem !important;
+      border-radius: 8px;
+      margin: 0.25rem 0;
+    }
+    
+    .nav-link:hover {
+      background-color: rgba(254, 66, 77, 0.2);
+    }
+    
+    .search-inp {
+      width: 100%;
+      margin-bottom: 0.75rem;
+    }
+    
+    .search-btn {
+      width: 100%;
+    }
+    
+    .navbar-nav.ms-auto {
+      margin-left: 0 !important;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .navbar {
+      padding: 0.5rem;
+    }
+    
+    .navbar-brand {
+      font-size: 1.3rem;
+    }
+    
+    .navbar-collapse {
+      padding: 0.75rem;
+    }
+    
+    .nav-link {
+      padding: 0.6rem 0.75rem !important;
+      font-size: 0.95rem;
+    }
+    
+    .search-inp {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+    
+    .search-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+  }
 </style>
 <nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top"> 
   <div class="container-fluid">
@@ -43,7 +128,18 @@
       </div>
       
       <div class="navbar-nav ms-auto">
-        <a class="nav-link" href="/listings/new">Homigo your home</a>
+        <% if(currUser && currUser.role === 'admin') { %>
+          <a class="nav-link" href="/admin/dashboard"><i class="fas fa-user-shield me-1"></i>Admin Dashboard</a>
+        <% } else if(currUser && currUser.role === 'host') { %>
+          <a class="nav-link" href="/host/dashboard">Host Dashboard</a>
+          <a class="nav-link" href="/listings/host/listings">My Listings</a>
+          <a class="nav-link" href="/listings/new">Add Listing</a>
+        <% } else if(currUser) { %>
+          <a class="nav-link" href="/bookings">My Bookings</a>
+          <form method="POST" action="/upgrade-to-host" class="d-inline">
+            <button type="submit" class="nav-link btn btn-link" style="cursor: pointer;">Become a Host</button>
+          </form>
+        <% } %>
         <% if(!currUser) {%> 
           <a class="nav-link" href="/signup"><b>Sign up</b></a>
           <a class="nav-link" href="/login"><b>Log in</b></a>

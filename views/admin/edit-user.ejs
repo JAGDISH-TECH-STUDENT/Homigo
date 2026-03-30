@@ -1,0 +1,317 @@
+<% layout("/layouts/boilerplate") %>
+
+<style>
+    :root {
+        --airbnb-red: #FF5A5F;
+        --airbnb-dark: #484848;
+        --airbnb-light: #767676;
+        --airbnb-border: #EBEBEB;
+        --airbnb-bg: #F7F7F7;
+        --airbnb-white: #FFFFFF;
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.08);
+        --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+        --transition: all 0.3s ease;
+    }
+
+    .admin-page {
+        background-color: var(--airbnb-bg);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .page-header {
+        background: var(--airbnb-white);
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--airbnb-border);
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--airbnb-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        color: var(--airbnb-light);
+        margin: 0;
+    }
+
+    .btn-back {
+        background: var(--airbnb-white);
+        border: 1px solid var(--airbnb-border);
+        color: var(--airbnb-dark);
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: var(--transition);
+    }
+
+    .btn-back:hover {
+        background: var(--airbnb-bg);
+        border-color: var(--airbnb-dark);
+    }
+
+    .content-card {
+        background: var(--airbnb-white);
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--airbnb-border);
+        overflow: hidden;
+    }
+
+    .content-card .card-header {
+        background: var(--airbnb-white);
+        border-bottom: 1px solid var(--airbnb-border);
+        padding: 1.25rem 1.5rem;
+    }
+
+    .content-card .card-header h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--airbnb-dark);
+        margin: 0;
+    }
+
+    .content-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--airbnb-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border: 1px solid var(--airbnb-border);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        transition: var(--transition);
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: var(--airbnb-dark);
+        box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+    }
+
+    .form-control:disabled {
+        background-color: var(--airbnb-bg);
+        color: var(--airbnb-light);
+    }
+
+    .form-text {
+        color: var(--airbnb-light);
+        font-size: 0.85rem;
+    }
+
+    .btn-primary {
+        background: var(--airbnb-red);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-primary:hover {
+        background: #E04E53;
+    }
+
+    .btn-secondary {
+        background: var(--airbnb-white);
+        border: 1px solid var(--airbnb-border);
+        color: var(--airbnb-dark);
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: var(--transition);
+    }
+
+    .btn-secondary:hover {
+        background: var(--airbnb-bg);
+        border-color: var(--airbnb-dark);
+    }
+
+    .user-details .list-group-item {
+        border: none;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--airbnb-border);
+    }
+
+    .user-details .list-group-item:last-child {
+        border-bottom: none;
+    }
+
+    .role-badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        text-transform: capitalize;
+    }
+
+    .role-badge.admin {
+        background-color: #FFE4E4;
+        color: var(--airbnb-red);
+    }
+
+    .role-badge.host {
+        background-color: #E4E9FF;
+        color: #667eea;
+    }
+
+    .role-badge.guest {
+        background-color: #E8E8E8;
+        color: var(--airbnb-light);
+    }
+
+    .warning-box {
+        background-color: #FFF3CD;
+        border: 1px solid #FFE69C;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .warning-box i {
+        color: #997404;
+    }
+
+    .warning-box small {
+        color: #997404;
+    }
+
+    .role-info h6 {
+        font-weight: 600;
+        color: var(--airbnb-dark);
+        margin-bottom: 0.25rem;
+    }
+
+    .role-info small {
+        color: var(--airbnb-light);
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<div class="admin-page">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-user-edit me-2"></i>Edit User</h1>
+                    <p>Update user role and information</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <a href="/admin/users" class="btn-back">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Users
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle me-2"></i>User Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="/admin/users/<%= user._id %>?_method=PUT" method="POST">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" value="<%= user.username %>" disabled>
+                                <div class="form-text">Username cannot be changed</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" value="<%= user.email %>" disabled>
+                                <div class="form-text">Email cannot be changed</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Role</label>
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="guest" <%= (user.role === 'guest' || !user.role) ? 'selected' : '' %>>Guest</option>
+                                    <option value="host" <%= user.role === 'host' ? 'selected' : '' %>>Host</option>
+                                    <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                                </select>
+                                <% if(user._id.equals(currUser._id)) { %>
+                                <div class="warning-box">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    <small>You cannot change your own admin role</small>
+                                </div>
+                                <% } %>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Save Changes
+                                </button>
+                                <a href="/admin/users" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="content-card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-id-card me-2"></i>User Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush user-details">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>User ID:</span>
+                                <span class="text-muted"><%= user._id.toString().slice(-8) %></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Current Role:</span>
+                                <span class="role-badge <%= user.role || 'guest' %>">
+                                    <%= user.role || 'guest' %>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-shield-alt me-2"></i>Role Permissions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="role-info mb-3">
+                            <h6><i class="fas fa-user me-2 text-secondary"></i>Guest</h6>
+                            <small>Can browse listings, make bookings, and leave reviews</small>
+                        </div>
+                        <div class="role-info mb-3">
+                            <h6><i class="fas fa-user-tie me-2" style="color: #667eea;"></i>Host</h6>
+                            <small>Can create and manage their own listings</small>
+                        </div>
+                        <div class="role-info">
+                            <h6><i class="fas fa-user-shield me-2" style="color: var(--airbnb-red);"></i>Admin</h6>
+                            <small>Full access to manage all users, listings, and bookings</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

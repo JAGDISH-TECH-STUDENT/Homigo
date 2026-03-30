@@ -20,6 +20,22 @@
                 <input name="password" id="password" type="password" class="form-control" required>
                 
             </div>
+
+            <div class="mb-3">
+                <label class="form-label">I want to:</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="role" id="roleGuest" value="guest" checked>
+                    <label class="form-check-label" for="roleGuest">
+                        <strong>Book places to stay</strong> (Guest)
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="role" id="roleHost" value="host">
+                    <label class="form-check-label" for="roleHost">
+                        <strong>Host my property</strong> (Host)
+                    </label>
+                </div>
+            </div>
            
             <button class="btn btn-success">SignUp</button>
         </form>

@@ -20,6 +20,8 @@ const User=require("./models/user.js");
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
+const bookingRouter = require("./routes/booking.js");
+const adminRouter = require("./routes/admin.js");
 
 main().then(()=>{ 
     console.log("connected to DB");
@@ -89,6 +91,8 @@ app.use((req,res,next)=>{
 app.use("/listings",listingRouter);
 app.use("/listings/:id/reviews",reviewRouter);
 app.use("/",userRouter);
+app.use("/",bookingRouter);
+app.use("/admin",adminRouter);
 
 // 404 error handling
 app.all("/*catchall",( req, res, next)=>{

@@ -1,0 +1,61 @@
+<% layout("/layouts/boilerplate")%>
+
+<div class="row mt-4">
+    <div class="col-10 offset-1">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0" style="color: #ffffff; font-weight: 700;">My Listings</h2>
+            <a href="/listings/new" class="booking-action-btn primary">
+                <i class="fa-solid fa-plus"></i> Add New Listing
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-10 offset-1">
+        <% if(listings.length === 0) { %>
+            <div class="booking-empty-state">
+                <div class="booking-empty-icon">
+                    <i class="fa-solid fa-house"></i>
+                </div>
+                <h3 class="booking-empty-title">No listings yet</h3>
+                <p class="booking-empty-text">You haven't created any listings yet. Start hosting by adding your first property!</p>
+                <a href="/listings/new" class="booking-empty-btn">
+                    <i class="fa-solid fa-plus"></i> Add Your First Listing
+                </a>
+            </div>
+        <% } else { %>
+            <div class="row">
+                <% for(let listing of listings) { %>
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="booking-list-card">
+                            <img src="<%= listing.image.url %>" class="booking-list-img" alt="<%= listing.title %>">
+                            <div class="booking-list-body">
+                                <h5 class="booking-list-title"><%= listing.title %></h5>
+                                <div class="booking-list-details">
+                                    <div class="booking-detail-row">
+                                        <span class="booking-detail-label">Location</span>
+                                        <span class="booking-detail-value"><%= listing.location %>, <%= listing.country %></span>
+                                    </div>
+                                    <div class="booking-detail-row">
+                                        <span class="booking-detail-label">Price</span>
+                                        <span class="booking-detail-value">&#8377;<%= listing.price ? listing.price.toLocaleString("en-IN") : "0" %> / night</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="booking-list-footer">
+                                <div class="booking-list-actions">
+                                    <a href="/listings/<%= listing._id %>" class="booking-action-btn secondary">View</a>
+                                    <a href="/listings/<%= listing._id %>/edit" class="booking-action-btn primary">Edit</a>
+                                    <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE" class="d-inline">
+                                        <button type="submit" class="booking-action-btn danger" onclick="return confirm('Are you sure you want to delete this listing?')">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</div>

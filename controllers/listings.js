@@ -103,4 +103,16 @@ module.exports.renderEditForm=async(req,res)=>{
     let deleteListing=await Listing.findByIdAndDelete(id); 
     req.flash("success","Listing DELETED!");
     res.redirect("/listings");
+ };
+
+// Get all listings for host
+module.exports.getHostListings = async (req, res) => {
+    // Check if user is a host
+    if (req.user.role !== 'host') {
+        req.flash("error", "Only hosts can access their listings!");
+        return res.redirect("/listings");
+    }
+    
+    const listings = await Listing.find({ owner: req.user._id });
+    res.render("listings/host-listings.ejs", { listings });
 };

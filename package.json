@@ -7,7 +7,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed-admin": "node init/admin-seed.js",
+    "change-admin-password": "node init/change-admin-password.js",
+    "change-admin-username": "node init/change-admin-username.js"
   },
   "keywords": [],
   "author": "",

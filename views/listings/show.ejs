@@ -27,6 +27,73 @@
     </div>
 </div>
 
+<% if(currUser && !listing.owner._id.equals(currUser._id) && currUser.role !== 'host'){ %>
+<div class="row mt-4">
+    <div class="col-6 offset-3">
+        <div class="booking-card">
+            <div class="booking-header">
+                <div class="booking-price">
+                    <span class="price-amount">&#8377;<%= listing.price ? listing.price.toLocaleString("en-IN") : "0" %></span>
+                    <span class="price-period">/ night</span>
+                </div>
+                <div class="booking-rating">
+                    <i class="fa-solid fa-star"></i>
+                    <span><%= listing.reviews && listing.reviews.length > 0 ? (listing.reviews.reduce((sum, r) => sum + r.rating, 0) / listing.reviews.length).toFixed(1) : 'New' %></span>
+                    <% if(listing.reviews && listing.reviews.length > 0) { %>
+                        <span class="rating-count">(<%= listing.reviews.length %> reviews)</span>
+                    <% } %>
+                </div>
+            </div>
+            <form method="POST" action="/listings/<%= listing._id %>/bookings" class="booking-form needs-validation" novalidate>
+                <div class="booking-dates">
+                    <div class="date-input">
+                        <label for="checkIn" class="date-label">CHECK-IN</label>
+                        <input type="date" class="date-field" id="checkIn" name="booking[checkIn]" required min="<%= new Date().toISOString().split('T')[0] %>">
+                        <div class="invalid-feedback">Please select a check-in date</div>
+                    </div>
+                    <div class="date-input">
+                        <label for="checkOut" class="date-label">CHECK-OUT</label>
+                        <input type="date" class="date-field" id="checkOut" name="booking[checkOut]" required min="<%= new Date().toISOString().split('T')[0] %>">
+                        <div class="invalid-feedback">Please select a check-out date</div>
+                    </div>
+                </div>
+                <div class="guests-input">
+                    <label for="guests" class="guests-label">GUESTS</label>
+                    <select class="guests-field" id="guests" name="booking[guests]" required>
+                        <% for(let i = 1; i <= 10; i++) { %>
+                            <option value="<%= i %>"><%= i %> guest<%= i > 1 ? 's' : '' %></option>
+                        <% } %>
+                    </select>
+                    <div class="invalid-feedback">Please select number of guests</div>
+                </div>
+                <button type="submit" class="booking-submit-btn">
+                    <span class="btn-text">Reserve</span>
+                </button>
+                <div class="booking-note">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>You won't be charged yet</span>
+                </div>
+                <div class="booking-summary" id="bookingSummary" style="display: none;">
+                    <div class="summary-row">
+                        <span class="summary-label">&#8377;<%= listing.price ? listing.price.toLocaleString("en-IN") : "0" %> x <span id="nightCount">0</span> nights</span>
+                        <span class="summary-value" id="subtotal">&#8377;0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Service fee</span>
+                        <span class="summary-value" id="serviceFee">&#8377;0</span>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-row summary-total">
+                        <span class="summary-label">Total</span>
+                        <span class="summary-value" id="totalPrice">&#8377;0</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<% } %>
+
 
 <% if(currUser && listing.owner._id.equals(currUser._id)){ %>
 <div class="btns">
@@ -105,6 +172,65 @@
    
 </div>
 <script src="/js/map.js"></script>
+<script>
+    // Booking price calculator
+    const checkInInput = document.getElementById('checkIn');
+    const checkOutInput = document.getElementById('checkOut');
+    const guestsInput = document.getElementById('guests');
+    const bookingSummary = document.getElementById('bookingSummary');
+    const nightCountEl = document.getElementById('nightCount');
+    const subtotalEl = document.getElementById('subtotal');
+    const serviceFeeEl = document.getElementById('serviceFee');
+    const totalPriceEl = document.getElementById('totalPrice');
+    const pricePerNight = <%= listing.price || 0 %>;
+
+    function calculatePrice() {
+        const checkInValue = checkInInput.value;
+        const checkOutValue = checkOutInput.value;
+        
+        if (checkInValue && checkOutValue) {
+            const checkIn = new Date(checkInValue);
+            const checkOut = new Date(checkOutValue);
+            
+            // Reset time to midnight for accurate day calculation
+            checkIn.setHours(0, 0, 0, 0);
+            checkOut.setHours(0, 0, 0, 0);
+            
+            if (checkOut > checkIn) {
+                const nights = Math.round((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+                const subtotal = pricePerNight * nights;
+                const serviceFee = Math.round(subtotal * 0.12);
+                const total = subtotal + serviceFee;
+                
+                nightCountEl.textContent = nights;
+                subtotalEl.innerHTML = '&#8377;' + subtotal.toLocaleString('en-IN');
+                serviceFeeEl.innerHTML = '&#8377;' + serviceFee.toLocaleString('en-IN');
+                totalPriceEl.innerHTML = '&#8377;' + total.toLocaleString('en-IN');
+                
+                bookingSummary.style.display = 'block';
+            } else {
+                bookingSummary.style.display = 'none';
+            }
+        } else {
+            bookingSummary.style.display = 'none';
+        }
+    }
+
+    checkInInput.addEventListener('change', function() {
+        if (this.value) {
+            const nextDay = new Date(this.value);
+            nextDay.setDate(nextDay.getDate() + 1);
+            checkOutInput.min = nextDay.toISOString().split('T')[0];
+            if (checkOutInput.value && new Date(checkOutInput.value) <= new Date(this.value)) {
+                checkOutInput.value = '';
+            }
+        }
+        calculatePrice();
+    });
+
+    checkOutInput.addEventListener('change', calculatePrice);
+    guestsInput.addEventListener('change', calculatePrice);
+</script>
 
 
 
