@@ -1,4 +1,173 @@
 <% layout("/layouts/boilerplate")%>
+<style>
+    .booking-detail-card {
+        background-color: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: row;
+    }
+    .booking-detail-img {
+        width: 400px;
+        height: 300px;
+        object-fit: cover;
+    }
+    .booking-detail-content {
+        flex: 1;
+        padding: 1.5rem;
+    }
+    .booking-detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+    .booking-detail-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #222;
+        margin: 0;
+    }
+    .booking-detail-location {
+        color: #717171;
+        font-size: 0.9rem;
+        margin: 0.5rem 0 0 0;
+    }
+    .booking-status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .status-confirmed {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+    .status-pending {
+        background-color: #fff3e0;
+        color: #f57c00;
+    }
+    .status-cancelled {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+    .booking-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .booking-info-item {
+        background-color: #f7f7f7;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+    .booking-info-label {
+        font-size: 0.8rem;
+        color: #717171;
+        margin-bottom: 0.5rem;
+    }
+    .booking-info-value {
+        font-weight: 600;
+        color: #222;
+    }
+    .booking-price-summary {
+        background-color: #222;
+        color: #fff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    .booking-price-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+    .booking-price-label {
+        color: #ddd;
+    }
+    .booking-price-value {
+        font-weight: 600;
+    }
+    .booking-price-divider {
+        border-top: 1px solid #444;
+        margin: 0.5rem 0;
+    }
+    .booking-price-total {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    .booking-detail-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .booking-detail-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    .booking-detail-btn.primary {
+        background-color: #ff385c;
+        color: white;
+    }
+    .booking-detail-btn.primary:hover {
+        background-color: #e31c5f;
+        color: white;
+    }
+    .booking-detail-btn.secondary {
+        background-color: #222;
+        color: white;
+    }
+    .booking-detail-btn.secondary:hover {
+        background-color: #000;
+        color: white;
+    }
+    .booking-detail-btn.danger {
+        background-color: #c62828;
+        color: white;
+    }
+    .booking-detail-btn.danger:hover {
+        background-color: #b71c1c;
+        color: white;
+    }
+    .booking-action-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        color: #222;
+    }
+    .booking-action-btn:hover {
+        background-color: #f7f7f7;
+        color: #222;
+    }
+    @media (max-width: 768px) {
+        .booking-detail-card {
+            flex-direction: column;
+        }
+        .booking-detail-img {
+            width: 100%;
+            height: 200px;
+        }
+        .booking-info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 
 <div class="row mt-4">
     <div class="col-10 offset-1">

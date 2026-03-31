@@ -30,6 +30,11 @@ const listingSchema= new Schema({
         type:String,
         required: true,
     },
+    category:{
+        type:String,
+        enum: ['Trending', 'Rooms', 'Iconic cities', 'Mountains', 'Castles', 'Amazing pools', 'Camping', 'Farms', 'Arctic', 'Domes', 'Boats'],
+        default: 'Trending'
+    },
     reviews:[
         {
         type: mongoose.Schema.Types.ObjectId,

@@ -1,3 +1,55 @@
+<style>
+    footer {
+        background-color: #f7f7f7;
+        border-top: 1px solid #ddd;
+        padding: 2rem 0;
+        margin-top: 3rem;
+    }
+    .f-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+    .f-info-socials {
+        display: flex;
+        gap: 1rem;
+    }
+    .f-info-socials i {
+        font-size: 1.5rem;
+        color: #222;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    .f-info-socials i:hover {
+        color: #ff385c;
+    }
+    .f-info-brand {
+        color: #222;
+        font-weight: 600;
+    }
+    .f-info-links {
+        display: flex;
+        gap: 1.5rem;
+    }
+    .f-info-links a {
+        color: #222;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .f-info-links a:hover {
+        color: #ff385c;
+    }
+    @media (max-width: 768px) {
+        .f-info {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+    }
+</style>
 <footer>
     <div class="f-info">
         <div class="f-info-socials">

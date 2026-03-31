@@ -114,3 +114,47 @@ module.exports.getHostListings = async (req, res) => {
     const listings = await Listing.find({ owner: req.user._id });
     res.render("listings/host-listings.ejs", { listings });
 };
+
+module.exports.searchListings = async (req, res) => {
+    const { q, category, minPrice, maxPrice } = req.query;
+    
+    let query = {};
+    
+    // Text search (place/title/description)
+    if (q && q.trim() !== "") {
+        const searchQuery = q.trim();
+        const searchRegex = new RegExp(searchQuery, 'i');
+        query.$or = [
+            { title: searchRegex },
+            { location: searchRegex },
+            { country: searchRegex },
+            { description: searchRegex }
+        ];
+    }
+    
+    // Category filter
+    if (category && category.trim() !== "") {
+        query.category = category.trim();
+    }
+    
+    // Price range filter
+    if (minPrice || maxPrice) {
+        query.price = {};
+        if (minPrice && !isNaN(minPrice)) {
+            query.price.$gte = parseInt(minPrice);
+        }
+        if (maxPrice && !isNaN(maxPrice)) {
+            query.price.$lte = parseInt(maxPrice);
+        }
+    }
+    
+    const allListings = await Listing.find(query);
+    
+    res.render("listings/index.ejs", { 
+        allListings, 
+        searchQuery: q || "",
+        selectedCategory: category || "",
+        minPrice: minPrice || "",
+        maxPrice: maxPrice || ""
+    });
+};

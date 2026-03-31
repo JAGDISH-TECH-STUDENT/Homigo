@@ -1,82 +1,250 @@
 <% layout("/layouts/boilerplate")%>
    <style>
+        .search-container {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #ddd;
+        }
+        .search-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+        .search-form .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .search-form label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+            color: #222;
+        }
+        .search-form input,
+        .search-form select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .search-form input:focus,
+        .search-form select:focus {
+            outline: none;
+            border-color: #222;
+        }
+        .search-form button {
+            background-color: #ff385c;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            height: fit-content;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .search-form button:hover {
+            background-color: #e31c5f;
+        }
+        .clear-btn {
+            background-color: #222;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            height: fit-content;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .clear-btn:hover {
+            background-color: #000;
+            color: white;
+        }
         #filters{
             display: flex;
             flex-wrap: wrap;
             align-items: center;
+            gap: 1.5rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 1.5rem;
         }
         .filter{
             text-align: center;
-            margin-right: 2rem;
-            margin-top: 2rem;
             opacity:0.7;
+            text-decoration: none;
+            color: #222;
+            padding: 0.5rem 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
         }
         .filter:hover{
             opacity:1;
             cursor: pointer;
+            color: #222;
+            border-bottom: 2px solid #222;
         }
         .filter p{
             font-size:0.8rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
         }
         .tax-info {
             display:none;
         }
         .tax-toggle{
-            border: 1px solid black;
+            border: 1px solid #ddd;
             border-radius: 1rem;
             height:3.2rem;
             padding : 1rem;
             margin-left: 2rem;
             display:flex;
             align-items: center;
-            
+        }
+        .listing-card {
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .listing-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .listing-card img {
+            border-radius: 12px;
+        }
+        .listing-link {
+            text-decoration: none;
+            color: inherit;
+        }
+        .listing-link:hover {
+            color: inherit;
+        }
+        .card-body {
+            padding: 1rem;
+        }
+        .card-text {
+            font-size: 0.9rem;
+            color: #222;
+        }
+        .card-text b {
+            font-weight: 600;
+        }
+        .search-results {
+            background-color: #f7f7f7;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .search-results h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .search-results p {
+            margin: 0.5rem 0 0 0;
+            color: #717171;
         }
    </style>
+   <div class="search-container">
+       <form class="search-form" action="/listings/search" method="GET">
+           <div class="form-group">
+               <label for="q">Search</label>
+               <input type="text" id="q" name="q" placeholder="Search by place, title, or description" value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+           </div>
+           <div class="form-group">
+               <label for="category">Category</label>
+               <select id="category" name="category">
+                   <option value="">All Categories</option>
+                   <option value="Trending" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Trending' ? 'selected' : '' %>>Trending</option>
+                   <option value="Rooms" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Rooms' ? 'selected' : '' %>>Rooms</option>
+                   <option value="Iconic cities" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Iconic cities' ? 'selected' : '' %>>Iconic cities</option>
+                   <option value="Mountains" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Mountains' ? 'selected' : '' %>>Mountains</option>
+                   <option value="Castles" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Castles' ? 'selected' : '' %>>Castles</option>
+                   <option value="Amazing pools" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Amazing pools' ? 'selected' : '' %>>Amazing pools</option>
+                   <option value="Camping" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Camping' ? 'selected' : '' %>>Camping</option>
+                   <option value="Farms" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Farms' ? 'selected' : '' %>>Farms</option>
+                   <option value="Arctic" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Arctic' ? 'selected' : '' %>>Arctic</option>
+                   <option value="Domes" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Domes' ? 'selected' : '' %>>Domes</option>
+                   <option value="Boats" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Boats' ? 'selected' : '' %>>Boats</option>
+               </select>
+           </div>
+           <div class="form-group">
+               <label for="minPrice">Min Price</label>
+               <input type="number" id="minPrice" name="minPrice" placeholder="Min" value="<%= typeof minPrice !== 'undefined' ? minPrice : '' %>">
+           </div>
+           <div class="form-group">
+               <label for="maxPrice">Max Price</label>
+               <input type="number" id="maxPrice" name="maxPrice" placeholder="Max" value="<%= typeof maxPrice !== 'undefined' ? maxPrice : '' %>">
+           </div>
+           <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+           <a href="/listings" class="clear-btn">Clear</a>
+       </form>
+   </div>
+   <% if(typeof searchQuery !== 'undefined' && searchQuery || typeof selectedCategory !== 'undefined' && selectedCategory || typeof minPrice !== 'undefined' && minPrice || typeof maxPrice !== 'undefined' && maxPrice) { %>
+   <div class="search-results">
+        <h5>Search results
+            <% if(typeof searchQuery !== 'undefined' && searchQuery) { %> for "<%= searchQuery %>"<% } %>
+            <% if(typeof selectedCategory !== 'undefined' && selectedCategory) { %> in <%= selectedCategory %><% } %>
+            <% if(typeof minPrice !== 'undefined' && minPrice || typeof maxPrice !== 'undefined' && maxPrice) { %>
+                with price <% if(typeof minPrice !== 'undefined' && minPrice) { %>from &#8377;<%= minPrice %><% } %>
+                <% if(typeof maxPrice !== 'undefined' && maxPrice) { %>to &#8377;<%= maxPrice %><% } %>
+            <% } %>
+        </h5>
+        <p>Found <%= allListings.length %> listing(s)</p>
+   </div>
+   <% } %>
     <div id="filters">
-        <div class="filter">
+        <a href="/listings/search?category=Trending" class="filter">
             <div><i class="fa-solid fa-fire"></i></div>
             <p>Trending</p>
-        </div>
-        <div class="filter">
+        </a>
+        <a href="/listings/search?category=Rooms" class="filter">
             <div><i class="fa-solid fa-bed"></i></div>
             <p>Rooms</p>
-        </div>
-         <div class="filter">
+        </a>
+         <a href="/listings/search?category=Iconic cities" class="filter">
             <div><i class="fa-solid fa-mountain-city"></i></div>
             <p>Iconic cities</p>
-        </div>
-         <div class="filter">
+        </a>
+         <a href="/listings/search?category=Mountains" class="filter">
             <div><i class="fa-solid fa-mountain"></i></div>
             <p>Mountains</p>
-        </div>
-         <div class="filter">
+        </a>
+         <a href="/listings/search?category=Castles" class="filter">
             <div><i class="fa-brands fa-fort-awesome"></i></div>
             <p>Castles</p>
-        </div>
-        <div class="filter">
+        </a>
+        <a href="/listings/search?category=Amazing pools" class="filter">
             <div><i class="fa-solid fa-person-swimming"></i></div>
             <p>Amazing pools</p>
-        </div> 
-        <div class="filter">
+        </a> 
+        <a href="/listings/search?category=Camping" class="filter">
             <div><i class="fa-solid fa-campground"></i></div>
             <p>Camping</p>
-        </div> 
-        <div class="filter">
+        </a> 
+        <a href="/listings/search?category=Farms" class="filter">
             <div><i class="fa-solid fa-cow"></i></div>
             <p>Farms</p>
-        </div> 
-        <div class="filter">
+        </a> 
+        <a href="/listings/search?category=Arctic" class="filter">
             <div><i class="fa-solid fa-snowflake"></i></div>
             <p>Arctic</p>
-        </div> 
-        <div class="filter">
+        </a> 
+        <a href="/listings/search?category=Domes" class="filter">
             <div><i class="fa-solid fa-igloo"></i></div>
             <p>Domes</p>
-        </div> 
-        <div class="filter">
+        </a> 
+        <a href="/listings/search?category=Boats" class="filter">
             <div><i class="fa-solid fa-ship"></i></div>
             <p>Boats</p>
-        </div> 
+        </a> 
 
         
         <div class="tax-toggle">
@@ -87,6 +255,16 @@
         </div>
     </div>
     <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+        <% if(allListings.length === 0 && (typeof searchQuery !== 'undefined' && searchQuery || typeof selectedCategory !== 'undefined' && selectedCategory || typeof minPrice !== 'undefined' && minPrice || typeof maxPrice !== 'undefined' && maxPrice)) { %>
+            <div class="col-12 text-center mt-5">
+                <h4>No listings found
+                    <% if(typeof searchQuery !== 'undefined' && searchQuery) { %> for "<%= searchQuery %>"<% } %>
+                    <% if(typeof selectedCategory !== 'undefined' && selectedCategory) { %> in <%= selectedCategory %><% } %>
+                </h4>
+                <p>Try adjusting your search criteria</p>
+                <a href="/listings" class="btn btn-primary">View All Listings</a>
+            </div>
+        <% } else { %>
         <% for(let listing of allListings){ %>
             <a href="/listings/<%=listing._id %>" class="listing-link">
                 <div class="card col listing-card">
@@ -102,6 +280,7 @@
                 </div>
             </a>
         <%}%>
+        <% } %>
     </div>    
 <script>
     let taxSwitch=document.getElementById('switchCheckDefault');
@@ -116,4 +295,3 @@
         }
      })
 </script>
-
