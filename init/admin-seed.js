@@ -1,12 +1,10 @@
 const mongoose = require("mongoose");
 const User = require("../models/user");
 
-// Load environment variables
 if(process.env.NODE_ENV != "production"){
     require("dotenv").config();
 }
 
-// Database connection
 const dbUrl = process.env.ATLASDB_URL;
 
 async function seedAdmin() {
@@ -14,13 +12,11 @@ async function seedAdmin() {
         await mongoose.connect(dbUrl);
         console.log("Connected to database");
 
-        // Admin credentials
-        const adminUsername = "admin";
+                const adminUsername = "admin";
         const adminEmail = "admin@homigo.com";
-        const adminPassword = "admin123"; // Change this to a secure password
+        const adminPassword = "admin123";
 
-        // Check if admin already exists
-        const existingAdmin = await User.findOne({ role: "admin" });
+                const existingAdmin = await User.findOne({ role: "admin" });
         if (existingAdmin) {
             console.log("Admin user already exists:");
             console.log(`Username: ${existingAdmin.username}`);
@@ -29,8 +25,7 @@ async function seedAdmin() {
             process.exit(0);
         }
 
-        // Check if username or email already exists
-        const existingUser = await User.findOne({
+                const existingUser = await User.findOne({
             $or: [{ username: adminUsername }, { email: adminEmail }]
         });
 
@@ -46,15 +41,13 @@ async function seedAdmin() {
             process.exit(0);
         }
 
-        // Create new admin user
-        const adminUser = new User({
+                const adminUser = new User({
             username: adminUsername,
             email: adminEmail,
             role: "admin"
         });
 
-        // Register user with passport-local-mongoose
-        await User.register(adminUser, adminPassword);
+                await User.register(adminUser, adminPassword);
 
         console.log("Admin user created successfully!");
         console.log("=================================");

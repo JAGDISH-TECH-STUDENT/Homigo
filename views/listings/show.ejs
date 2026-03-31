@@ -173,7 +173,6 @@
 </div>
 <script src="/js/map.js"></script>
 <script>
-    // Booking price calculator
     const checkInInput = document.getElementById('checkIn');
     const checkOutInput = document.getElementById('checkOut');
     const guestsInput = document.getElementById('guests');
@@ -192,7 +191,6 @@
             const checkIn = new Date(checkInValue);
             const checkOut = new Date(checkOutValue);
             
-            // Reset time to midnight for accurate day calculation
             checkIn.setHours(0, 0, 0, 0);
             checkOut.setHours(0, 0, 0, 0);
             

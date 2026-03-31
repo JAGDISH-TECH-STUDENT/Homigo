@@ -26,16 +26,14 @@ async function changeAdminUsername() {
             process.exit(1);
         }
 
-        // Find admin user
-        const admin = await User.findOne({ role: "admin" });
+                const admin = await User.findOne({ role: "admin" });
         
         if (!admin) {
             console.log("No admin user found. Please run 'npm run seed-admin' first.");
             process.exit(1);
         }
 
-        // Change username
-        const oldUsername = admin.username;
+                const oldUsername = admin.username;
         admin.username = newUsername;
         await admin.save();
 

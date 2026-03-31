@@ -28,7 +28,6 @@ router.get("/:id/edit",
     isOwner,
     wrapAsync(listingController.renderEditForm));
 
-// Get all listings for host
 router.get("/host/listings", isLoggedIn, wrapAsync(listingController.getHostListings));
 
 module.exports = router;

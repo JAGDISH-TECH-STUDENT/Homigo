@@ -16,7 +16,6 @@ router.route("/login")
 
 router.get("/logout",userController.logout);
 
-// Upgrade to host
 router.post("/upgrade-to-host", userController.upgradeToHost);
 
 module.exports=router; 

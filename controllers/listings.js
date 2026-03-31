@@ -30,7 +30,7 @@ module.exports.showListing =async (req,res)=>{
         req.flash("error","Listing you requested for does not exist!");
         return res.redirect("/listings");
     }
-    let coords = { lat: 28.6139, lon: 77.2090 }; // Default coordinates (Delhi)
+    let coords = { lat: 28.6139, lon: 77.2090 };
     
     if (process.env.TOMTOM_API_KEY) {
         try {
@@ -105,9 +105,7 @@ module.exports.renderEditForm=async(req,res)=>{
     res.redirect("/listings");
  };
 
-// Get all listings for host
 module.exports.getHostListings = async (req, res) => {
-    // Check if user is a host
     if (req.user.role !== 'host') {
         req.flash("error", "Only hosts can access their listings!");
         return res.redirect("/listings");

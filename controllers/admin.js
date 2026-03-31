@@ -3,7 +3,6 @@ const Listing = require("../models/listing");
 const Booking = require("../models/booking");
 const Review = require("../models/review");
 
-// Admin Dashboard
 module.exports.renderDashboard = async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
@@ -42,7 +41,6 @@ module.exports.renderDashboard = async (req, res) => {
     }
 };
 
-// User Management
 module.exports.renderUsers = async (req, res) => {
     try {
         const users = await User.find().sort({ _id: -1 });
@@ -79,8 +77,7 @@ module.exports.updateUser = async (req, res) => {
             return res.redirect("/admin/users");
         }
         
-        // Prevent admin from demoting themselves
-        if (user._id.equals(req.user._id) && role !== 'admin') {
+                if (user._id.equals(req.user._id) && role !== 'admin') {
             req.flash("error", "You cannot change your own admin role");
             return res.redirect("/admin/users");
         }
@@ -100,8 +97,7 @@ module.exports.deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
         
-        // Prevent admin from deleting themselves
-        if (req.user._id.equals(id)) {
+                if (req.user._id.equals(id)) {
             req.flash("error", "You cannot delete your own account");
             return res.redirect("/admin/users");
         }
@@ -112,17 +108,13 @@ module.exports.deleteUser = async (req, res) => {
             return res.redirect("/admin/users");
         }
         
-        // Delete all listings owned by this user
-        await Listing.deleteMany({ owner: id });
+                await Listing.deleteMany({ owner: id });
         
-        // Delete all bookings made by this user
-        await Booking.deleteMany({ user: id });
+                await Booking.deleteMany({ user: id });
         
-        // Delete all reviews by this user
-        await Review.deleteMany({ author: id });
+                await Review.deleteMany({ author: id });
         
-        // Delete the user
-        await User.findByIdAndDelete(id);
+                await User.findByIdAndDelete(id);
         
         req.flash("success", "User and associated data deleted successfully");
         res.redirect("/admin/users");
@@ -132,7 +124,6 @@ module.exports.deleteUser = async (req, res) => {
     }
 };
 
-// Listing Management
 module.exports.renderListings = async (req, res) => {
     try {
         const listings = await Listing.find().populate("owner", "username email").sort({ _id: -1 });

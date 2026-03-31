@@ -40,7 +40,6 @@ const bookingSchema = new Schema({
     }
 });
 
-// Validation: check-out must be after check-in
 bookingSchema.pre("save", function(next) {
     if (this.checkOut <= this.checkIn) {
         const err = new Error("Check-out date must be after check-in date");

@@ -94,16 +94,13 @@ app.use("/",userRouter);
 app.use("/",bookingRouter);
 app.use("/admin",adminRouter);
 
-// 404 error handling
 app.all("/*catchall",( req, res, next)=>{
     next(new ExpressError(404,"Page Not Found!"));
 });
-// express middleware to handle error
 
 app.use((err, req, res, next)=>{
     let {statusCode=500,message="something went wrong"}= err;
-    // res.send(message);
-    res.status(statusCode).render("error.ejs",{message}); 
+        res.status(statusCode).render("error.ejs",{message}); 
 });
 
 app.listen(process.env.PORT || 8080, ()=>{

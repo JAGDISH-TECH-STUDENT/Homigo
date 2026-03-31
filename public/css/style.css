@@ -3,15 +3,14 @@ body{
     display: flex;
     flex-direction:column;
     min-height: 100vh;
-    background-color: #2d2d2d; /* Light black background */
-    color: #ffffff; /* White text */
+    background-color: #2d2d2d;
+    color: #ffffff;
 }
 .container{
     flex:1;
 }
 
 
-/* navbar */
 .navbar{
     height: 5rem;
     background-color: #535050 !important;
@@ -59,7 +58,6 @@ body{
     justify-content:center;
     
 }
-/* cards */
 .listing-card{
     border:none !important;
     margin-bottom : 3rem; 
@@ -78,7 +76,6 @@ body{
 .listing-link{
     text-decoration: none;
 }
-/* card effect */
 
 .card-img-overlay {
     opacity:0;
@@ -93,13 +90,11 @@ body{
     border : none !important;
 }
 
-/* edit page */
 .edit-btn{
     background-color: #fe424d !important;
     border : none !important;
 }
 
-/* show page */
 
 .show-img{
     height: 30vh;
@@ -114,7 +109,6 @@ body{
     padding-right: 0;
 }
 
-/* Map */
 #map {
     width: 1222px;
     height: 100vh;
@@ -125,7 +119,6 @@ body{
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
-/* Booking Card */
 .booking-card {
     background: #3d3d3d;
     border-radius: 16px;
@@ -335,7 +328,6 @@ body{
     text-decoration: none;
 }
 
-/* Booking Cards - Index Page */
 .booking-list-card {
     background: #3d3d3d;
     border-radius: 16px;
@@ -485,7 +477,6 @@ body{
     background: rgba(244, 67, 54, 0.1);
 }
 
-/* Booking Detail Page */
 .booking-detail-card {
     background: #3d3d3d;
     border-radius: 16px;
@@ -643,7 +634,6 @@ body{
     background: rgba(244, 67, 54, 0.1);
 }
 
-/* Empty State */
 .booking-empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -687,7 +677,6 @@ body{
     color: #ffffff;
 }
 
-/* Host Dashboard */
 .host-stat-card {
     background: #3d3d3d;
     border-radius: 16px;
@@ -732,7 +721,6 @@ body{
     margin: 4px 0 0 0;
 }
 
-/* Responsive Styles */
 @media (max-width: 992px) {
     .booking-card {
         padding: 20px;
@@ -889,7 +877,6 @@ body{
     }
 }
 
-/* Review Section Responsive */
 @media (max-width: 768px) {
     .card.col-5.ms-3.mb-3 {
         width: 100%;
