@@ -36,7 +36,7 @@
             outline: none;
             border-color: #222;
         }
-        .search-form button {
+        .search-form button, .search-submit-btn {
             background-color: #ff385c;
             color: white;
             border: none;
@@ -47,8 +47,9 @@
             font-weight: 600;
             font-size: 1rem;
             transition: background-color 0.2s;
+            min-width: 120px;
         }
-        .search-form button:hover {
+        .search-form button:hover, .search-submit-btn:hover {
             background-color: #e31c5f;
         }
         .clear-btn {
@@ -184,7 +185,7 @@
                <label for="maxPrice">Max Price</label>
                <input type="number" id="maxPrice" name="maxPrice" placeholder="Max" value="<%= typeof maxPrice !== 'undefined' ? maxPrice : '' %>">
            </div>
-           <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+           <button type="submit" class="search-submit-btn"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
            <a href="/listings" class="clear-btn">Clear</a>
        </form>
    </div>
