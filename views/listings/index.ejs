@@ -71,78 +71,34 @@
             background-color: #000;
             color: white;
         }
-        .filter-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        .filter-btn {
-            background-color: #f7f7f7;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .filter-btn:hover {
-            background-color: #222;
-            color: white;
-            border-color: #222;
-        }
-        .filter-btn.active {
-            background-color: #ff385c;
-            color: white;
-            border-color: #ff385c;
-        }
-        .filter-panel {
-            display: none;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .filter-panel.show {
-            display: block;
-        }
-        .filter-panel h5 {
-            margin: 0 0 1rem 0;
-            font-weight: 600;
-            color: #222;
-        }
-        .filter-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-        .filter-option {
-            background-color: #f7f7f7;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-        .filter-option:hover {
-            background-color: #222;
-            color: white;
-            border-color: #222;
-        }
-        .filter-option.selected {
-            background-color: #ff385c;
-            color: white;
-            border-color: #ff385c;
-        }
         #filters{
-            display: none;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 1.5rem;
+        }
+        .filter{
+            text-align: center;
+            opacity:0.7;
+            text-decoration: none;
+            color: #222;
+            padding: 0.5rem 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .filter:hover{
+            opacity:1;
+            cursor: pointer;
+            color: #222;
+            border-bottom: 2px solid #222;
+        }
+        .filter p{
+            font-size:0.8rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
         }
         .tax-info {
             display:none;
@@ -237,56 +193,6 @@
        </form>
    </div>
    
-   <div class="filter-buttons">
-       <button class="filter-btn" onclick="toggleFilter('category')">
-           <i class="fa-solid fa-list"></i> Category
-       </button>
-       <button class="filter-btn" onclick="toggleFilter('price')">
-           <i class="fa-solid fa-indian-rupee-sign"></i> Price
-       </button>
-       <button class="filter-btn" onclick="toggleFilter('tax')">
-           <i class="fa-solid fa-percent"></i> Tax
-       </button>
-   </div>
-   
-   <div id="categoryFilter" class="filter-panel">
-       <h5>Filter by Category</h5>
-       <div class="filter-options">
-           <a href="/listings/search?category=Trending" class="filter-option">Trending</a>
-           <a href="/listings/search?category=Rooms" class="filter-option">Rooms</a>
-           <a href="/listings/search?category=Iconic cities" class="filter-option">Iconic cities</a>
-           <a href="/listings/search?category=Mountains" class="filter-option">Mountains</a>
-           <a href="/listings/search?category=Castles" class="filter-option">Castles</a>
-           <a href="/listings/search?category=Amazing pools" class="filter-option">Amazing pools</a>
-           <a href="/listings/search?category=Camping" class="filter-option">Camping</a>
-           <a href="/listings/search?category=Farms" class="filter-option">Farms</a>
-           <a href="/listings/search?category=Arctic" class="filter-option">Arctic</a>
-           <a href="/listings/search?category=Domes" class="filter-option">Domes</a>
-           <a href="/listings/search?category=Boats" class="filter-option">Boats</a>
-       </div>
-   </div>
-   
-   <div id="priceFilter" class="filter-panel">
-       <h5>Filter by Price</h5>
-       <div class="filter-options">
-           <a href="/listings/search?maxPrice=1000" class="filter-option">Under ₹1,000</a>
-           <a href="/listings/search?minPrice=1000&maxPrice=3000" class="filter-option">₹1,000 - ₹3,000</a>
-           <a href="/listings/search?minPrice=3000&maxPrice=5000" class="filter-option">₹3,000 - ₹5,000</a>
-           <a href="/listings/search?minPrice=5000&maxPrice=10000" class="filter-option">₹5,000 - ₹10,000</a>
-           <a href="/listings/search?minPrice=10000" class="filter-option">Over ₹10,000</a>
-       </div>
-   </div>
-   
-   <div id="taxFilter" class="filter-panel">
-       <h5>Display Options</h5>
-       <div class="filter-options">
-           <div class="form-check form-switch">
-               <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault">
-               <label class="form-check-label" for="switchCheckDefault">Display total after taxes</label>
-           </div>
-       </div>
-   </div>
-   
    <% if(typeof searchQuery !== 'undefined' && searchQuery || typeof selectedCategory !== 'undefined' && selectedCategory || typeof minPrice !== 'undefined' && minPrice || typeof maxPrice !== 'undefined' && maxPrice) { %>
    <div class="search-results">
         <h5>Search results
@@ -301,6 +207,60 @@
    </div>
    <% } %>
    
+    <div id="filters">
+        <a href="/listings/search?category=Trending" class="filter">
+            <div><i class="fa-solid fa-fire"></i></div>
+            <p>Trending</p>
+        </a>
+        <a href="/listings/search?category=Rooms" class="filter">
+            <div><i class="fa-solid fa-bed"></i></div>
+            <p>Rooms</p>
+        </a>
+         <a href="/listings/search?category=Iconic cities" class="filter">
+            <div><i class="fa-solid fa-mountain-city"></i></div>
+            <p>Iconic cities</p>
+        </a>
+         <a href="/listings/search?category=Mountains" class="filter">
+            <div><i class="fa-solid fa-mountain"></i></div>
+            <p>Mountains</p>
+        </a>
+         <a href="/listings/search?category=Castles" class="filter">
+            <div><i class="fa-brands fa-fort-awesome"></i></div>
+            <p>Castles</p>
+        </a>
+        <a href="/listings/search?category=Amazing pools" class="filter">
+            <div><i class="fa-solid fa-person-swimming"></i></div>
+            <p>Amazing pools</p>
+        </a> 
+        <a href="/listings/search?category=Camping" class="filter">
+            <div><i class="fa-solid fa-campground"></i></div>
+            <p>Camping</p>
+        </a> 
+        <a href="/listings/search?category=Farms" class="filter">
+            <div><i class="fa-solid fa-cow"></i></div>
+            <p>Farms</p>
+        </a> 
+        <a href="/listings/search?category=Arctic" class="filter">
+            <div><i class="fa-solid fa-snowflake"></i></div>
+            <p>Arctic</p>
+        </a> 
+        <a href="/listings/search?category=Domes" class="filter">
+            <div><i class="fa-solid fa-igloo"></i></div>
+            <p>Domes</p>
+        </a> 
+        <a href="/listings/search?category=Boats" class="filter">
+            <div><i class="fa-solid fa-ship"></i></div>
+            <p>Boats</p>
+        </a> 
+
+        
+        <div class="tax-toggle">
+            <div class="form-check-reverse form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault">
+                <label class="form-check-label" for="switchCheckDefault">Display total after taxes</label>
+            </div>
+        </div>
+    </div>
     <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
         <% if(allListings.length === 0 && (typeof searchQuery !== 'undefined' && searchQuery || typeof selectedCategory !== 'undefined' && selectedCategory || typeof minPrice !== 'undefined' && minPrice || typeof maxPrice !== 'undefined' && maxPrice)) { %>
             <div class="col-12 text-center mt-5">
@@ -330,30 +290,6 @@
         <% } %>
     </div>    
 <script>
-    function toggleFilter(filterType) {
-        const panels = ['categoryFilter', 'priceFilter', 'taxFilter'];
-        const buttons = document.querySelectorAll('.filter-btn');
-        
-        panels.forEach(panel => {
-            const element = document.getElementById(panel);
-            if (panel === filterType + 'Filter') {
-                element.classList.toggle('show');
-                buttons.forEach(btn => {
-                    if (btn.textContent.toLowerCase().includes(filterType)) {
-                        btn.classList.toggle('active');
-                    }
-                });
-            } else {
-                element.classList.remove('show');
-                buttons.forEach(btn => {
-                    if (btn.textContent.toLowerCase().includes(panel.replace('Filter', ''))) {
-                        btn.classList.remove('active');
-                    }
-                });
-            }
-        });
-    }
-    
     let taxSwitch=document.getElementById('switchCheckDefault');
      taxSwitch.addEventListener("click",()=>{
         let taxInfo=document.getElementsByClassName('tax-info');
