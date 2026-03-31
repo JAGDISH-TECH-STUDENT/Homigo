@@ -68,7 +68,7 @@ body{
     object-fit: cover !important;
 }
 .card-body {
-    padding:0 !important;
+    padding: 1rem !important;
 }
 .card-text p{
     font-weight:400;
@@ -105,8 +105,8 @@ body{
 }
 
 .show-card{
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 #map {
