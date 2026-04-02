@@ -79,8 +79,6 @@
         border-radius: 12px;
         padding: 1.5rem;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        position: sticky;
-        top: 100px;
     }
     .booking-header {
         display: flex;
@@ -130,7 +128,7 @@
         font-size: 0.7rem;
         font-weight: 600;
         text-transform: uppercase;
-        color: #222;
+        color: #ffffff;
         display: block;
         margin-bottom: 0.5rem;
     }
@@ -148,7 +146,7 @@
         font-size: 0.7rem;
         font-weight: 600;
         text-transform: uppercase;
-        color: #222;
+        color: #ffffff;
         display: block;
         margin-bottom: 0.5rem;
     }
@@ -344,7 +342,36 @@
         <div class="col-8">
             <h1 class="listing-title"><%= listing.title %></h1>
             <p class="listing-location"><%= listing.location %>, <%= listing.country %></p>
-            <img src="<%=listing.image.url%>" class="listing-image" alt="listing_image">
+            <% if(listing.images && listing.images.length > 0) { %>
+                <% if(listing.images.length === 1) { %>
+                    <img src="<%=listing.images[0].url%>" class="listing-image" alt="listing_image">
+                <% } else { %>
+                    <div id="listingCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-indicators">
+                            <% listing.images.forEach((img, index) => { %>
+                                <button type="button" data-bs-target="#listingCarousel" data-bs-slide-to="<%= index %>" class="<%= index === 0 ? 'active' : '' %>" aria-current="<%= index === 0 ? 'true' : 'false' %>" aria-label="Slide <%= index + 1 %>"></button>
+                            <% }) %>
+                        </div>
+                        <div class="carousel-inner">
+                            <% listing.images.forEach((img, index) => { %>
+                                <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
+                                    <img src="<%=img.url%>" class="d-block w-100 listing-image" alt="listing_image_<%= index + 1 %>">
+                                </div>
+                            <% }) %>
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#listingCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#listingCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                <% } %>
+            <% } else { %>
+                <img src="https://thumbs.dreamstime.com/z/no-photo-available-missing-image-no-image-symbol-isolated-white-background-no-photo-available-missing-image-no-image-272386839.jpg" class="listing-image" alt="listing_image">
+            <% } %>
             
             <div class="listing-details">
                 <div class="listing-info">

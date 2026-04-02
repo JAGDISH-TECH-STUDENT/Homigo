@@ -6,6 +6,7 @@
             border-radius: 10px;
             margin-bottom: 1.5rem;
             border: 1px solid #ddd;
+            position: relative;
         }
         .search-form {
             display: flex;
@@ -36,6 +37,48 @@
         .search-form select:focus {
             outline: none;
             border-color: #222;
+        }
+        .price-range-group {
+            flex: 2;
+            min-width: 200px;
+        }
+        .price-range-container {
+            padding: 0.5rem 0;
+        }
+        .price-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .price-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ff385c;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .price-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ff385c;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .price-range-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #717171;
         }
         .search-form button, .search-submit-btn {
             background-color: #ff385c;
@@ -210,6 +253,16 @@
                <label for="maxPrice">Max Price</label>
                <input type="number" id="maxPrice" name="maxPrice" placeholder="Max" value="<%= typeof maxPrice !== 'undefined' ? maxPrice : '' %>">
            </div>
+           <div class="form-group price-range-group">
+               <label>Price Range</label>
+               <div class="price-range-container">
+                   <input type="range" id="priceRange" min="0" max="100000" step="500" value="<%= typeof maxPrice !== 'undefined' && maxPrice ? maxPrice : 100000 %>" class="price-slider">
+                   <div class="price-range-labels">
+                       <span>₹0</span>
+                       <span id="priceRangeValue">₹<%= typeof maxPrice !== 'undefined' && maxPrice ? maxPrice : '100,000' %></span>
+                   </div>
+               </div>
+           </div>
            <button type="submit" class="search-submit-btn"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
            <a href="/listings" class="clear-btn">Clear</a>
        </form>
@@ -297,10 +350,10 @@
         <% for(let listing of allListings){ %>
             <a href="/listings/<%=listing._id %>" class="listing-link">
                 <div class="card col listing-card">
-                    <button class="favorite-btn" onclick="event.preventDefault(); toggleFavorite('<%=listing._id%>')">
-                        <i class="fa-regular fa-heart"></i>
+                    <button class="favorite-btn <%= userFavorites && userFavorites.includes(listing._id.toString()) ? 'active' : '' %>" onclick="event.preventDefault(); toggleFavorite('<%=listing._id%>')">
+                        <i class="<%= userFavorites && userFavorites.includes(listing._id.toString()) ? 'fa-solid' : 'fa-regular' %> fa-heart"></i>
                     </button>
-                    <img src="<%= listing.image.url %>" class="card-img-top" alt="listing_image" style="height: 20rem">
+                    <img src="<%= listing.images && listing.images.length > 0 ? listing.images[0].url : 'https://thumbs.dreamstime.com/z/no-photo-available-missing-image-no-image-symbol-isolated-white-background-no-photo-available-missing-image-no-image-272386839.jpg' %>" class="card-img-top" alt="listing_image" style="height: 20rem">
                     <div class="card-img-overlay"></div>
                     <div class="card-body">
                         <p class="card-text">
@@ -315,10 +368,27 @@
         <% } %>
     </div>    
 <script>
+    const priceRange = document.getElementById('priceRange');
+    const maxPriceInput = document.getElementById('maxPrice');
+    const priceRangeValue = document.getElementById('priceRangeValue');
+    
+    if (priceRange) {
+        priceRange.addEventListener('input', function() {
+            const value = this.value;
+            if (maxPriceInput) {
+                maxPriceInput.value = value;
+            }
+            if (priceRangeValue) {
+                priceRangeValue.textContent = '₹' + parseInt(value).toLocaleString('en-IN');
+            }
+        });
+    }
+    
     function toggleFavorite(listingId) {
         const btn = event.target.closest('.favorite-btn');
         const icon = btn.querySelector('i');
         
+        // Toggle UI immediately for better UX
         if (icon.classList.contains('fa-regular')) {
             icon.classList.remove('fa-regular');
             icon.classList.add('fa-solid');
@@ -328,12 +398,49 @@
             icon.classList.add('fa-regular');
             btn.classList.remove('active');
         }
+        
+        // Make API call to toggle favorite
+        fetch(`/favorites/${listingId}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                // Revert UI change if there was an error
+                if (icon.classList.contains('fa-solid')) {
+                    icon.classList.remove('fa-solid');
+                    icon.classList.add('fa-regular');
+                    btn.classList.remove('active');
+                } else {
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid');
+                    btn.classList.add('active');
+                }
+                alert(data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Revert UI change on error
+            if (icon.classList.contains('fa-solid')) {
+                icon.classList.remove('fa-solid');
+                icon.classList.add('fa-regular');
+                btn.classList.remove('active');
+            } else {
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid');
+                btn.classList.add('active');
+            }
+        });
     }
     
     let taxSwitch=document.getElementById('switchCheckDefault');
      taxSwitch.addEventListener("click",()=>{
         let taxInfo=document.getElementsByClassName('tax-info');
-        for(info of taxInfo){
+        for(let info of taxInfo){
             if(info.style.display !="inline")
             info.style.display="inline";
             else{

@@ -1,0 +1,163 @@
+<% layout("/layouts/boilerplate")%>
+
+<style>
+    .favorites-header {
+        margin-bottom: 2rem;
+    }
+    .favorites-header h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #222;
+        margin-bottom: 0.5rem;
+    }
+    .favorites-header p {
+        color: #717171;
+        font-size: 1rem;
+    }
+    .favorites-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+    .favorite-card {
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .favorite-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .favorite-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+    .favorite-card-body {
+        padding: 1rem;
+    }
+    .favorite-card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #222;
+        margin-bottom: 0.5rem;
+    }
+    .favorite-card-location {
+        color: #717171;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    .favorite-card-price {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #ff385c;
+    }
+    .favorite-card-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .favorite-card-actions a {
+        flex: 1;
+        text-align: center;
+        padding: 0.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    .favorite-card-actions .view-btn {
+        background: #222;
+        color: #fff;
+    }
+    .favorite-card-actions .view-btn:hover {
+        background: #000;
+    }
+    .favorite-card-actions .remove-btn {
+        background: #fff;
+        color: #ff385c;
+        border: 1px solid #ff385c;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    .favorite-card-actions .remove-btn:hover {
+        background: #ff385c;
+        color: #fff;
+    }
+    .empty-favorites {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    .empty-favorites i {
+        font-size: 4rem;
+        color: #ddd;
+        margin-bottom: 1rem;
+    }
+    .empty-favorites h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #222;
+        margin-bottom: 0.5rem;
+    }
+    .empty-favorites p {
+        color: #717171;
+        margin-bottom: 1.5rem;
+    }
+    .empty-favorites a {
+        display: inline-block;
+        background: #ff385c;
+        color: #fff;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background 0.2s;
+    }
+    .empty-favorites a:hover {
+        background: #e31c5f;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="favorites-header">
+        <h2><i class="fa-solid fa-heart"></i> My Favorites</h2>
+        <p>Your saved listings</p>
+    </div>
+
+    <% if(favorites.length === 0) { %>
+        <div class="empty-favorites">
+            <i class="fa-regular fa-heart"></i>
+            <h3>No favorites yet</h3>
+            <p>Start exploring and save your favorite listings!</p>
+            <a href="/listings">Browse Listings</a>
+        </div>
+    <% } else { %>
+        <div class="favorites-grid">
+            <% for(let favorite of favorites) { %>
+                <% if(favorite.listing) { %>
+                    <div class="favorite-card">
+                        <img src="<%= favorite.listing.images && favorite.listing.images.length > 0 ? favorite.listing.images[0].url : 'https://thumbs.dreamstime.com/z/no-photo-available-missing-image-no-image-symbol-isolated-white-background-no-photo-available-missing-image-no-image-272386839.jpg' %>" alt="<%= favorite.listing.title %>">
+                        <div class="favorite-card-body">
+                            <h5 class="favorite-card-title"><%= favorite.listing.title %></h5>
+                            <p class="favorite-card-location"><i class="fa-solid fa-location-dot"></i> <%= favorite.listing.location %>, <%= favorite.listing.country %></p>
+                            <p class="favorite-card-price">&#8377;<%= favorite.listing.price ? favorite.listing.price.toLocaleString("en-IN") : "0" %> / night</p>
+                            <div class="favorite-card-actions">
+                                <a href="/listings/<%= favorite.listing._id %>" class="view-btn">View</a>
+                                <form method="POST" action="/favorites/<%= favorite.listing._id %>/toggle" class="d-inline">
+                                    <button type="submit" class="remove-btn" style="width:100%;">Remove</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            <% } %>
+        </div>
+    <% } %>
+</div>

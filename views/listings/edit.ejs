@@ -15,12 +15,21 @@
                 <div class="invalid-feedback">Please enter a short description </div>
             </div>
             <div class="mb-3 Original">
-                Original Listing image<br>
-                <img src="<%= originalImageUrl%>">
+                Original Listing Images<br>
+                <% if(listing.images && listing.images.length > 0) { %>
+                    <div class="d-flex flex-wrap gap-2">
+                        <% listing.images.forEach((img, index) => { %>
+                            <img src="<%= img.url.replace('/upload', '/upload/w_150') %>" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <p>No images uploaded</p>
+                <% } %>
             </div>
             <div class="mb-3">
-                <label for="image" class="form-label">Upload New Image</label>
-                <input name="listing[image]" type="file" class="form-control" >
+                <label for="images" class="form-label">Upload New Images</label>
+                <input name="listing[images]" type="file" class="form-control" multiple accept="image/*">
+                <small class="text-muted">You can select multiple images to add to your listing</small>
             </div>
                 
             <div class="row">

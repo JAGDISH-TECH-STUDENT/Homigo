@@ -3,9 +3,9 @@
 <div class="row mt-4">
     <div class="col-10 offset-1">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0" style="color: #ffffff; font-weight: 700;">Host Dashboard</h2>
-            <a href="/listings/new" class="booking-action-btn primary">
-                <i class="fa-solid fa-plus"></i> Add New Listing
+            <h2 class="mb-0" style="color: #ffffff; font-weight: 700;">Bookings for "<%= listing.title %>"</h2>
+            <a href="/host/dashboard" class="booking-action-btn primary">
+                <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
             </a>
         </div>
     </div>
@@ -13,60 +13,21 @@
 
 <div class="row mt-3">
     <div class="col-10 offset-1">
-        <div class="row mb-4">
-            <div class="col-md-4 mb-3">
-                <div class="host-stat-card">
-                    <div class="host-stat-icon">
-                        <i class="fa-solid fa-list"></i>
-                    </div>
-                    <div class="host-stat-info">
-                        <h3><%= listings.length %></h3>
-                        <p>Total Listings</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="host-stat-card">
-                    <div class="host-stat-icon pending">
-                        <i class="fa-solid fa-clock"></i>
-                    </div>
-                    <div class="host-stat-info">
-                        <h3><%= pendingBookings %></h3>
-                        <p>Pending Requests</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="host-stat-card">
-                    <div class="host-stat-icon confirmed">
-                        <i class="fa-solid fa-check"></i>
-                    </div>
-                    <div class="host-stat-info">
-                        <h3><%= confirmedBookings %></h3>
-                        <p>Confirmed Bookings</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <h4 class="mb-3" style="color: #ffffff; font-weight: 600;">Booking Requests</h4>
-        
         <% if(bookings.length === 0) { %>
             <div class="booking-empty-state">
                 <div class="booking-empty-icon">
                     <i class="fa-solid fa-calendar-check"></i>
                 </div>
-                <h3 class="booking-empty-title">No booking requests yet</h3>
-                <p class="booking-empty-text">When guests book your listings, their requests will appear here.</p>
+                <h3 class="booking-empty-title">No bookings yet</h3>
+                <p class="booking-empty-text">When guests book this listing, their requests will appear here.</p>
             </div>
         <% } else { %>
             <div class="row">
                 <% for(let booking of bookings) { %>
                     <div class="col-md-6 col-lg-4 mb-4">
                         <div class="booking-list-card">
-                            <img src="<%= booking.listing && booking.listing.images && booking.listing.images.length > 0 ? booking.listing.images[0].url : '' %>" class="booking-list-img" alt="<%= booking.listing ? booking.listing.title : 'Listing' %>">
                             <div class="booking-list-body">
-                                <h5 class="booking-list-title"><%= booking.listing ? booking.listing.title : 'Listing' %></h5>
+                                <h5 class="booking-list-title">Booking #<%= booking._id.toString().slice(-6).toUpperCase() %></h5>
                                 <div class="booking-list-details">
                                     <div class="booking-detail-row">
                                         <span class="booking-detail-label">Guest</span>

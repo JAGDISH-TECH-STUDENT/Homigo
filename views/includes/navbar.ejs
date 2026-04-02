@@ -1,7 +1,7 @@
 <style>
   .navbar {
-    background-color: #fff;
-    border-bottom: 1px solid #ddd;
+    background-color: #535050;
+    border-bottom: 1px solid #666;
     padding: 0.5rem 1rem;
   }
   
@@ -16,7 +16,7 @@
   }
   
   .nav-link {
-    color: #222;
+    color: #ffffff;
     font-weight: 500;
     padding: 0.5rem 1rem;
     border-radius: 20px;
@@ -24,21 +24,52 @@
   }
   
   .nav-link:hover {
-    background-color: #f7f7f7;
-    color: #222;
+    background-color: #666;
+    color: #ffffff;
+  }
+  
+  .search-toggle-btn {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 20px;
+    transition: background-color 0.2s;
+  }
+  
+  .search-toggle-btn:hover {
+    background-color: #666;
+  }
+  
+  @media (max-width: 768px) {
+    .search-toggle-btn {
+      padding: 0.375rem 0.5rem !important;
+      border-radius: 4px;
+      margin: 0.0625rem 0;
+      font-size: 0.85rem;
+      display: block;
+      width: 100%;
+      text-align: left;
+    }
   }
   
   .search-container {
-    display: flex;
+    display: none;
     align-items: center;
-    background-color: #fff;
-    border: 1px solid #ddd;
+    background-color: #3d3d3d;
+    border: 1px solid #666;
     border-radius: 40px;
     padding: 0.5rem 0.5rem 0.5rem 1.5rem;
     box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
     transition: box-shadow 0.2s;
     max-width: 850px;
-    margin: 0 auto;
+    margin: 0.5rem auto;
+  }
+  
+  .search-container.active {
+    display: flex;
   }
   
   .search-container:hover {
@@ -51,6 +82,12 @@
     font-size: 0.9rem;
     width: 100%;
     padding: 0.5rem;
+    background: transparent;
+    color: #ffffff;
+  }
+  
+  .search-container input::placeholder {
+    color: #b0b0b0;
   }
   
   .search-container button {
@@ -75,7 +112,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    border: 1px solid #ddd;
+    border: 1px solid #666;
     border-radius: 20px;
     padding: 0.5rem;
     cursor: pointer;
@@ -88,7 +125,7 @@
   
   .user-menu i {
     font-size: 1.2rem;
-    color: #222;
+    color: #ffffff;
   }
   
   .user-avatar {
@@ -104,30 +141,63 @@
   }
   
   @media (max-width: 768px) {
-    .search-container {
-      display: none;
-    }
-    
     .navbar-collapse {
-      background-color: #fff;
-      border-radius: 10px;
-      padding: 1rem;
-      margin-top: 0.5rem;
+      background-color: #535050;
+      border-radius: 8px;
+      padding: 0.25rem;
+      margin-top: 0.25rem;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      border: 1px solid #666;
+      max-width: 200px;
+      margin-left: auto;
+      margin-right: 0;
     }
     
     .navbar-nav {
-      padding: 0.5rem 0;
+      padding: 0.125rem 0;
     }
     
     .nav-link {
-      padding: 0.75rem 1rem !important;
-      border-radius: 8px;
-      margin: 0.25rem 0;
+      padding: 0.375rem 0.5rem !important;
+      border-radius: 4px;
+      margin: 0.0625rem 0;
+      color: #ffffff !important;
+      display: block;
+      width: 100%;
+      font-size: 0.85rem;
     }
     
     .nav-link:hover {
-      background-color: #f7f7f7;
+      background-color: #666;
+      color: #ffffff !important;
+    }
+    
+    .search-container {
+      max-width: 100%;
+      background-color: #3d3d3d;
+      border-color: #666;
+    }
+    
+    .search-container input {
+      color: #ffffff;
+    }
+    
+    .search-container input::placeholder {
+      color: #b0b0b0;
+    }
+    
+    .navbar-toggler {
+      border: 1px solid #ddd;
+      padding: 0.5rem;
+    }
+    
+    .navbar-toggler:focus {
+      box-shadow: none;
     }
   }
 </style>
@@ -140,12 +210,15 @@
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <a class="nav-link" href="/listings">Explore</a>
+        <button class="search-toggle-btn" onclick="toggleSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
       </div>
       
       <div class="navbar-nav mx-auto">
-        <div class="search-container">
-          <input type="text" placeholder="Search destinations" />
-          <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <div class="search-container" id="searchContainer">
+          <form action="/listings/search" method="GET" style="display: flex; width: 100%; align-items: center;">
+            <input type="text" name="q" placeholder="Search destinations" />
+            <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+          </form>
         </div>
       </div>
       
@@ -156,8 +229,10 @@
           <a class="nav-link" href="/host/dashboard">Host Dashboard</a>
           <a class="nav-link" href="/listings/host/listings">My Listings</a>
           <a class="nav-link" href="/listings/new">Add Listing</a>
+          <a class="nav-link" href="/favorites"><i class="fa-solid fa-heart me-1"></i>Favorites</a>
         <% } else if(currUser) { %>
           <a class="nav-link" href="/bookings">My Bookings</a>
+          <a class="nav-link" href="/favorites"><i class="fa-solid fa-heart me-1"></i>Favorites</a>
           <form method="POST" action="/upgrade-to-host" class="d-inline">
             <button type="submit" class="nav-link btn btn-link" style="cursor: pointer;">Become a Host</button>
           </form>
@@ -172,3 +247,13 @@
     </div>
   </div>
 </nav>
+
+<script>
+  function toggleSearch() {
+    const searchContainer = document.getElementById('searchContainer');
+    searchContainer.classList.toggle('active');
+    if (searchContainer.classList.contains('active')) {
+      searchContainer.querySelector('input').focus();
+    }
+  }
+</script>

@@ -33,7 +33,7 @@
             <% for(let booking of bookings) { %>
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="booking-list-card">
-                        <img src="<%= booking.listing ? booking.listing.image.url : '' %>" class="booking-list-img" alt="<%= booking.listing ? booking.listing.title : 'Listing' %>">
+                        <img src="<%= booking.listing && booking.listing.images && booking.listing.images.length > 0 ? booking.listing.images[0].url : '' %>" class="booking-list-img" alt="<%= booking.listing ? booking.listing.title : 'Listing' %>">
                         <div class="booking-list-body">
                             <h5 class="booking-list-title"><%= booking.listing ? booking.listing.title : 'Listing' %></h5>
                             <div class="booking-list-details">

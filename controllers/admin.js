@@ -228,9 +228,10 @@ module.exports.deleteReview = async (req, res) => {
             return res.redirect("/admin/reviews");
         }
 
-        await Listing.findByIdAndUpdate(review.listing, {
-            $pull: { reviews: id }
-        });
+        await Listing.updateMany(
+            { reviews: id },
+            { $pull: { reviews: id } }
+        );
         
         await Review.findByIdAndDelete(id);
         

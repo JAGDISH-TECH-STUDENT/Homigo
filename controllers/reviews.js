@@ -17,7 +17,6 @@ module.exports.createReview=async(req,res)=>{
 
    
     listing.reviews.push(newReview);
-    console.log("Review schema paths:", Object.keys(newReview.schema.paths));
      await newReview.save();
     await listing.save();
     req.flash("success","New Review Created!");

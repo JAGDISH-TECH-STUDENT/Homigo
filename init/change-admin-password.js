@@ -34,7 +34,6 @@ async function changeAdminPassword() {
         console.log("=================================");
         console.log(`Username: ${admin.username}`);
         console.log(`Email: ${admin.email}`);
-        console.log(`New Password: ${newPassword}`);
         console.log("=================================");
 
         process.exit(0);

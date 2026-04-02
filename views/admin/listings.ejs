@@ -274,8 +274,8 @@
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <% if(listing.image && listing.image.url) { %>
-                                        <img src="<%= listing.image.url %>" alt="<%= listing.title %>" class="listing-image me-3">
+                                        <% if(listing.images && listing.images.length > 0) { %>
+                                        <img src="<%= listing.images[0].url %>" alt="<%= listing.title %>" class="listing-image me-3">
                                         <% } else { %>
                                         <div class="listing-image-placeholder me-3">
                                             <i class="fas fa-home"></i>

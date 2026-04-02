@@ -29,7 +29,7 @@
                 <% for(let listing of listings) { %>
                     <div class="col-md-6 col-lg-4 mb-4">
                         <div class="booking-list-card">
-                            <img src="<%= listing.image.url %>" class="booking-list-img" alt="<%= listing.title %>">
+                            <img src="<%= listing.images && listing.images.length > 0 ? listing.images[0].url : 'https://thumbs.dreamstime.com/z/no-photo-available-missing-image-no-image-symbol-isolated-white-background-no-photo-available-missing-image-no-image-272386839.jpg' %>" class="booking-list-img" alt="<%= listing.title %>">
                             <div class="booking-list-body">
                                 <h5 class="booking-list-title"><%= listing.title %></h5>
                                 <div class="booking-list-details">

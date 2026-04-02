@@ -14,8 +14,6 @@ router.post("/bookings/:bookingId/cancel", isLoggedIn, wrapAsync(bookingControll
 
 router.delete("/bookings/:bookingId", isLoggedIn, wrapAsync(bookingController.deleteBooking));
 
-router.get("/listings/:id/bookings", isLoggedIn, wrapAsync(bookingController.getListingBookings));
-
 router.get("/host/dashboard", isLoggedIn, wrapAsync(bookingController.getHostDashboard));
 
 router.post("/host/bookings/:bookingId/confirm", isLoggedIn, wrapAsync(bookingController.confirmBooking));

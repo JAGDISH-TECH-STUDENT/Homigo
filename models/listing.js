@@ -10,13 +10,13 @@ const listingSchema= new Schema({
         type:String,
         required: true,
     },
-    image: {
+    images: [{
         filename: { type: String, default: "no-image" },
         url: {
             type: String,
             default: "https://thumbs.dreamstime.com/z/no-photo-available-missing-image-no-image-symbol-isolated-white-background-no-photo-available-missing-image-no-image-272386839.jpg"
         },
-    },
+    }],
     price:{
         type:Number,
         required: true,
@@ -34,6 +34,11 @@ const listingSchema= new Schema({
         type:String,
         enum: ['Trending', 'Rooms', 'Iconic cities', 'Mountains', 'Castles', 'Amazing pools', 'Camping', 'Farms', 'Arctic', 'Domes', 'Boats'],
         default: 'Trending'
+    },
+    maxGuests:{
+        type:Number,
+        min:1,
+        default:10
     },
     reviews:[
         {

@@ -2,7 +2,7 @@ const User=require("../models/user");
 module.exports.renderSignupForm=(req,res)=>{
     res.render("users/signup.ejs");
 };
-module.exports.signUp=async(req,res)=>{
+module.exports.signUp=async(req,res,next)=>{
     try{
         let {username, email, password, role} =req.body;
         const newUser=new User({email, username, role: role || 'guest'});

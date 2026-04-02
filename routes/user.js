@@ -3,7 +3,7 @@ const router= express.Router();
 const User=require("../models/user.js");
 const wrapAsync = require("../utils/wrapAsync");
 const passport =require("passport");
-const {saveRedirectUrl}=require("../middleware.js");
+const {saveRedirectUrl, isLoggedIn}=require("../middleware.js");
 const userController=require("../controllers/user.js");
 
 router.route("/signup")
@@ -16,6 +16,6 @@ router.route("/login")
 
 router.get("/logout",userController.logout);
 
-router.post("/upgrade-to-host", userController.upgradeToHost);
+router.post("/upgrade-to-host", isLoggedIn, userController.upgradeToHost);
 
 module.exports=router; 

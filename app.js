@@ -22,6 +22,7 @@ const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 const bookingRouter = require("./routes/booking.js");
 const adminRouter = require("./routes/admin.js");
+const favoriteRouter = require("./routes/favorite.js");
 
 main().then(()=>{ 
     console.log("connected to DB");
@@ -36,6 +37,7 @@ async function main() {
 
 app.set("view engine","ejs");
 app.set("views",path.join(__dirname,"views"));
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.engine("ejs",ejsMate); 
@@ -45,7 +47,7 @@ app.use(express.static(path.join(__dirname,"/public")));
 const store = MongoStore.create({
     mongoUrl: dbUrl,
     crypto: {
-        secret:"mysupersecretcode"
+        secret:process.env.SECRET
     },
     touchAfter: 24 * 60 * 60 
 });
@@ -54,7 +56,7 @@ store.on("error",function(e){
 });
 const sessionOptions = {
     store,
-    secret: "mysupersecretcode",
+    secret: process.env.SECRET,
     resave: false,
     saveUninitialized: true,
     cookie:{
@@ -93,6 +95,7 @@ app.use("/listings/:id/reviews",reviewRouter);
 app.use("/",userRouter);
 app.use("/",bookingRouter);
 app.use("/admin",adminRouter);
+app.use("/favorites",favoriteRouter);
 
 app.all("/*catchall",( req, res, next)=>{
     next(new ExpressError(404,"Page Not Found!"));

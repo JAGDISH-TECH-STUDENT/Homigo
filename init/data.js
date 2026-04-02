@@ -2,10 +2,10 @@ const sampleListings = [
  {
     title: "Tropical Treehouse",
     description: "Live among the treetops in a handcrafted eco-treehouse with jungle sounds and sunrise views.",
-    image: {
+    images: [{
       filename: "treehouse",
       url: "https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6MTQ1OTQ0NTMzMDczNTQ5ODUwOA==/original/78500990-54a7-4d46-8cc8-10314eb7cb68.jpeg?im_w=720",
-    },
+    }],
     price: 1100,
     location: "Bali",
     country: "Indonesia",
@@ -13,10 +13,10 @@ const sampleListings = [
   {
     title: "Desert Oasis Villa",
     description: "A private luxury villa surrounded by golden sand dunes and starry desert skies.",
-    image: {
+    images: [{
       filename: "desertvilla",
       url: "https://a0.muscache.com/im/pictures/hosting/Hosting-1463920813760367779/original/f87aa631-1d69-48ba-9577-8961f47ead86.jpeg?im_w=720",
-    },
+    }],
     price: 2000,
     location: "Dubai",
     country: "UAE",
@@ -24,10 +24,10 @@ const sampleListings = [
   {
     title: "Countryside Farm Stay",
     description: "Wake up to roosters and rolling hills—ideal for peace, slow mornings, and fresh air.",
-    image: {
+    images: [{
       filename: "farmstay",
       url: "https://a0.muscache.com/im/pictures/hosting/Hosting-1440795779048357142/original/641ccd00-1ffe-4f03-b51e-ba7689f5e0a3.jpeg?im_w=720",
-    },
+    }],
     price: 800,
     location: "Punjab",
     country: "India",
@@ -35,10 +35,10 @@ const sampleListings = [
   {
     title: "Modern Glass Cabin",
     description: "Floor-to-ceiling windows, lake views, and stargazing from bed—yes, really.",
-    image: {
+    images: [{
       filename: "glasscabin",
       url: "https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6MTAxNjA1MTM2MTA2MDY4NTA5Nw%3D%3D/original/8b4518a8-a843-4a6e-9d0a-99c8d049e76d.jpeg?im_w=720",
-    },
+    }],
     price: 2300,
     location: "Oslo",
     country: "Norway",
@@ -46,10 +46,10 @@ const sampleListings = [
   {
     title: "Ski Lodge Escape",
     description: "Slope-side retreat with cozy wood interiors and roaring fireplaces.",
-    image: {
+    images: [{
       filename: "skilodge",
       url: "https://a0.muscache.com/im/pictures/prohost-api/Hosting-1097063795935406760/original/cbf50128-29ff-4916-9c24-a42e5fb7e66c.jpeg?im_w=720",
-    },
+    }],
     price: 2800,
     location: "Whistler",
     country: "Canada",
@@ -57,10 +57,10 @@ const sampleListings = [
   {
     title: "Historic Castle Stay",
     description: "Sleep like royalty inside a restored 13th-century castle—dungeon tours included.",
-    image: {
+    images: [{
       filename: "castle",
       url: "https://tse4.mm.bing.net/th/id/OIP.K8qeNZHmk1-ALX19Tl55aAHaFj?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 3500,
     location: "Edinburgh",
     country: "Scotland",
@@ -68,10 +68,10 @@ const sampleListings = [
   {
     title: "Floating Water Bungalow",
     description: "Turquoise waters, private sundeck, and your own ladder into the ocean.",
-    image: {
+    images: [{
       filename: "waterbungalow",
       url: "https://th.bing.com/th/id/R.f5ce463cb6a4ceb46d653e9f631fe22c?rik=lW2XLCa1nd71pw&riu=http%3a%2f%2fwww.mabulwaterbungalows.com%2fwp-content%2fuploads%2f2013%2f11%2f1600x6006-1600x600.jpg&ehk=9mzHPm1iQ1F%2bx%2bjXwhIMzxl8z76jsDOvbLeeMEowTHg%3d&risl=&pid=ImgRaw&r=0",
-    },
+    }],
     price: 4000,
     location: "Bora Bora",
     country: "French Polynesia",
@@ -79,10 +79,10 @@ const sampleListings = [
   {
     title: "Jungle Safari Camp",
     description: "Wildlife at your doorstep—spot elephants and leopards just beyond your tent.",
-    image: {
+    images: [{
       filename: "safaricamp",
       url: "https://tse4.mm.bing.net/th/id/OIP.UEJDVzHPhtx4Lbt3muGWbwHaE7?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 1600,
     location: "Jim Corbett",
     country: "India",
@@ -90,10 +90,10 @@ const sampleListings = [
   {
     title: "Hidden River Cabin",
     description: "Tucked beside a flowing river, this cabin is the definition of unplug and unwind.",
-    image: {
+    images: [{
       filename: "rivercabin",
       url: "https://tse2.mm.bing.net/th/id/OIP.b5RaiZP5KribBC4GzEykwQAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 1900,
     location: "Rishikesh",
     country: "India",
@@ -101,10 +101,10 @@ const sampleListings = [
   {
     title: "Boutique Paris Loft",
     description: "Minimalist loft with Eiffel Tower views—perfect for wine, writing, and romance.",
-    image: {
+    images: [{
       filename: "parisloft",
       url: "https://tse3.mm.bing.net/th/id/OIP.vydk9eAbDQ4pgzE9TWjjBQHaE7?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 2700,
     location: "Paris",
     country: "France",
@@ -112,10 +112,10 @@ const sampleListings = [
   {
     title: "Alpine Meadow Chalet",
     description: "Nestled in the Swiss Alps, this cozy chalet is perfect for hikers and snow lovers.",
-    image: {
+    images: [{
       filename: "meadowchalet",
       url: "https://tse3.mm.bing.net/th/id/OIP.oEv3ff2IAkOEKjDcbDbC3AHaDz?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 3100,
     location: "Zermatt",
     country: "Switzerland",
@@ -123,10 +123,10 @@ const sampleListings = [
   {
     title: "Rainforest Retreat",
     description: "Wake to the sounds of tropical birds and explore lush trails just steps from your door.",
-    image: {
+    images: [{
       filename: "rainforestretreat",
       url: "https://www.vajrasoltravel.com/wp-content/uploads/2022/05/Silencio_2BR-Suite_exterior.jpeg",
-    },
+    }],
     price: 1400,
     location: "Costa Rica",
     country: "Costa Rica",
@@ -134,10 +134,10 @@ const sampleListings = [
   {
     title: "Santorini Sunset Suite",
     description: "Cliffside rooms with iconic whitewashed walls and unbelievable sunset views.",
-    image: {
+    images: [{
       filename: "santorinisuite",
       url: "https://th.bing.com/th/id/R.f7e01c6520c386d222a0cb75c820a314?rik=ypUhiIFUR%2fwQuw&riu=http%3a%2f%2fimg04.deviantart.net%2fdfcf%2fi%2f2016%2f148%2fe%2f8%2fsunset_at_santorini__thira___greece_by_hessbeck_fotografix-da435z5.jpg&ehk=RnVstCnFn0yf38bpMpy4xmqbG78PS48ZDKaSM9YZZl0%3d&risl=&pid=ImgRaw&r=0",
-    },
+    }],
     price: 3300,
     location: "Santorini",
     country: "Greece",
@@ -145,10 +145,10 @@ const sampleListings = [
   {
     title: "Canal View Studio",
     description: "Traditional Dutch charm with a canal view, perfect for cycling and café hopping.",
-    image: {
+    images: [{
       filename: "canalstudio",
       url: "https://tse4.mm.bing.net/th/id/OIP.-hGvKMdI3czqGJgV3VjZswHaE8?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 2100,
     location: "Amsterdam",
     country: "Netherlands",
@@ -156,10 +156,10 @@ const sampleListings = [
   {
     title: "Remote Arctic Dome",
     description: "Off-the-grid adventure meets comfort with aurora borealis views from bed.",
-    image: {
+    images: [{
       filename: "arcticdome",
       url: "https://tse4.mm.bing.net/th/id/OIP.dduM_7Kd3d27TIAvD0anHgHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 4000,
     location: "Svalbard",
     country: "Norway",
@@ -167,10 +167,10 @@ const sampleListings = [
   {
     title: "Boho Garden Yurt",
     description: "Earthy, artistic, and surrounded by greenery—perfect for soul-soothing weekends.",
-    image: {
+    images: [{
       filename: "gardenyurt",
       url: "https://i.pinimg.com/originals/31/2f/4b/312f4b06d211d3e457af107f0631b31d.jpg",
-    },
+    }],
     price: 1300,
     location: "Goa",
     country: "India",
@@ -178,10 +178,10 @@ const sampleListings = [
   {
     title: "Cliffside Bamboo Hideout",
     description: "Perched on a cliff with dramatic ocean views and all-bamboo interiors.",
-    image: {
+    images: [{
       filename: "bamboohideout",
       url: "https://i.pinimg.com/736x/ad/2f/57/ad2f577ebe3e30a8e782ca3818020d98.jpg",
-    },
+    }],
     price: 1900,
     location: "Uluwatu",
     country: "Indonesia",
@@ -189,10 +189,10 @@ const sampleListings = [
   {
     title: "Cultural Courtyard Home",
     description: "Step into history with this beautifully restored haveli in a heritage town.",
-    image: {
+    images: [{
       filename: "courtyardhome",
       url: "https://cdn.mos.cms.futurecdn.net/XTcKRwfbdu4CLacLZm5y3H-1280-80.jpg",
-    },
+    }],
     price: 1700,
     location: "Jaipur",
     country: "India",
@@ -200,10 +200,10 @@ const sampleListings = [
   {
     title: "Secluded Cliff Apartment",
     description: "Panoramic ocean views and dramatic rock formations make this unforgettable.",
-    image: {
+    images: [{
       filename: "cliffapartment",
       url: "https://i.dailymail.co.uk/i/pix/2015/11/18/15/2E89DFC600000578-3322451-image-a-82_1447860377919.jpg",
-    },
+    }],
     price: 2500,
     location: "Lisbon",
     country: "Portugal",
@@ -211,10 +211,10 @@ const sampleListings = [
   {
     title: "Riverside Zen Cabin",
     description: "Minimalist design meets nature in this peaceful riverside escape.",
-    image: {
+    images: [{
       filename: "zencabin",
       url: "https://static.wixstatic.com/media/fc0bb8_1ef8f322a92a4938970397207b0fc54e~mv2.jpg/v1/fill/w_836,h_634,q_90/fc0bb8_1ef8f322a92a4938970397207b0fc54e~mv2.jpg",
-    },
+    }],
     price: 1200,
     location: "Kyoto",
     country: "Japan",
@@ -222,10 +222,10 @@ const sampleListings = [
   {
     title: "Lavender Hillside Cabin",
     description: "Perched above a lavender field with open-air baths and dreamy sunsets.",
-    image: {
+    images: [{
       filename: "lavendercabin",
       url: "https://i.pinimg.com/736x/37/21/95/372195c57285edf73e9a5b03fd96107d--life-magazine-north-carolina.jpg",
-    },
+    }],
     price: 2200,
     location: "Provence",
     country: "France",
@@ -233,10 +233,10 @@ const sampleListings = [
   {
     title: "Skyline Rooftop Nest",
     description: "Elevated living in a rooftop pod with sweeping city views and minimal interiors.",
-    image: {
+    images: [{
       filename: "rooftopnest",
       url: "https://www.re-thinkingthefuture.com/wp-content/uploads/2023/06/9261-The-Skyline-Nest-A-luxurious-Sky-villa-by-Nightingale-creative-Design-Studio-5.jpg",
-    },
+    }],
     price: 2600,
     location: "New York",
     country: "United States",
@@ -244,10 +244,10 @@ const sampleListings = [
   {
     title: "Tiny Floating Cabin",
     description: "Compact living on water—ideal for peaceful journaling and dockside espresso.",
-    image: {
+    images: [{
       filename: "floatingtiny",
       url: "https://tse4.mm.bing.net/th/id/OIP.SzZGYCCDts0ugzUh9tkxSQHaE8?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 1500,
     location: "Stockholm",
     country: "Sweden",
@@ -255,10 +255,10 @@ const sampleListings = [
   {
     title: "Art District Loft",
     description: "Graffiti-lined alleys and creative vibes make this loft perfect for artists-at-heart.",
-    image: {
+    images: [{
       filename: "artloft",
       url: "https://tse2.mm.bing.net/th/id/OIP.40pRz1zfhdn_0ui5AdFgoQHaE8?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 2000,
     location: "Berlin",
     country: "Germany",
@@ -266,10 +266,10 @@ const sampleListings = [
   {
     title: "Island Hammock Haven",
     description: "Two hammocks. One beach. Zero worries.",
-    image: {
+    images: [{
       filename: "hammockhaven",
       url: "https://tse4.mm.bing.net/th/id/OIP.sToV3DDbq0O4NlwkVaxohQHaE7?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 1700,
     location: "Phuket",
     country: "Thailand",
@@ -277,10 +277,10 @@ const sampleListings = [
   {
     title: "Tea Estate Cottage",
     description: "Rolling tea plantations and cool mornings—plus a veranda perfect for sipping.",
-    image: {
+    images: [{
       filename: "teaestate",
       url: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/606610109.jpg?k=f1fe49d7938151f09996fbc3ebb15529679fe9450db019bdf7b10df95412a1d1&o=&hp=1",
-    },
+    }],
     price: 1300,
     location: "Darjeeling",
     country: "India",
@@ -288,10 +288,10 @@ const sampleListings = [
   {
     title: "Cave Suite Experience",
     description: "Sleep inside a rock-hewn cave with modern comforts and ancient ambiance.",
-    image: {
+    images: [{
       filename: "cavesuite",
       url: "https://tse2.mm.bing.net/th/id/OIP.bbTLUxcObRdYLIpBRKV0YQHaEU?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 3000,
     location: "Cappadocia",
     country: "Turkey",
@@ -299,10 +299,10 @@ const sampleListings = [
   {
     title: "Forest Canopy Dome",
     description: "360° windows and a transparent ceiling give you the stars without leaving the bed.",
-    image: {
+    images: [{
       filename: "canopydome",
       url: "https://tse3.mm.bing.net/th/id/OIP.2gqMjhx2qiQ33zCMgLjyxAHaEU?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 2400,
     location: "Queenstown",
     country: "New Zealand",
@@ -310,10 +310,10 @@ const sampleListings = [
   {
     title: "Zen Rock Garden House",
     description: "Designed for peace and quiet, with a meditation room and raked stone courtyard.",
-    image: {
+    images: [{
       filename: "zengardenhouse",
       url: "https://tse4.mm.bing.net/th/id/OIP.d9IXQqHH7YAHC-dMVQuUEwHaE8?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    },
+    }],
     price: 1800,
     location: "Nara",
     country: "Japan",
@@ -321,10 +321,10 @@ const sampleListings = [
   {
     title: "Colorful Colonial Home",
     description: "Bold walls, tiled floors, and courtyards bursting with bougainvillea.",
-    image: {
+    images: [{
       filename: "colonialhome",
       url: "https://i.pinimg.com/originals/74/84/c4/7484c401d4e056e5e7f3ec5d6d6774f3.jpg",
-    },
+    }],
     price: 1500,
     location: "Mérida",
     country: "Mexico",

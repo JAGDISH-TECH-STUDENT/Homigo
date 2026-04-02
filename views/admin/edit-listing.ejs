@@ -229,11 +229,13 @@
                             <p class="form-control-plaintext"><%= listing.description %></p>
                         </div>
                         
-                        <% if(listing.image && listing.image.url) { %>
+                        <% if(listing.images && listing.images.length > 0) { %>
                         <div class="mb-3">
-                            <label class="form-label">Image</label>
-                            <div>
-                                <img src="<%= listing.image.url %>" alt="<%= listing.title %>" class="listing-image">
+                            <label class="form-label">Images</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <% listing.images.forEach((img, index) => { %>
+                                    <img src="<%= img.url %>" alt="<%= listing.title %>" class="listing-image" style="width: 150px; height: 150px; object-fit: cover;">
+                                <% }) %>
                             </div>
                         </div>
                         <% } %>
