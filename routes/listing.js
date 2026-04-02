@@ -1,25 +1,18 @@
 const express = require("express");
-const router= express.Router();
+const router = express.Router();
 const wrapAsync = require("../utils/wrapAsync.js");
-const Listing = require("../models/listing.js");
-const {isLoggedIn , isOwner , validateListing, isHost}=require("../middleware.js");
-const listingController=require("../controllers/listings.js");
+const { isLoggedIn, isOwner, validateListing, isHost } = require("../middleware.js");
+const listingController = require("../controllers/listings.js");
 const bookingController = require("../controllers/bookings.js");
 const multer = require("multer");
-const {storage}=require("../cloudConfig.js");
-const upload = multer({storage  });
+const { storage } = require("../cloudConfig.js");
+const upload = multer({ storage });
+
 router.route("/")
     .get(wrapAsync(listingController.index))
-    .post(
-    isHost,
-    upload.array("listing[images]"),
-    validateListing,
-    wrapAsync(listingController.createListing)  
-);
+    .post(isHost, upload.array("listing[images]"), validateListing, wrapAsync(listingController.createListing));
 
 router.get("/search", wrapAsync(listingController.searchListings));
-
-router.get("/new",isLoggedIn, listingController.renderNewForm);
 
 router.get("/host/listings", isLoggedIn, wrapAsync(listingController.getHostListings));
 
@@ -27,12 +20,7 @@ router.get("/:id/bookings", isLoggedIn, wrapAsync(bookingController.getListingBo
 
 router.route("/:id")
     .get(wrapAsync(listingController.showListing))
-    .put(isLoggedIn,isOwner,upload.array("listing[images]"),validateListing,wrapAsync(listingController.updateListing))
-    .delete(isLoggedIn,isOwner,wrapAsync(listingController.deleteListing));
-
-router.get("/:id/edit",
-    isLoggedIn,
-    isOwner,
-    wrapAsync(listingController.renderEditForm));
+    .put(isLoggedIn, isOwner, upload.array("listing[images]"), validateListing, wrapAsync(listingController.updateListing))
+    .delete(isLoggedIn, isOwner, wrapAsync(listingController.deleteListing));
 
 module.exports = router;
