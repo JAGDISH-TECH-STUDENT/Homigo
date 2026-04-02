@@ -1,62 +1,53 @@
-const User=require("../models/user");
-module.exports.renderSignupForm=(req,res)=>{
-    res.render("users/signup.ejs");
-};
-module.exports.signUp=async(req,res,next)=>{
-    try{
-        let {username, email, password, role} =req.body;
-        const newUser=new User({email, username, role: role || 'guest'});
-        const registeredUser=await User.register(newUser, password);
-        req.login(registeredUser,(err)=>{
-            if(err){
-                return next(err);
-            }
-            if(role === 'host'){
-                req.flash("success","Welcome to Homigo! You can now list your property.");
-                res.redirect("/host/dashboard");
-            } else {
-                req.flash("success","Welcome to Homigo!");
-                res.redirect("/listings");
-            }
+const User = require("../models/user");
+
+module.exports.signUp = async (req, res, next) => {
+    try {
+        const { username, email, password, role } = req.body;
+        const newUser = new User({ email, username, role: role || 'guest' });
+        const registeredUser = await User.register(newUser, password);
+        req.login(registeredUser, (err) => {
+            if (err) return next(err);
+            res.status(201).json({
+                success: true,
+                user: { _id: registeredUser._id, username: registeredUser.username, email: registeredUser.email, role: registeredUser.role }
+            });
         });
-    } catch(e){
-        req.flash("error",e.message);
-        res.redirect("/signup");
+    } catch (e) {
+        res.status(400).json({ error: e.message });
     }
-    
 };
-module.exports.renderLoginForm=(req,res)=>{
-    res.render("users/login.ejs");
-};
-module.exports.login=async (req,res)=>{
-    req.flash("success","Welcome back to Homigo!");
-    let redirectUrl=res.locals.redirectUrl || "/listings";
-    res.redirect(redirectUrl);
-};
-module.exports.logout=(req,res,next)=>{
-    req.logout((err)=>{
-        if(err){
-            return next(err); 
-        }
-        req.flash("success","you are logged out!");
-        res.redirect("/listings");
+
+module.exports.login = async (req, res) => {
+    res.json({
+        success: true,
+        user: { _id: req.user._id, username: req.user.username, email: req.user.email, role: req.user.role }
     });
 };
 
-module.exports.upgradeToHost=async(req,res,next)=>{
-    try{
-        if(req.user.role === 'host'){
-            req.flash("error","You are already a host!");
-            return res.redirect("/host/dashboard");
+module.exports.logout = (req, res, next) => {
+    req.logout((err) => {
+        if (err) return next(err);
+        res.json({ success: true, message: "Logged out" });
+    });
+};
+
+module.exports.getMe = (req, res) => {
+    if (req.user) {
+        res.json({ user: { _id: req.user._id, username: req.user.username, email: req.user.email, role: req.user.role } });
+    } else {
+        res.json({ user: null });
+    }
+};
+
+module.exports.upgradeToHost = async (req, res, next) => {
+    try {
+        if (req.user.role === 'host') {
+            return res.status(400).json({ error: "You are already a host" });
         }
-        
         req.user.role = 'host';
         await req.user.save();
-        
-        req.flash("success","You are now a host! You can list your property.");
-        res.redirect("/host/dashboard");
-    } catch(e){
-        req.flash("error",e.message);
-        res.redirect("/listings");
+        res.json({ success: true, user: { _id: req.user._id, username: req.user.username, email: req.user.email, role: req.user.role } });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
 };

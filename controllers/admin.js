@@ -4,241 +4,103 @@ const Booking = require("../models/booking");
 const Review = require("../models/review");
 
 module.exports.renderDashboard = async (req, res) => {
-    try {
-        const totalUsers = await User.countDocuments();
-        const totalListings = await Listing.countDocuments();
-        const totalBookings = await Booking.countDocuments();
-        const totalReviews = await Review.countDocuments();
-        
-        const guests = await User.countDocuments({ 
-            $or: [
-                { role: 'guest' },
-                { role: { $exists: false } }
-            ]
-        });
-        const hosts = await User.countDocuments({ role: 'host' });
-        const admins = await User.countDocuments({ role: 'admin' });
-        
-        const recentUsers = await User.find().sort({ _id: -1 }).limit(5);
-        const recentListings = await Listing.find().sort({ _id: -1 }).limit(5);
-        const recentBookings = await Booking.find().sort({ _id: -1 }).limit(5);
-        
-        res.render("admin/dashboard", {
-            totalUsers,
-            totalListings,
-            totalBookings,
-            totalReviews,
-            guests,
-            hosts,
-            admins,
-            recentUsers,
-            recentListings,
-            recentBookings
-        });
-    } catch (e) {
-        req.flash("error", "Error loading dashboard");
-        res.redirect("/listings");
-    }
+    const totalUsers = await User.countDocuments();
+    const totalListings = await Listing.countDocuments();
+    const totalBookings = await Booking.countDocuments();
+    const totalReviews = await Review.countDocuments();
+    const guests = await User.countDocuments({ $or: [{ role: 'guest' }, { role: { $exists: false } }] });
+    const hosts = await User.countDocuments({ role: 'host' });
+    const admins = await User.countDocuments({ role: 'admin' });
+    const recentUsers = await User.find().sort({ _id: -1 }).limit(5);
+    const recentListings = await Listing.find().sort({ _id: -1 }).limit(5);
+    const recentBookings = await Booking.find().sort({ _id: -1 }).limit(5);
+    res.json({ totalUsers, totalListings, totalBookings, totalReviews, guests, hosts, admins, recentUsers, recentListings, recentBookings });
 };
 
 module.exports.renderUsers = async (req, res) => {
-    try {
-        const users = await User.find().sort({ _id: -1 });
-        res.render("admin/users", { users });
-    } catch (e) {
-        req.flash("error", "Error loading users");
-        res.redirect("/admin/dashboard");
-    }
+    const users = await User.find().sort({ _id: -1 });
+    res.json({ users });
 };
 
 module.exports.renderEditUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user = await User.findById(id);
-        if (!user) {
-            req.flash("error", "User not found");
-            return res.redirect("/admin/users");
-        }
-        res.render("admin/edit-user", { user });
-    } catch (e) {
-        req.flash("error", "Error loading user");
-        res.redirect("/admin/users");
-    }
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json({ user });
 };
 
 module.exports.updateUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { role } = req.body;
-        
-        const user = await User.findById(id);
-        if (!user) {
-            req.flash("error", "User not found");
-            return res.redirect("/admin/users");
-        }
-        
-                if (user._id.equals(req.user._id) && role !== 'admin') {
-            req.flash("error", "You cannot change your own admin role");
-            return res.redirect("/admin/users");
-        }
-        
-        user.role = role;
-        await user.save();
-        
-        req.flash("success", "User updated successfully");
-        res.redirect("/admin/users");
-    } catch (e) {
-        req.flash("error", "Error updating user");
-        res.redirect("/admin/users");
+    const { id } = req.params;
+    const { role } = req.body;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    if (user._id.equals(req.user._id) && role !== 'admin') {
+        return res.status(400).json({ error: "Cannot change your own admin role" });
     }
+    user.role = role;
+    await user.save();
+    res.json({ success: true, user });
 };
 
 module.exports.deleteUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-                if (req.user._id.equals(id)) {
-            req.flash("error", "You cannot delete your own account");
-            return res.redirect("/admin/users");
-        }
-        
-        const user = await User.findById(id);
-        if (!user) {
-            req.flash("error", "User not found");
-            return res.redirect("/admin/users");
-        }
-        
-                await Listing.deleteMany({ owner: id });
-        
-                await Booking.deleteMany({ user: id });
-        
-                await Review.deleteMany({ author: id });
-        
-                await User.findByIdAndDelete(id);
-        
-        req.flash("success", "User and associated data deleted successfully");
-        res.redirect("/admin/users");
-    } catch (e) {
-        req.flash("error", "Error deleting user");
-        res.redirect("/admin/users");
+    const { id } = req.params;
+    if (req.user._id.equals(id)) {
+        return res.status(400).json({ error: "Cannot delete your own account" });
     }
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    await Listing.deleteMany({ owner: id });
+    await Booking.deleteMany({ user: id });
+    await Review.deleteMany({ author: id });
+    await User.findByIdAndDelete(id);
+    res.json({ success: true, message: "User and associated data deleted" });
 };
 
 module.exports.renderListings = async (req, res) => {
-    try {
-        const listings = await Listing.find().populate("owner", "username email").sort({ _id: -1 });
-        res.render("admin/listings", { listings });
-    } catch (e) {
-        req.flash("error", "Error loading listings");
-        res.redirect("/admin/dashboard");
-    }
+    const listings = await Listing.find().populate("owner", "username email").sort({ _id: -1 });
+    res.json({ listings });
 };
 
 module.exports.renderEditListing = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const listing = await Listing.findById(id).populate("owner", "username email");
-        if (!listing) {
-            req.flash("error", "Listing not found");
-            return res.redirect("/admin/listings");
-        }
-        res.render("admin/edit-listing", { listing });
-    } catch (e) {
-        req.flash("error", "Error loading listing");
-        res.redirect("/admin/listings");
-    }
+    const listing = await Listing.findById(req.params.id).populate("owner", "username email");
+    if (!listing) return res.status(404).json({ error: "Listing not found" });
+    res.json({ listing });
 };
 
 module.exports.deleteListing = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const listing = await Listing.findById(id);
-        
-        if (!listing) {
-            req.flash("error", "Listing not found");
-            return res.redirect("/admin/listings");
-        }
-
-        await Review.deleteMany({ _id: { $in: listing.reviews } });
-
-        await Booking.deleteMany({ listing: id });
-
-        await Listing.findByIdAndDelete(id);
-        
-        req.flash("success", "Listing and associated data deleted successfully");
-        res.redirect("/admin/listings");
-    } catch (e) {
-        req.flash("error", "Error deleting listing");
-        res.redirect("/admin/listings");
-    }
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ error: "Listing not found" });
+    await Review.deleteMany({ _id: { $in: listing.reviews } });
+    await Booking.deleteMany({ listing: req.params.id });
+    await Listing.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Listing and associated data deleted" });
 };
 
 module.exports.renderBookings = async (req, res) => {
-    try {
-        const bookings = await Booking.find()
-            .populate("listing", "title")
-            .populate("user", "username email")
-            .sort({ _id: -1 });
-        res.render("admin/bookings", { bookings });
-    } catch (e) {
-        req.flash("error", "Error loading bookings");
-        res.redirect("/admin/dashboard");
-    }
+    const bookings = await Booking.find()
+        .populate("listing", "title")
+        .populate("user", "username email")
+        .sort({ _id: -1 });
+    res.json({ bookings });
 };
 
 module.exports.deleteBooking = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const booking = await Booking.findById(id);
-        
-        if (!booking) {
-            req.flash("error", "Booking not found");
-            return res.redirect("/admin/bookings");
-        }
-        
-        await Booking.findByIdAndDelete(id);
-        
-        req.flash("success", "Booking deleted successfully");
-        res.redirect("/admin/bookings");
-    } catch (e) {
-        req.flash("error", "Error deleting booking");
-        res.redirect("/admin/bookings");
-    }
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ error: "Booking not found" });
+    await Booking.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Booking deleted" });
 };
 
 module.exports.renderReviews = async (req, res) => {
-    try {
-        const reviews = await Review.find()
-            .populate("author", "username email")
-            .sort({ _id: -1 });
-        res.render("admin/reviews", { reviews });
-    } catch (e) {
-        req.flash("error", "Error loading reviews");
-        res.redirect("/admin/dashboard");
-    }
+    const reviews = await Review.find()
+        .populate("author", "username email")
+        .sort({ _id: -1 });
+    res.json({ reviews });
 };
 
 module.exports.deleteReview = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const review = await Review.findById(id);
-        
-        if (!review) {
-            req.flash("error", "Review not found");
-            return res.redirect("/admin/reviews");
-        }
-
-        await Listing.updateMany(
-            { reviews: id },
-            { $pull: { reviews: id } }
-        );
-        
-        await Review.findByIdAndDelete(id);
-        
-        req.flash("success", "Review deleted successfully");
-        res.redirect("/admin/reviews");
-    } catch (e) {
-        req.flash("error", "Error deleting review");
-        res.redirect("/admin/reviews");
-    }
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json({ error: "Review not found" });
+    await Listing.updateMany({ reviews: req.params.id }, { $pull: { reviews: req.params.id } });
+    await Review.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Review deleted" });
 };

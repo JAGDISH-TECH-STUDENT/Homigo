@@ -1,49 +1,33 @@
-const Review=require("../models/review.js");
-const Listing=require("../models/listing.js");
-module.exports.createReview=async(req,res)=>{
+const Review = require("../models/review.js");
+const Listing = require("../models/listing.js");
 
-    let listing=await Listing.findById(req.params.id);
+module.exports.createReview = async (req, res) => {
+    const listing = await Listing.findById(req.params.id);
     if (!listing) {
-    req.flash("error", "Listing not found!");
-    return res.redirect("/listings");
-  }
-    const { rating, comment } = req.body.review;
-
+        return res.status(404).json({ error: "Listing not found" });
+    }
     const newReview = new Review({
-    rating:req.body.review.rating,
-    comment:req.body.review.comment,
-    author: req.user._id
+        rating: req.body.review.rating,
+        comment: req.body.review.comment,
+        author: req.user._id
     });
-
-   
     listing.reviews.push(newReview);
-     await newReview.save();
+    await newReview.save();
     await listing.save();
-    req.flash("success","New Review Created!");
-    res.redirect(`/listings/${listing._id}`);
+    const populated = await Review.findById(newReview._id).populate("author", "username");
+    res.status(201).json({ success: true, review: populated });
 };
 
-module.exports.deleteReview=async(req,res)=>{
-    let { id, reviewId } = req.params;
+module.exports.deleteReview = async (req, res) => {
+    const { id, reviewId } = req.params;
     const review = await Review.findById(reviewId);
-    
     if (!review) {
-        req.flash("error", "Review not found!");
-        return res.redirect(`/listings/${id}`);
+        return res.status(404).json({ error: "Review not found" });
     }
-    
-    if (!req.user) {
-        req.flash("error", "You must be logged in to delete reviews!");
-        return res.redirect(`/listings/${id}`);
-    }
-    
     if (!review.author || !review.author.equals(req.user._id)) {
-        req.flash("error", "You are not authorized to delete this review!");
-        return res.redirect(`/listings/${id}`);
+        return res.status(403).json({ error: "Not authorized to delete this review" });
     }
-    
     await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
     await Review.findByIdAndDelete(reviewId);
-     req.flash("success","Review Deleted!");
-    res.redirect(`/listings/${id}`); 
+    res.json({ success: true, message: "Review deleted" });
 };

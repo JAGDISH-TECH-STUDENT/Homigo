@@ -1,46 +1,28 @@
-const Listing=require("../models/listing");
-const express = require('express');
+const Listing = require("../models/listing");
 const axios = require('axios');
 
-const TOMTOM_API_KEY =process.env.TOMTOM_API_KEY;
+const TOMTOM_API_KEY = process.env.TOMTOM_API_KEY;
 
-module.exports.index=async (req,res)=>{
-    const allListings =await Listing.find({});
-    
-    // Get user's favorites if logged in
+module.exports.index = async (req, res) => {
+    const allListings = await Listing.find({}).populate("owner", "username");
     let userFavorites = [];
     if (req.user) {
         const Favorite = require("../models/favorite");
         const favorites = await Favorite.find({ user: req.user._id });
         userFavorites = favorites.map(fav => fav.listing.toString());
     }
-    
-    res.render("listings/index.ejs",{allListings, userFavorites});
+    res.json({ listings: allListings, userFavorites });
 };
 
-module.exports.renderNewForm=(req,res)=>{
-    res.render("listings/new.ejs");
-};
-
-module.exports.showListing =async (req,res)=>{
-    let  { id } = req.params;
-    
-
-
-    const listing= await Listing.findById(id)
-    .populate({
-        path:"reviews",
-        populate:{
-            path:"author"
-        }
-    })
+module.exports.showListing = async (req, res) => {
+    const { id } = req.params;
+    const listing = await Listing.findById(id)
+        .populate({ path: "reviews", populate: { path: "author" } })
         .populate("owner");
-    if(!listing){
-        req.flash("error","Listing you requested for does not exist!");
-        return res.redirect("/listings");
+    if (!listing) {
+        return res.status(404).json({ error: "Listing not found" });
     }
     let coords = { lat: 28.6139, lon: 77.2090 };
-    
     if (process.env.TOMTOM_API_KEY) {
         try {
             const geoRes = await axios.get(`https://api.tomtom.com/search/2/geocode/${encodeURIComponent(listing.location)}.json?key=${process.env.TOMTOM_API_KEY}`);
@@ -48,15 +30,13 @@ module.exports.showListing =async (req,res)=>{
                 coords = geoRes.data.results[0].position;
             }
         } catch (e) {
-            console.error("Geocoding failed:", e.message);
+            // use default coords
         }
     }
-    
-    res.render("listings/show.ejs",{listing,coords,tomtomApiKey: process.env.TOMTOM_API_KEY || ""});
-    
+    res.json({ listing, coords, tomtomApiKey: process.env.TOMTOM_API_KEY || "" });
 };
 
-module.exports.createListing=async (req, res, next)=>{
+module.exports.createListing = async (req, res) => {
     try {
         let lat = 28.6139, lon = 77.2090;
         if (process.env.TOMTOM_API_KEY) {
@@ -67,67 +47,47 @@ module.exports.createListing=async (req, res, next)=>{
                     lon = geoRes.data.results[0].position.lon;
                 }
             } catch (e) {
-                console.error("Geocoding failed during listing creation:", e.message);
+                // use default coords
             }
         }
-    
-    if (req.body.listing.category === '') {
-        delete req.body.listing.category;
-    }
-    
-    const newListing=new Listing(req.body.listing);
-    newListing.owner=req.user._id;
-    
-    // Handle multiple image uploads
-    if (req.files && req.files.length > 0) {
-        newListing.images = req.files.map(file => ({
-            url: file.path,
-            filename: file.filename
-        }));
-    } else {
-        // If no images uploaded, use default
-        newListing.images = [{
-            url: "https://thumbs.dreamstime.com/z/no-photo-available-missing-image-no-image-symbol-isolated-white-background-no-photo-available-missing-image-no-image-272386839.jpg",
-            filename: "no-image"
-        }];
-    }
-    
-    newListing.geometry={
-        type: 'Point',
-        coordinates: [lon, lat]
-    }
-    let saveListing=await newListing.save();
-    req.flash("success","New Listing id created!");
-    res.redirect("/listings"); 
+
+        if (req.body.listing.category === '') {
+            delete req.body.listing.category;
+        }
+
+        const newListing = new Listing(req.body.listing);
+        newListing.owner = req.user._id;
+
+        if (req.files && req.files.length > 0) {
+            newListing.images = req.files.map(file => ({
+                url: file.path,
+                filename: file.filename
+            }));
+        } else {
+            newListing.images = [{
+                url: "https://thumbs.dreamstime.com/z/no-photo-available-missing-image-no-image-symbol-isolated-white-background-no-photo-available-missing-image-no-image-272386839.jpg",
+                filename: "no-image"
+            }];
+        }
+
+        newListing.geometry = { type: 'Point', coordinates: [lon, lat] };
+        const savedListing = await newListing.save();
+        res.status(201).json({ success: true, listing: savedListing });
     } catch (err) {
-        next(err);
+        res.status(500).json({ error: err.message });
     }
 };
-module.exports.renderEditForm=async(req,res)=>{
-    let {id}=req.params;
-    const listing=  await Listing.findById(id);
-    if(!listing){
-        req.flash("error","Listing you requested for does not exist!");
-        return res.redirect("/listings");
-    }
-    // Get first image for preview
-    let originalImageUrl = listing.images && listing.images.length > 0 
-        ? listing.images[0].url.replace("/upload","/upload/w_250")
-        : "https://thumbs.dreamstime.com/z/no-photo-available-missing-image-no-image-symbol-isolated-white-background-no-photo-available-missing-image-no-image-272386839.jpg";
-    res.render("listings/edit.ejs",{ listing ,originalImageUrl});
-};
- module.exports.updateListing=async(req,res)=>{
-    let {id}=req.params;
-    
-    // If category is empty string, remove it so Mongoose default will be used
+
+module.exports.updateListing = async (req, res) => {
+    const { id } = req.params;
     if (req.body.listing.category === '') {
         delete req.body.listing.category;
     }
-    
-    let listing=await Listing.findByIdAndUpdate(id, { ...req.body.listing}, { new: true });
-    
-    // Handle multiple image uploads
-    if(req.files && req.files.length > 0){
+    const listing = await Listing.findByIdAndUpdate(id, { ...req.body.listing }, { new: true });
+    if (!listing) {
+        return res.status(404).json({ error: "Listing not found" });
+    }
+    if (req.files && req.files.length > 0) {
         const newImages = req.files.map(file => ({
             url: file.path,
             filename: file.filename
@@ -135,33 +95,30 @@ module.exports.renderEditForm=async(req,res)=>{
         listing.images = [...listing.images, ...newImages];
         await listing.save();
     }
-    req.flash("success","Listing Updated!");
-    res.redirect("/listings");
- };
+    res.json({ success: true, listing });
+};
 
- module.exports.deleteListing=async(req,res)=>{
-    let {id}=req.params;
-    let deleteListing=await Listing.findByIdAndDelete(id); 
-    req.flash("success","Listing DELETED!");
-    res.redirect("/listings");
- };
+module.exports.deleteListing = async (req, res) => {
+    const { id } = req.params;
+    const listing = await Listing.findByIdAndDelete(id);
+    if (!listing) {
+        return res.status(404).json({ error: "Listing not found" });
+    }
+    res.json({ success: true, message: "Listing deleted" });
+};
 
 module.exports.getHostListings = async (req, res) => {
     if (req.user.role !== 'host') {
-        req.flash("error", "Only hosts can access their listings!");
-        return res.redirect("/listings");
+        return res.status(403).json({ error: "Only hosts can access their listings" });
     }
-    
     const listings = await Listing.find({ owner: req.user._id });
-    res.render("listings/host-listings.ejs", { listings });
+    res.json({ listings });
 };
 
 module.exports.searchListings = async (req, res) => {
     const { q, category, minPrice, maxPrice } = req.query;
-    
     let query = {};
-    
-    // Text search (place/title/description)
+
     if (q && q.trim() !== "") {
         const searchQuery = q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const searchRegex = new RegExp(searchQuery, 'i');
@@ -172,39 +129,28 @@ module.exports.searchListings = async (req, res) => {
             { description: searchRegex }
         ];
     }
-    
-    // Category filter
+
     if (category && category.trim() !== "") {
         query.category = category.trim();
     }
-    
-    // Price range filter
+
     if (minPrice || maxPrice) {
         query.price = {};
-        if (minPrice && !isNaN(minPrice)) {
-            query.price.$gte = parseInt(minPrice);
-        }
-        if (maxPrice && !isNaN(maxPrice)) {
-            query.price.$lte = parseInt(maxPrice);
-        }
+        if (minPrice && !isNaN(minPrice)) query.price.$gte = parseInt(minPrice);
+        if (maxPrice && !isNaN(maxPrice)) query.price.$lte = parseInt(maxPrice);
     }
-    
-    const allListings = await Listing.find(query);
-    
-    // Get user's favorites if logged in
+
+    const allListings = await Listing.find(query).populate("owner", "username");
     let userFavorites = [];
     if (req.user) {
         const Favorite = require("../models/favorite");
         const favorites = await Favorite.find({ user: req.user._id });
         userFavorites = favorites.map(fav => fav.listing.toString());
     }
-    
-    res.render("listings/index.ejs", { 
-        allListings, 
+
+    res.json({
+        listings: allListings,
         userFavorites,
-        searchQuery: q || "",
-        selectedCategory: category || "",
-        minPrice: minPrice || "",
-        maxPrice: maxPrice || ""
+        filters: { q: q || "", category: category || "", minPrice: minPrice || "", maxPrice: maxPrice || "" }
     });
 };

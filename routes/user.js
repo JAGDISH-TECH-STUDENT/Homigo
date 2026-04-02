@@ -1,21 +1,13 @@
 const express = require("express");
-const router= express.Router();
-const User=require("../models/user.js");
-const wrapAsync = require("../utils/wrapAsync");
-const passport =require("passport");
-const {saveRedirectUrl, isLoggedIn}=require("../middleware.js");
-const userController=require("../controllers/user.js");
+const router = express.Router();
+const passport = require("passport");
+const userController = require("../controllers/user.js");
+const { isLoggedIn } = require("../middleware.js");
 
-router.route("/signup")
-    .get(userController.renderSignupForm)
-    .post(wrapAsync(userController.signUp));
-
-router.route("/login")
-    .get(userController.renderLoginForm)
-    .post(saveRedirectUrl,passport.authenticate("local",{failureRedirect:"/login",failureFlash: true}),userController.login );
-
-router.get("/logout",userController.logout);
-
+router.post("/signup", userController.signUp);
+router.post("/login", passport.authenticate("local"), userController.login);
+router.get("/logout", userController.logout);
+router.get("/me", userController.getMe);
 router.post("/upgrade-to-host", isLoggedIn, userController.upgradeToHost);
 
-module.exports=router; 
+module.exports = router;

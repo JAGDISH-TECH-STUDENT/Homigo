@@ -1,0 +1,390 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import API from '../../api/axios';
+import FlashMessage from '../../components/FlashMessage';
+
+export default function ListingShow() {
+  const { id } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [listing, setListing] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const [currentImage, setCurrentImage] = useState(0);
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [guests, setGuests] = useState(1);
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
+
+  const [deletingListing, setDeletingListing] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    API.get(`/listings/${id}`)
+      .then(res => setListing(res.data.listing || res.data))
+      .catch(err => setError(err.response?.data?.error || 'Failed to load listing'))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  const nights = checkIn && checkOut
+    ? Math.max(0, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
+    : 0;
+  const subtotal = nights * (listing?.price || 0);
+  const serviceFee = Math.round(subtotal * 0.12);
+  const totalPrice = subtotal + serviceFee;
+
+  const handleBooking = async (e) => {
+    e.preventDefault();
+    if (!user) { navigate('/login'); return; }
+    if (nights <= 0) { setError('Check-out must be after check-in'); return; }
+    setBookingLoading(true);
+    setError('');
+    try {
+      await API.post(`/listings/${id}/bookings`, { booking: { checkIn, checkOut, guests } });
+      setSuccess('Booking confirmed!');
+      setCheckIn(''); setCheckOut(''); setGuests(1);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Booking failed');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  const handleReview = async (e) => {
+    e.preventDefault();
+    if (!user) { navigate('/login'); return; }
+    setReviewLoading(true);
+    setError('');
+    try {
+      const res = await API.post(`/listings/${id}/reviews`, { review: { rating: reviewRating, comment: reviewComment } });
+      const newReview = res.data.review || res.data;
+      setListing(prev => ({ ...prev, reviews: [...(prev.reviews || []), newReview] }));
+      setReviewComment('');
+      setReviewRating(5);
+      setSuccess('Review added!');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to add review');
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      await API.delete(`/listings/${id}/reviews/${reviewId}`);
+      setListing(prev => ({
+        ...prev,
+        reviews: (prev.reviews || []).filter(r => (r._id || r.id) !== reviewId),
+      }));
+      setSuccess('Review deleted');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to delete review');
+    }
+  };
+
+  const handleDeleteListing = async () => {
+    if (!window.confirm('Are you sure you want to delete this listing?')) return;
+    setDeletingListing(true);
+    try {
+      await API.delete(`/listings/${id}`);
+      navigate('/listings');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to delete listing');
+      setDeletingListing(false);
+    }
+  };
+
+  const avgRating = listing?.reviews?.length
+    ? (listing.reviews.reduce((sum, r) => sum + r.rating, 0) / listing.reviews.length).toFixed(1)
+    : null;
+
+  const isOwner = user && listing && (user._id === listing.owner?._id || user._id === listing.owner);
+
+  if (loading) return <div className="loading-spinner" />;
+  if (!listing) return (
+    <div className="container text-center" style={{ padding: '4rem 0' }}>
+      {error ? <FlashMessage message={error} type="error" /> : <h2>Listing not found</h2>}
+    </div>
+  );
+
+  const images = listing.images || [];
+  const host = listing.owner || {};
+
+  return (
+    <div className="detail-page">
+      {error && <FlashMessage message={error} type="error" />}
+      {success && <FlashMessage message={success} type="success" />}
+
+      <h1 className="detail-title">{listing.title}</h1>
+      <p className="detail-location">
+        {listing.location}, {listing.country}
+        {avgRating && (
+          <span className="star-rating" style={{ marginLeft: '1rem' }}>
+            <i className="fa-solid fa-star star-filled"></i>
+            <span className="rating-value">{avgRating}</span>
+            <span className="text-light" style={{ fontSize: '0.85rem' }}>({listing.reviews.length} review{listing.reviews.length !== 1 ? 's' : ''})</span>
+          </span>
+        )}
+      </p>
+
+      {isOwner && (
+        <div className="flex gap-1 mb-2">
+          <Link to={`/listings/${id}/edit`} className="btn btn-secondary btn-sm">Edit Listing</Link>
+          <button className="btn btn-danger btn-sm" onClick={handleDeleteListing} disabled={deletingListing}>
+            {deletingListing ? 'Deleting...' : 'Delete Listing'}
+          </button>
+        </div>
+      )}
+
+      {images.length > 0 && (
+        <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+          <img
+            className="detail-image"
+            src={images[currentImage]?.url || images[currentImage]}
+            alt={listing.title}
+            style={{ marginBottom: 0 }}
+          />
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={() => setCurrentImage(i => (i - 1 + images.length) % images.length)}
+                style={{
+                  position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                  width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
+                  border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: 'var(--shadow-md)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <i className="fa-solid fa-chevron-left"></i>
+              </button>
+              <button
+                onClick={() => setCurrentImage(i => (i + 1) % images.length)}
+                style={{
+                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                  width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
+                  border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: 'var(--shadow-md)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <i className="fa-solid fa-chevron-right"></i>
+              </button>
+              <div style={{
+                position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
+                display: 'flex', gap: 6,
+              }}>
+                {images.map((_, i) => (
+                  <span
+                    key={i}
+                    onClick={() => setCurrentImage(i)}
+                    style={{
+                      width: 8, height: 8, borderRadius: '50%', cursor: 'pointer',
+                      background: i === currentImage ? '#fff' : 'rgba(255,255,255,0.5)',
+                      border: '1px solid rgba(0,0,0,0.3)',
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2rem', alignItems: 'start' }}>
+        <div>
+          <div className="detail-section">
+            <h3>About this place</h3>
+            <p className="text-light">{listing.description}</p>
+            {listing.category && (
+              <span className="badge badge-active mt-1" style={{ display: 'inline-block' }}>
+                {listing.category}
+              </span>
+            )}
+          </div>
+
+          <div className="detail-section">
+            <h3>Hosted by {host.username || 'Unknown'}</h3>
+            <p className="text-light">Member since {host.createdAt ? new Date(host.createdAt).toLocaleDateString() : 'N/A'}</p>
+          </div>
+
+          <div className="detail-section">
+            <h3>Location</h3>
+            <p className="text-light">{listing.location}, {listing.country}</p>
+            {listing.geometry?.coordinates && (
+              <div style={{
+                marginTop: '0.75rem', background: '#e8f4f8', borderRadius: 'var(--radius-sm)',
+                padding: '1.5rem', textAlign: 'center', color: 'var(--text-light)', fontSize: '0.9rem',
+              }}>
+                <i className="fa-solid fa-map-marker-alt" style={{ fontSize: '1.5rem', marginBottom: '0.5rem', display: 'block', color: 'var(--primary)' }}></i>
+                Lat: {listing.geometry.coordinates[1]?.toFixed(4)}, Lng: {listing.geometry.coordinates[0]?.toFixed(4)}
+              </div>
+            )}
+          </div>
+
+          <div className="detail-section" style={{ borderBottom: 'none' }}>
+            <h3>
+              Reviews
+              {avgRating && (
+                <span className="star-rating" style={{ marginLeft: '0.5rem' }}>
+                  <i className="fa-solid fa-star star-filled"></i>
+                  <span className="rating-value">{avgRating}</span>
+                </span>
+              )}
+            </h3>
+
+            {(!listing.reviews || listing.reviews.length === 0) && (
+              <p className="text-light">No reviews yet.</p>
+            )}
+
+            {(listing.reviews || []).map(review => {
+              const reviewId = review._id || review.id;
+              const isReviewAuthor = user && (user._id === (review.author?._id || review.author));
+              return (
+                <div key={reviewId} style={{
+                  padding: '1rem 0', borderBottom: '1px solid var(--border)',
+                }}>
+                  <div className="flex items-center justify-between" style={{ marginBottom: '0.35rem' }}>
+                    <div className="flex items-center gap-1">
+                      <strong style={{ fontSize: '0.9rem' }}>{review.author?.username || 'User'}</strong>
+                      <span className="star-rating" style={{ fontSize: '0.8rem' }}>
+                        {[1, 2, 3, 4, 5].map(s => (
+                          <i key={s} className={`fa-solid fa-star ${s <= review.rating ? 'star-filled' : 'star-empty'}`}></i>
+                        ))}
+                      </span>
+                    </div>
+                    <span className="text-light" style={{ fontSize: '0.8rem' }}>
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.9rem' }}>{review.comment}</p>
+                  {isReviewAuthor && (
+                    <button
+                      className="btn btn-danger btn-sm mt-1"
+                      onClick={() => handleDeleteReview(reviewId)}
+                      style={{ fontSize: '0.75rem' }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+
+            {user && (
+              <form onSubmit={handleReview} style={{ marginTop: '1.5rem' }}>
+                <h3 style={{ marginBottom: '0.75rem' }}>Leave a Review</h3>
+                <div className="form-group">
+                  <label>Rating</label>
+                  <div className="star-rating" style={{ fontSize: '1.25rem', cursor: 'pointer' }}>
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <i
+                        key={s}
+                        className={`fa-solid fa-star ${s <= reviewRating ? 'star-filled' : 'star-empty'}`}
+                        onClick={() => setReviewRating(s)}
+                        style={{ marginRight: 4 }}
+                      ></i>
+                    ))}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="review-comment">Comment</label>
+                  <textarea
+                    id="review-comment"
+                    className="form-control"
+                    rows={3}
+                    value={reviewComment}
+                    onChange={e => setReviewComment(e.target.value)}
+                    placeholder="Share your experience..."
+                    required
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={reviewLoading}>
+                  {reviewLoading ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </form>
+            )}
+            {!user && (
+              <p className="text-light mt-2">
+                <Link to="/login" style={{ color: 'var(--primary)' }}>Log in</Link> to leave a review.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="card" style={{ position: 'sticky', top: 80, padding: '1.5rem' }}>
+          <p className="card-price" style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>
+            ₹{listing.price?.toLocaleString('en-IN')} <span>/ night</span>
+          </p>
+
+          <form onSubmit={handleBooking}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: '1rem' }}>
+              <div style={{ borderRight: '1px solid var(--border)', padding: '0.625rem 0.75rem' }}>
+                <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Check-in</label>
+                <input
+                  type="date"
+                  value={checkIn}
+                  onChange={e => setCheckIn(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 2 }}
+                  required
+                />
+              </div>
+              <div style={{ padding: '0.625rem 0.75rem' }}>
+                <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Check-out</label>
+                <input
+                  type="date"
+                  value={checkOut}
+                  onChange={e => setCheckOut(e.target.value)}
+                  min={checkIn || new Date().toISOString().split('T')[0]}
+                  style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 2 }}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label>Guests</label>
+              <input
+                type="number"
+                className="form-control"
+                min={1}
+                max={20}
+                value={guests}
+                onChange={e => setGuests(Number(e.target.value))}
+                required
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={bookingLoading}>
+              {bookingLoading ? 'Booking...' : 'Book Now'}
+            </button>
+          </form>
+
+          {nights > 0 && (
+            <div style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
+              <div className="flex justify-between" style={{ padding: '0.35rem 0' }}>
+                <span className="text-light">₹{listing.price?.toLocaleString('en-IN')} x {nights} night{nights !== 1 ? 's' : ''}</span>
+                <span>₹{subtotal.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between" style={{ padding: '0.35rem 0' }}>
+                <span className="text-light">Service fee (12%)</span>
+                <span>₹{serviceFee.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between" style={{ padding: '0.75rem 0 0', borderTop: '1px solid var(--border)', fontWeight: 700, marginTop: '0.5rem' }}>
+                <span>Total</span>
+                <span>₹{totalPrice.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
