@@ -72,14 +72,13 @@ export default function Navbar() {
             <>
               {user.role === 'admin' ? (
                 <Link to="/admin" onClick={() => setMenuOpen(false)}>Admin Dashboard</Link>
+              ) : user.role === 'host' ? (
+                <>
+                  <Link to="/host/listings" onClick={() => setMenuOpen(false)}>My Listings</Link>
+                  <Link to="/host/dashboard" onClick={() => setMenuOpen(false)}>Host Dashboard</Link>
+                </>
               ) : (
                 <>
-                  {user.role === 'host' && (
-                    <>
-                      <Link to="/host/listings" onClick={() => setMenuOpen(false)}>My Listings</Link>
-                      <Link to="/host/dashboard" onClick={() => setMenuOpen(false)}>Host Dashboard</Link>
-                    </>
-                  )}
                   <Link to="/favorites" onClick={() => setMenuOpen(false)}>Favorites</Link>
                   <Link to="/bookings" onClick={() => setMenuOpen(false)}>My Bookings</Link>
                 </>
