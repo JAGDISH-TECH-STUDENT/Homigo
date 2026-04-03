@@ -4,90 +4,41 @@ import { useAuth } from '../../context/AuthContext';
 import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
 import ListingMap from '../../components/ListingMap';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
 const PUBLISHABLE_KEY = 'pk_test_51TIASeBN1PIqJJhZDeJRORSIX14Gwhm9sfH4wul6leHGp8YZBFUB0Pn2vvqtSjszaBtNhqQYhyitbc85NyImqr1u00n5AxMvbq';
-const stripePromise = loadStripe(PUBLISHABLE_KEY);
 
 function BookingForm({ listing, user, navigate }) {
-  const stripe = useStripe();
-  const elements = useElements();
-  
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState(1);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [clientSecret, setClientSecret] = useState('');
-
-  const nights = checkIn && checkOut
-    ? Math.max(0, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
-    : 0;
-  const subtotal = nights * (listing?.price || 0);
-  const serviceFee = Math.round(subtotal * 0.12);
-  const totalPrice = subtotal + serviceFee;
-
-  const createPaymentIntent = async () => {
-    if (nights <= 0) return;
-    try {
-      const res = await API.post('/payment/create-payment-intent', { amount: totalPrice });
-      setClientSecret(res.data.clientSecret);
-    } catch (err) {
-      console.error('Payment intent error:', err);
-    }
-  };
-
-  useEffect(() => {
-    if (nights > 0 && totalPrice > 0) {
-      createPaymentIntent();
-    }
-  }, [nights, totalPrice]);
+  
+  const totalPrice = listing?.price || 0;
 
   const handleBooking = async (e) => {
     e.preventDefault();
     if (!user) { navigate('/login'); return; }
-    if (nights <= 0) { setError('Check-out must be after check-in'); return; }
+    if (!checkIn || !checkOut) { setError('Please select check-in and check-out dates'); return; }
     
     setBookingLoading(true);
     setError('');
-
-    if (!stripe || !elements || !clientSecret) {
-      try {
-        await API.post(`/listings/${listing._id}/bookings`, { booking: { checkIn, checkOut, guests } });
-        setSuccess('Booking confirmed!');
-        setCheckIn(''); setCheckOut(''); setGuests(1);
-      } catch (err) {
-        setError(err.response?.data?.error || 'Booking failed');
-      } finally {
-        setBookingLoading(false);
-      }
-      return;
-    }
-
-    const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      redirect: 'if_required',
-    });
-
-    if (stripeError) {
-      setError(stripeError.message);
+    try {
+      await API.post(`/listings/${listing._id}/bookings`, { booking: { checkIn, checkOut, guests } });
+      setSuccess('Booking confirmed!');
+      setCheckIn(''); setCheckOut(''); setGuests(1);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Booking failed');
+    } finally {
       setBookingLoading(false);
-      return;
     }
-
-    if (paymentIntent?.status === 'succeeded') {
-      try {
-        await API.post(`/listings/${listing._id}/bookings`, { booking: { checkIn, checkOut, guests } });
-        setSuccess('Booking confirmed with payment!');
-        setCheckIn(''); setCheckOut(''); setGuests(1);
-      } catch (err) {
-        setError(err.response?.data?.error || 'Booking failed');
-      }
-    }
-    setBookingLoading(false);
   };
+
+  const nights = checkIn && checkOut ? Math.max(0, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24))) : 0;
+  const subtotal = nights * totalPrice;
+  const serviceFee = Math.round(subtotal * 0.12);
+  const grandTotal = subtotal + serviceFee;
 
   return (
     <div className="card" style={{ position: 'sticky', top: 80, padding: '1.5rem' }}>
@@ -95,7 +46,7 @@ function BookingForm({ listing, user, navigate }) {
       {success && <FlashMessage message={success} type="success" />}
       
       <p className="card-price" style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>
-        ₹{listing.price?.toLocaleString('en-IN')} <span>/ night</span>
+        ₹{totalPrice?.toLocaleString('en-IN')} <span>/ night</span>
       </p>
 
       <form onSubmit={handleBooking}>
@@ -115,12 +66,6 @@ function BookingForm({ listing, user, navigate }) {
           <input type="number" className="form-control" min={1} max={listing?.maxGuests || 20} value={guests} onChange={e => setGuests(Number(e.target.value))} required />
         </div>
 
-        {clientSecret && (
-          <div style={{ marginBottom: '1rem', padding: '0.75rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
-          <PaymentElement />
-        </div>
-        )}
-
         <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={bookingLoading}>
           {bookingLoading ? 'Processing...' : 'Book Now'}
         </button>
@@ -129,7 +74,7 @@ function BookingForm({ listing, user, navigate }) {
       {nights > 0 && (
         <div style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
           <div className="flex justify-between" style={{ padding: '0.35rem 0' }}>
-            <span className="text-light">₹{listing.price?.toLocaleString('en-IN')} x {nights} night{nights !== 1 ? 's' : ''}</span>
+            <span className="text-light">₹{totalPrice?.toLocaleString('en-IN')} x {nights} night{nights !== 1 ? 's' : ''}</span>
             <span>₹{subtotal.toLocaleString('en-IN')}</span>
           </div>
           <div className="flex justify-between" style={{ padding: '0.35rem 0' }}>
@@ -138,7 +83,7 @@ function BookingForm({ listing, user, navigate }) {
           </div>
           <div className="flex justify-between" style={{ padding: '0.75rem 0 0', borderTop: '1px solid var(--border)', fontWeight: 700, marginTop: '0.5rem' }}>
             <span>Total</span>
-            <span>₹{totalPrice.toLocaleString('en-IN')}</span>
+            <span>₹{grandTotal.toLocaleString('en-IN')}</span>
           </div>
         </div>
       )}
@@ -236,14 +181,13 @@ export default function ListingShow() {
         <h1 className="detail-title" style={{ margin: 0 }}>{listing.title}</h1>
         {user && !isOwner && (
           <button
-            className="favorite-btn"
             onClick={async () => {
               try {
                 await API.post(`/favorites/${id}/toggle`);
                 setListing(prev => ({ ...prev, isFavorited: !listing.isFavorited }));
               } catch {}
             }}
-            style={{ position: 'static', width: 40, height: 40, borderRadius: '50%', background: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}
+            style={{ width: 44, height: 44, borderRadius: '8px', background: '#fff', border: '1px solid #ddd', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
           >
             <i className={listing.isFavorited ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} style={{ color: listing.isFavorited ? '#ff385c' : '#666' }}></i>
           </button>
@@ -274,10 +218,10 @@ export default function ListingShow() {
           <img className="detail-image" src={images[currentImage]?.url || images[currentImage]} alt={listing.title} style={{ marginBottom: 0 }} />
           {images.length > 1 && (
             <>
-              <button onClick={() => setCurrentImage(i => (i - 1 + images.length) % images.length)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}><i className="fa-solid fa-chevron-left"></i></button>
-              <button onClick={() => setCurrentImage(i => (i + 1) % images.length)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}><i className="fa-solid fa-chevron-right"></i></button>
+              <button onClick={() => setCurrentImage(i => (i - 1 + images.length) % images.length)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '8px', background: 'rgba(255,255,255,0.95)', border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}><i className="fa-solid fa-chevron-left"></i></button>
+              <button onClick={() => setCurrentImage(i => (i + 1) % images.length)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '8px', background: 'rgba(255,255,255,0.95)', border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}><i className="fa-solid fa-chevron-right"></i></button>
               <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
-                {images.map((_, i) => (<span key={i} onClick={() => setCurrentImage(i)} style={{ width: 8, height: 8, borderRadius: '50%', cursor: 'pointer', background: i === currentImage ? '#fff' : 'rgba(255,255,255,0.5)', border: '1px solid rgba(0,0,0,0.3)' }} />))}
+                {images.map((_, i) => (<span key={i} onClick={() => setCurrentImage(i)} style={{ width: 10, height: 10, borderRadius: '3px', cursor: 'pointer', background: i === currentImage ? '#fff' : 'rgba(255,255,255,0.5)', border: '1px solid rgba(0,0,0,0.3)' }} />))}
               </div>
             </>
           )}
@@ -403,9 +347,7 @@ export default function ListingShow() {
         </div>
 
         {user && user.role !== 'host' && (
-          <Elements stripe={stripePromise}>
-            <BookingForm listing={listing} user={user} navigate={navigate} />
-          </Elements>
+          <BookingForm listing={listing} user={user} navigate={navigate} />
         )}
         {(!user || user.role === 'host') && (
           <div className="card" style={{ position: 'sticky', top: 80, padding: '1.5rem' }}>
