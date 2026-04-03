@@ -314,6 +314,22 @@ export default function ListingShow() {
             </div>
           </div>
 
+          <div className="detail-section">
+            <h3>Location</h3>
+            <p className="text-light mb-2">{listing.location}, {listing.country}</p>
+            {listing.geometry?.coordinates?.[0] && listing.geometry?.coordinates?.[1] ? (
+              <ListingMap 
+                lat={listing.geometry.coordinates[1]} 
+                lng={listing.geometry.coordinates[0]} 
+                title={listing.title} 
+              />
+            ) : (
+              <div style={{ height: 200, background: 'var(--bg)', borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <p className="text-light">Map not available</p>
+              </div>
+            )}
+          </div>
+
           <div className="detail-section" style={{ borderBottom: 'none' }}>
             <h3>Reviews{avgRating && <span className="star-rating" style={{ marginLeft: '0.5rem' }}><i className="fa-solid fa-star star-filled"></i><span className="rating-value">{avgRating}</span></span>}</h3>
 

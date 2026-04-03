@@ -72,7 +72,7 @@ export default function Navbar() {
             <>
               <Link to="/favorites" onClick={() => setMenuOpen(false)}>Favorites</Link>
               <Link to="/bookings" onClick={() => setMenuOpen(false)}>My Bookings</Link>
-              {(user.role === 'host' || user.role === 'admin') && (
+              {user.role === 'host' && (
                 <>
                   <Link to="/host/listings" onClick={() => setMenuOpen(false)}>My Listings</Link>
                   <Link to="/host/dashboard" onClick={() => setMenuOpen(false)}>Host Dashboard</Link>
