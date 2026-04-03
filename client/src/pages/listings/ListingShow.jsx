@@ -232,7 +232,23 @@ export default function ListingShow() {
       {error && <FlashMessage message={error} type="error" />}
       {success && <FlashMessage message={success} type="success" />}
 
-      <h1 className="detail-title">{listing.title}</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 className="detail-title" style={{ margin: 0 }}>{listing.title}</h1>
+        {user && !isOwner && (
+          <button
+            className="favorite-btn"
+            onClick={async () => {
+              try {
+                await API.post(`/favorites/${id}/toggle`);
+                setListing(prev => ({ ...prev, isFavorited: !listing.isFavorited }));
+              } catch {}
+            }}
+            style={{ position: 'static', width: 40, height: 40, borderRadius: '50%', background: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}
+          >
+            <i className={listing.isFavorited ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} style={{ color: listing.isFavorited ? '#ff385c' : '#666' }}></i>
+          </button>
+        )}
+      </div>
       <p className="detail-location">
         {listing.location}, {listing.country}
         {avgRating && (
@@ -343,7 +359,9 @@ export default function ListingShow() {
                   <div className="flex items-center justify-between" style={{ marginBottom: '0.35rem' }}>
                     <div className="flex items-center gap-1">
                       <strong style={{ fontSize: '0.9rem' }}>{review.author?.username || 'User'}</strong>
-                      <span className="star-rating" style={{ fontSize: '0.8rem' }}>{[1, 2, 3, 4, 5].map(s => <i key={s} className={`fa-solid fa-star ${s <= review.rating ? 'star-filled' : 'star-empty'}`}></i>)}</span>
+                      <span style={{ fontSize: '0.9rem', display: 'flex', gap: '1px' }}>
+                  {[1, 2, 3, 4, 5].map(s => <span key={s} style={{ color: s <= review.rating ? '#ff385c' : '#ddd' }}>{s <= review.rating ? '★' : '☆'}</span>)}
+                </span>
                     </div>
                     <span className="text-light" style={{ fontSize: '0.8rem' }}>{new Date(review.createdAt).toLocaleDateString()}</span>
                   </div>
@@ -358,7 +376,21 @@ export default function ListingShow() {
                 <h3 style={{ marginBottom: '0.75rem' }}>Leave a Review</h3>
                 <div className="form-group">
                   <label>Rating</label>
-                  <div className="star-rating" style={{ fontSize: '1.25rem', cursor: 'pointer' }}>{[1, 2, 3, 4, 5].map(s => <i key={s} className={`fa-solid fa-star ${s <= reviewRating ? 'star-filled' : 'star-empty'}`} onClick={() => setReviewRating(s)} style={{ marginRight: 4 }}></i>)}</div>
+                  <div style={{ fontSize: '1.5rem', cursor: 'pointer', display: 'flex', gap: '0.5rem' }}>
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <span 
+                      key={s} 
+                      onClick={() => setReviewRating(s)}
+                      style={{ 
+                        color: s <= reviewRating ? '#ff385c' : '#ddd',
+                        fontSize: '1.5rem',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {s <= reviewRating ? '★' : '☆'}
+                    </span>
+                  ))}
+                </div>
                 </div>
                 <div className="form-group">
                   <label htmlFor="review-comment">Comment</label>
