@@ -309,8 +309,8 @@ export default function ListingShow() {
 
           <div className="detail-section">
             <div className="flex gap-2 mb-1">
-              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Check-in: {listing.checkInTime || '3:00 PM'}</span>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Check-out: {listing.checkOutTime || '11:00 AM'}</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Check-in: {listing.checkInTime || '12:00 PM'}</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Check-out: {listing.checkOutTime || '10:00 AM'}</span>
             </div>
           </div>
 

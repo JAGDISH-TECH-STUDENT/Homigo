@@ -64,11 +64,11 @@ const listingSchema = new Schema({
     },
     checkInTime: {
         type: String,
-        default: "3:00 PM"
+        default: "12:00 PM"
     },
     checkOutTime: {
         type: String,
-        default: "11:00 AM"
+        default: "10:00 AM"
     },
     reviews: [{
         type: mongoose.Schema.Types.ObjectId,
