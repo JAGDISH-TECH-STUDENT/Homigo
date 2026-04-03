@@ -10,15 +10,17 @@ cloudinary.config({
     api_key: process.env.CLOUD_API_KEY,
     api_secret: process.env.CLOUD_API_SECRET
 });
-const storage =new CloudinaryStorage({
+
+const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder:"Homigo_dev",
-        allowedFormats: ["png","jpg","jpeg"],
-
-    },
+        folder: "Homigo_dev",
+        allowed_formats: ["png", "jpg", "jpeg", "gif", "webp"],
+        resource_type: "auto"
+    }
 });
-module.exports={
+
+module.exports = {
     cloudinary,
-    storage,
-} 
+    storage
+}; 

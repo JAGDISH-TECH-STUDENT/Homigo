@@ -74,7 +74,12 @@ module.exports.createListing = async (req, res) => {
         const savedListing = await newListing.save();
         res.status(201).json({ success: true, listing: savedListing });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("Create listing error:", err);
+        if (err.message && err.message.includes("Cannot read")) {
+            res.status(500).json({ error: "Image upload failed. Please try a different image format (JPG, PNG, or WebP)." });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
     }
 };
 
