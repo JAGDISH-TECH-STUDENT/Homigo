@@ -7,7 +7,7 @@ import ListingMap from '../../components/ListingMap';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
-const PUBLISHABLE_KEY = 'pk_test_your_key_here';
+const PUBLISHABLE_KEY = 'pk_test_51TIASeBN1PIqJJhZDeJRORSIX14Gwhm9sfH4wul6leHGp8YZBFUB0Pn2vvqtSjszaBtNhqQYhyitbc85NyImqr1u00n5AxMvbq';
 const stripePromise = loadStripe(PUBLISHABLE_KEY);
 
 function BookingForm({ listing, user, navigate }) {
