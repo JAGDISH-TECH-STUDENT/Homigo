@@ -42,6 +42,7 @@ export default function App() {
         <main className="main-content">
           <Routes>
             <Route path="/" element={<ListingIndex />} />
+            <Route path="/listings" element={<ListingIndex />} />
             <Route path="/listings/search" element={<ListingIndex />} />
             <Route path="/listings/new" element={<PrivateRoute><ListingNew /></PrivateRoute>} />
             <Route path="/listings/:id" element={<ListingShow />} />
