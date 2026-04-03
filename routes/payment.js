@@ -2,44 +2,37 @@ const express = require("express");
 const router = express.Router();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-router.post("/create-payment-intent", async (req, res) => {
+router.post("/create-checkout-session", async (req, res) => {
     try {
-        const { amount } = req.body;
+        const { listingTitle, listingImage, price, nights, guestName, checkIn, checkOut } = req.body;
         
-        if (!amount || amount <= 0) {
+        if (!price || price <= 0) {
             return res.status(400).json({ error: "Invalid amount" });
         }
 
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(amount * 100),
-            currency: "inr",
-            automatic_payment_methods: {
-                enabled: true,
-            },
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ["card"],
+            line_items: [{
+                price_data: {
+                    currency: "inr",
+                    product_data: {
+                        name: listingTitle || "Homigo Booking",
+                        description: `${nights} night(s) - Check-in: ${checkIn}, Check-out: ${checkOut}`,
+                        images: listingImage ? [listingImage] : [],
+                    },
+                    unit_amount: Math.round(price * 100),
+                },
+                quantity: 1,
+            }],
+            mode: "payment",
+            success_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/bookings?success=true`,
+            cancel_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/listings?cancelled=true`,
+            customer_email: guestName,
         });
 
-        res.json({
-            clientSecret: paymentIntent.client_secret,
-        });
+        res.json({ url: session.url, sessionId: session.id });
     } catch (error) {
-        console.error("Stripe error:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-router.post("/confirm-payment", async (req, res) => {
-    try {
-        const { paymentIntentId } = req.body;
-        
-        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-        
-        if (paymentIntent.status === "succeeded") {
-            res.json({ success: true, paymentIntent });
-        } else {
-            res.json({ success: false, status: paymentIntent.status });
-        }
-    } catch (error) {
-        console.error("Stripe confirmation error:", error);
+        console.error("Stripe checkout error:", error);
         res.status(500).json({ error: error.message });
     }
 });

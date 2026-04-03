@@ -721,19 +721,19 @@ select.form-control {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  background: #fff;
   cursor: pointer;
   transition: transform var(--transition);
   z-index: 10;
-  border: none;
+  border: 1px solid #eee;
   font-size: 1.2rem;
-  color: #666;
+  color: #ff385c;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
@@ -742,11 +742,11 @@ select.form-control {
 }
 
 .favorite-btn.active {
-  color: var(--primary);
+  color: #ff385c;
 }
 
 .favorite-btn:not(.active) {
-  color: var(--secondary-light);
+  color: #666;
 }
 
 /* ========== LOADING SPINNER ========== */

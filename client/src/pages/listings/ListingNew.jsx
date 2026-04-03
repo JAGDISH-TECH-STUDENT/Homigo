@@ -81,7 +81,12 @@ export default function ListingNew() {
       });
       navigate('/listings');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create listing');
+      const errMsg = err.response?.data?.error || 'Failed to create listing';
+      if (errMsg.includes('Cannot read image')) {
+        setError('Image format not supported. Please use JPG, PNG, or WebP format (under 1MB).');
+      } else {
+        setError(errMsg);
+      }
       setLoading(false);
     }
   };

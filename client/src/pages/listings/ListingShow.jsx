@@ -24,6 +24,7 @@ function BookingForm({ listing, user, navigate }) {
     
     setBookingLoading(true);
     setError('');
+    
     try {
       await API.post(`/listings/${listing._id}/bookings`, { booking: { checkIn, checkOut, guests } });
       setSuccess('Booking confirmed!');
