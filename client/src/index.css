@@ -480,7 +480,7 @@ select.form-control {
   background: #fff;
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  overflow: visible;
   transition: box-shadow var(--transition), transform var(--transition);
 }
 
