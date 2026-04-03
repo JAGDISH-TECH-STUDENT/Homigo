@@ -7,6 +7,14 @@ module.exports.ListingSchema = Joi.object({
     country: Joi.string().required(),
     price: Joi.number().required().min(1),
     category: Joi.string().valid('Trending', 'Rooms', 'Iconic cities', 'Mountains', 'Castles', 'Amazing pools', 'Camping', 'Farms', 'Arctic', 'Domes', 'Boats').allow('').optional(),
+    maxGuests: Joi.number().min(1).optional(),
+    bedrooms: Joi.number().min(0).optional(),
+    beds: Joi.number().min(0).optional(),
+    baths: Joi.number().min(0).optional(),
+    amenities: Joi.array().items(Joi.string()).optional(),
+    houseRules: Joi.string().allow('').optional(),
+    checkInTime: Joi.string().optional(),
+    checkOutTime: Joi.string().optional(),
     images: Joi.array().items(
       Joi.object({
         url: Joi.string().allow("", null).optional(),
@@ -16,10 +24,9 @@ module.exports.ListingSchema = Joi.object({
   }).required()
 });
 
-module.exports.reviewSchema=Joi.object({
-    review :Joi.object({
-        rating: Joi.number().required().min(1).max(5),
-        comment:Joi.string().required()
-          
-    }).required(),
+module.exports.reviewSchema = Joi.object({
+  review: Joi.object({
+    rating: Joi.number().required().min(1).max(5),
+    comment: Joi.string().required()
+  }).required(),
 });

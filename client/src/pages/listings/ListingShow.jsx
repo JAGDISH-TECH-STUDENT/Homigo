@@ -3,6 +3,148 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
+import ListingMap from '../../components/ListingMap';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+
+const PUBLISHABLE_KEY = 'pk_test_your_key_here';
+const stripePromise = loadStripe(PUBLISHABLE_KEY);
+
+function BookingForm({ listing, user, navigate }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [guests, setGuests] = useState(1);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [clientSecret, setClientSecret] = useState('');
+
+  const nights = checkIn && checkOut
+    ? Math.max(0, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
+    : 0;
+  const subtotal = nights * (listing?.price || 0);
+  const serviceFee = Math.round(subtotal * 0.12);
+  const totalPrice = subtotal + serviceFee;
+
+  const createPaymentIntent = async () => {
+    if (nights <= 0) return;
+    try {
+      const res = await API.post('/payment/create-payment-intent', { amount: totalPrice });
+      setClientSecret(res.data.clientSecret);
+    } catch (err) {
+      console.error('Payment intent error:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (nights > 0 && totalPrice > 0) {
+      createPaymentIntent();
+    }
+  }, [nights, totalPrice]);
+
+  const handleBooking = async (e) => {
+    e.preventDefault();
+    if (!user) { navigate('/login'); return; }
+    if (nights <= 0) { setError('Check-out must be after check-in'); return; }
+    
+    setBookingLoading(true);
+    setError('');
+
+    if (!stripe || !elements || !clientSecret) {
+      try {
+        await API.post(`/listings/${listing._id}/bookings`, { booking: { checkIn, checkOut, guests } });
+        setSuccess('Booking confirmed!');
+        setCheckIn(''); setCheckOut(''); setGuests(1);
+      } catch (err) {
+        setError(err.response?.data?.error || 'Booking failed');
+      } finally {
+        setBookingLoading(false);
+      }
+      return;
+    }
+
+    const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      redirect: 'if_required',
+    });
+
+    if (stripeError) {
+      setError(stripeError.message);
+      setBookingLoading(false);
+      return;
+    }
+
+    if (paymentIntent?.status === 'succeeded') {
+      try {
+        await API.post(`/listings/${listing._id}/bookings`, { booking: { checkIn, checkOut, guests } });
+        setSuccess('Booking confirmed with payment!');
+        setCheckIn(''); setCheckOut(''); setGuests(1);
+      } catch (err) {
+        setError(err.response?.data?.error || 'Booking failed');
+      }
+    }
+    setBookingLoading(false);
+  };
+
+  return (
+    <div className="card" style={{ position: 'sticky', top: 80, padding: '1.5rem' }}>
+      {error && <FlashMessage message={error} type="error" />}
+      {success && <FlashMessage message={success} type="success" />}
+      
+      <p className="card-price" style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>
+        ₹{listing.price?.toLocaleString('en-IN')} <span>/ night</span>
+      </p>
+
+      <form onSubmit={handleBooking}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: '1rem' }}>
+          <div style={{ borderRight: '1px solid var(--border)', padding: '0.625rem 0.75rem' }}>
+            <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Check-in</label>
+            <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 2 }} required />
+          </div>
+          <div style={{ padding: '0.625rem 0.75rem' }}>
+            <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Check-out</label>
+            <input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} min={checkIn || new Date().toISOString().split('T')[0]} style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 2 }} required />
+          </div>
+        </div>
+
+        <div className="form-group" style={{ marginBottom: '1rem' }}>
+          <label>Guests</label>
+          <input type="number" className="form-control" min={1} max={listing?.maxGuests || 20} value={guests} onChange={e => setGuests(Number(e.target.value))} required />
+        </div>
+
+        {clientSecret && (
+          <div style={{ marginBottom: '1rem', padding: '0.75rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+          <PaymentElement />
+        </div>
+        )}
+
+        <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={bookingLoading}>
+          {bookingLoading ? 'Processing...' : 'Book Now'}
+        </button>
+      </form>
+
+      {nights > 0 && (
+        <div style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
+          <div className="flex justify-between" style={{ padding: '0.35rem 0' }}>
+            <span className="text-light">₹{listing.price?.toLocaleString('en-IN')} x {nights} night{nights !== 1 ? 's' : ''}</span>
+            <span>₹{subtotal.toLocaleString('en-IN')}</span>
+          </div>
+          <div className="flex justify-between" style={{ padding: '0.35rem 0' }}>
+            <span className="text-light">Service fee (12%)</span>
+            <span>₹{serviceFee.toLocaleString('en-IN')}</span>
+          </div>
+          <div className="flex justify-between" style={{ padding: '0.75rem 0 0', borderTop: '1px solid var(--border)', fontWeight: 700, marginTop: '0.5rem' }}>
+            <span>Total</span>
+            <span>₹{totalPrice.toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ListingShow() {
   const { id } = useParams();
@@ -15,15 +157,9 @@ export default function ListingShow() {
   const [success, setSuccess] = useState('');
 
   const [currentImage, setCurrentImage] = useState(0);
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
-  const [guests, setGuests] = useState(1);
-  const [bookingLoading, setBookingLoading] = useState(false);
-
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
-
   const [deletingListing, setDeletingListing] = useState(false);
 
   useEffect(() => {
@@ -33,30 +169,6 @@ export default function ListingShow() {
       .catch(err => setError(err.response?.data?.error || 'Failed to load listing'))
       .finally(() => setLoading(false));
   }, [id]);
-
-  const nights = checkIn && checkOut
-    ? Math.max(0, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
-    : 0;
-  const subtotal = nights * (listing?.price || 0);
-  const serviceFee = Math.round(subtotal * 0.12);
-  const totalPrice = subtotal + serviceFee;
-
-  const handleBooking = async (e) => {
-    e.preventDefault();
-    if (!user) { navigate('/login'); return; }
-    if (nights <= 0) { setError('Check-out must be after check-in'); return; }
-    setBookingLoading(true);
-    setError('');
-    try {
-      await API.post(`/listings/${id}/bookings`, { booking: { checkIn, checkOut, guests } });
-      setSuccess('Booking confirmed!');
-      setCheckIn(''); setCheckOut(''); setGuests(1);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Booking failed');
-    } finally {
-      setBookingLoading(false);
-    }
-  };
 
   const handleReview = async (e) => {
     e.preventDefault();
@@ -80,10 +192,7 @@ export default function ListingShow() {
   const handleDeleteReview = async (reviewId) => {
     try {
       await API.delete(`/listings/${id}/reviews/${reviewId}`);
-      setListing(prev => ({
-        ...prev,
-        reviews: (prev.reviews || []).filter(r => (r._id || r.id) !== reviewId),
-      }));
+      setListing(prev => ({ ...prev, reviews: (prev.reviews || []).filter(r => (r._id || r.id) !== reviewId) }));
       setSuccess('Review deleted');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to delete review');
@@ -146,51 +255,13 @@ export default function ListingShow() {
 
       {images.length > 0 && (
         <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
-          <img
-            className="detail-image"
-            src={images[currentImage]?.url || images[currentImage]}
-            alt={listing.title}
-            style={{ marginBottom: 0 }}
-          />
+          <img className="detail-image" src={images[currentImage]?.url || images[currentImage]} alt={listing.title} style={{ marginBottom: 0 }} />
           {images.length > 1 && (
             <>
-              <button
-                onClick={() => setCurrentImage(i => (i - 1 + images.length) % images.length)}
-                style={{
-                  position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                  width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
-                  border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: 'var(--shadow-md)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >
-                <i className="fa-solid fa-chevron-left"></i>
-              </button>
-              <button
-                onClick={() => setCurrentImage(i => (i + 1) % images.length)}
-                style={{
-                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                  width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
-                  border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: 'var(--shadow-md)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >
-                <i className="fa-solid fa-chevron-right"></i>
-              </button>
-              <div style={{
-                position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
-                display: 'flex', gap: 6,
-              }}>
-                {images.map((_, i) => (
-                  <span
-                    key={i}
-                    onClick={() => setCurrentImage(i)}
-                    style={{
-                      width: 8, height: 8, borderRadius: '50%', cursor: 'pointer',
-                      background: i === currentImage ? '#fff' : 'rgba(255,255,255,0.5)',
-                      border: '1px solid rgba(0,0,0,0.3)',
-                    }}
-                  />
-                ))}
+              <button onClick={() => setCurrentImage(i => (i - 1 + images.length) % images.length)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}><i className="fa-solid fa-chevron-left"></i></button>
+              <button onClick={() => setCurrentImage(i => (i + 1) % images.length)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}><i className="fa-solid fa-chevron-right"></i></button>
+              <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
+                {images.map((_, i) => (<span key={i} onClick={() => setCurrentImage(i)} style={{ width: 8, height: 8, borderRadius: '50%', cursor: 'pointer', background: i === currentImage ? '#fff' : 'rgba(255,255,255,0.5)', border: '1px solid rgba(0,0,0,0.3)' }} />))}
               </div>
             </>
           )}
@@ -200,190 +271,99 @@ export default function ListingShow() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2rem', alignItems: 'start' }}>
         <div>
           <div className="detail-section">
+            <div className="flex items-center gap-2 mb-2">
+              <span style={{ fontWeight: 600, fontSize: '1.1rem' }}>Hosted by {host.username || 'Unknown'}</span>
+              {listing.category && <span className="badge badge-active">{listing.category}</span>}
+            </div>
+            <div className="flex gap-3 text-light" style={{ fontSize: '0.9rem' }}>
+              <span><i className="fa-solid fa-user"></i> {listing.maxGuests || 10} guests</span>
+              <span><i className="fa-solid fa-bed"></i> {listing.bedrooms || 1} bedroom{listing.bedrooms !== 1 ? 's' : ''}</span>
+              <span><i className="fa-solid fa-bath"></i> {listing.baths || 1} bath{listing.baths !== 1 ? 's' : ''}</span>
+            </div>
+          </div>
+
+          <div className="detail-section">
             <h3>About this place</h3>
             <p className="text-light">{listing.description}</p>
-            {listing.category && (
-              <span className="badge badge-active mt-1" style={{ display: 'inline-block' }}>
-                {listing.category}
-              </span>
-            )}
           </div>
 
-          <div className="detail-section">
-            <h3>Hosted by {host.username || 'Unknown'}</h3>
-            <p className="text-light">Member since {host.createdAt ? new Date(host.createdAt).toLocaleDateString() : 'N/A'}</p>
-          </div>
-
-          <div className="detail-section">
-            <h3>Location</h3>
-            <p className="text-light">{listing.location}, {listing.country}</p>
-            {listing.geometry?.coordinates && (
-              <div style={{
-                marginTop: '0.75rem', background: '#e8f4f8', borderRadius: 'var(--radius-sm)',
-                padding: '1.5rem', textAlign: 'center', color: 'var(--text-light)', fontSize: '0.9rem',
-              }}>
-                <i className="fa-solid fa-map-marker-alt" style={{ fontSize: '1.5rem', marginBottom: '0.5rem', display: 'block', color: 'var(--primary)' }}></i>
-                Lat: {listing.geometry.coordinates[1]?.toFixed(4)}, Lng: {listing.geometry.coordinates[0]?.toFixed(4)}
+          {(listing.amenities?.length > 0) && (
+            <div className="detail-section">
+              <h3>What this place offers</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                {listing.amenities.map((amenity, i) => (
+                  <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem' }}>
+                    <i className="fa-solid fa-check" style={{ color: 'var(--success)' }}></i> {amenity}
+                  </span>
+                ))}
               </div>
-            )}
+            </div>
+          )}
+
+          {listing.houseRules && (
+            <div className="detail-section">
+              <h3>House Rules</h3>
+              <p className="text-light">{listing.houseRules}</p>
+            </div>
+          )}
+
+          <div className="detail-section">
+            <div className="flex gap-2 mb-1">
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Check-in: {listing.checkInTime || '3:00 PM'}</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Check-out: {listing.checkOutTime || '11:00 AM'}</span>
+            </div>
           </div>
 
           <div className="detail-section" style={{ borderBottom: 'none' }}>
-            <h3>
-              Reviews
-              {avgRating && (
-                <span className="star-rating" style={{ marginLeft: '0.5rem' }}>
-                  <i className="fa-solid fa-star star-filled"></i>
-                  <span className="rating-value">{avgRating}</span>
-                </span>
-              )}
-            </h3>
+            <h3>Reviews{avgRating && <span className="star-rating" style={{ marginLeft: '0.5rem' }}><i className="fa-solid fa-star star-filled"></i><span className="rating-value">{avgRating}</span></span>}</h3>
 
-            {(!listing.reviews || listing.reviews.length === 0) && (
-              <p className="text-light">No reviews yet.</p>
-            )}
+            {(!listing.reviews || listing.reviews.length === 0) && <p className="text-light">No reviews yet.</p>}
 
             {(listing.reviews || []).map(review => {
               const reviewId = review._id || review.id;
               const isReviewAuthor = user && (user._id === (review.author?._id || review.author));
               return (
-                <div key={reviewId} style={{
-                  padding: '1rem 0', borderBottom: '1px solid var(--border)',
-                }}>
+                <div key={reviewId} style={{ padding: '1rem 0', borderBottom: '1px solid var(--border)' }}>
                   <div className="flex items-center justify-between" style={{ marginBottom: '0.35rem' }}>
                     <div className="flex items-center gap-1">
                       <strong style={{ fontSize: '0.9rem' }}>{review.author?.username || 'User'}</strong>
-                      <span className="star-rating" style={{ fontSize: '0.8rem' }}>
-                        {[1, 2, 3, 4, 5].map(s => (
-                          <i key={s} className={`fa-solid fa-star ${s <= review.rating ? 'star-filled' : 'star-empty'}`}></i>
-                        ))}
-                      </span>
+                      <span className="star-rating" style={{ fontSize: '0.8rem' }}>{[1, 2, 3, 4, 5].map(s => <i key={s} className={`fa-solid fa-star ${s <= review.rating ? 'star-filled' : 'star-empty'}`}></i>)}</span>
                     </div>
-                    <span className="text-light" style={{ fontSize: '0.8rem' }}>
-                      {new Date(review.createdAt).toLocaleDateString()}
-                    </span>
+                    <span className="text-light" style={{ fontSize: '0.8rem' }}>{new Date(review.createdAt).toLocaleDateString()}</span>
                   </div>
                   <p style={{ fontSize: '0.9rem' }}>{review.comment}</p>
-                  {isReviewAuthor && (
-                    <button
-                      className="btn btn-danger btn-sm mt-1"
-                      onClick={() => handleDeleteReview(reviewId)}
-                      style={{ fontSize: '0.75rem' }}
-                    >
-                      Delete
-                    </button>
-                  )}
+                  {isReviewAuthor && <button className="btn btn-danger btn-sm mt-1" onClick={() => handleDeleteReview(reviewId)} style={{ fontSize: '0.75rem' }}>Delete</button>}
                 </div>
               );
             })}
 
-            {user && (
+            {user ? (
               <form onSubmit={handleReview} style={{ marginTop: '1.5rem' }}>
                 <h3 style={{ marginBottom: '0.75rem' }}>Leave a Review</h3>
                 <div className="form-group">
                   <label>Rating</label>
-                  <div className="star-rating" style={{ fontSize: '1.25rem', cursor: 'pointer' }}>
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <i
-                        key={s}
-                        className={`fa-solid fa-star ${s <= reviewRating ? 'star-filled' : 'star-empty'}`}
-                        onClick={() => setReviewRating(s)}
-                        style={{ marginRight: 4 }}
-                      ></i>
-                    ))}
-                  </div>
+                  <div className="star-rating" style={{ fontSize: '1.25rem', cursor: 'pointer' }}>{[1, 2, 3, 4, 5].map(s => <i key={s} className={`fa-solid fa-star ${s <= reviewRating ? 'star-filled' : 'star-empty'}`} onClick={() => setReviewRating(s)} style={{ marginRight: 4 }}></i>)}</div>
                 </div>
                 <div className="form-group">
                   <label htmlFor="review-comment">Comment</label>
-                  <textarea
-                    id="review-comment"
-                    className="form-control"
-                    rows={3}
-                    value={reviewComment}
-                    onChange={e => setReviewComment(e.target.value)}
-                    placeholder="Share your experience..."
-                    required
-                  />
+                  <textarea id="review-comment" className="form-control" rows={3} value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder="Share your experience..." required />
                 </div>
-                <button type="submit" className="btn btn-primary" disabled={reviewLoading}>
-                  {reviewLoading ? 'Submitting...' : 'Submit Review'}
-                </button>
+                <button type="submit" className="btn btn-primary" disabled={reviewLoading}>{reviewLoading ? 'Submitting...' : 'Submit Review'}</button>
               </form>
-            )}
-            {!user && (
-              <p className="text-light mt-2">
-                <Link to="/login" style={{ color: 'var(--primary)' }}>Log in</Link> to leave a review.
-              </p>
-            )}
+            ) : <p className="text-light mt-2"><Link to="/login" style={{ color: 'var(--primary)' }}>Log in</Link> to leave a review.</p>}
           </div>
         </div>
 
-        <div className="card" style={{ position: 'sticky', top: 80, padding: '1.5rem' }}>
-          <p className="card-price" style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>
-            ₹{listing.price?.toLocaleString('en-IN')} <span>/ night</span>
-          </p>
-
-          <form onSubmit={handleBooking}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: '1rem' }}>
-              <div style={{ borderRight: '1px solid var(--border)', padding: '0.625rem 0.75rem' }}>
-                <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Check-in</label>
-                <input
-                  type="date"
-                  value={checkIn}
-                  onChange={e => setCheckIn(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 2 }}
-                  required
-                />
-              </div>
-              <div style={{ padding: '0.625rem 0.75rem' }}>
-                <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Check-out</label>
-                <input
-                  type="date"
-                  value={checkOut}
-                  onChange={e => setCheckOut(e.target.value)}
-                  min={checkIn || new Date().toISOString().split('T')[0]}
-                  style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 2 }}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-group" style={{ marginBottom: '1rem' }}>
-              <label>Guests</label>
-              <input
-                type="number"
-                className="form-control"
-                min={1}
-                max={20}
-                value={guests}
-                onChange={e => setGuests(Number(e.target.value))}
-                required
-              />
-            </div>
-
-            <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={bookingLoading}>
-              {bookingLoading ? 'Booking...' : 'Book Now'}
-            </button>
-          </form>
-
-          {nights > 0 && (
-            <div style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
-              <div className="flex justify-between" style={{ padding: '0.35rem 0' }}>
-                <span className="text-light">₹{listing.price?.toLocaleString('en-IN')} x {nights} night{nights !== 1 ? 's' : ''}</span>
-                <span>₹{subtotal.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="flex justify-between" style={{ padding: '0.35rem 0' }}>
-                <span className="text-light">Service fee (12%)</span>
-                <span>₹{serviceFee.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="flex justify-between" style={{ padding: '0.75rem 0 0', borderTop: '1px solid var(--border)', fontWeight: 700, marginTop: '0.5rem' }}>
-                <span>Total</span>
-                <span>₹{totalPrice.toLocaleString('en-IN')}</span>
-              </div>
-            </div>
-          )}
-        </div>
+        {user && user.role !== 'host' && (
+          <Elements stripe={stripePromise}>
+            <BookingForm listing={listing} user={user} navigate={navigate} />
+          </Elements>
+        )}
+        {(!user || user.role === 'host') && (
+          <div className="card" style={{ position: 'sticky', top: 80, padding: '1.5rem' }}>
+            <p className="text-light text-center">Login as a guest to book this place</p>
+          </div>
+        )}
       </div>
     </div>
   );

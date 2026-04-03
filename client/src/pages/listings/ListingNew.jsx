@@ -8,6 +8,13 @@ const CATEGORIES = [
   'Amazing pools', 'Camping', 'Farms', 'Arctic', 'Domes', 'Boats',
 ];
 
+const AMENITIES = [
+  'Wifi', 'Kitchen', 'AC', 'Heating', 'Washer', 'Dryer',
+  'TV', 'Parking', 'Pool', 'Gym', 'Hot Tub', 'Pet Friendly',
+  'Workspace', 'Coffee Maker', 'Iron', 'Hair Dryer', 'BBQ Grill', 'Beach Access',
+  'Mountain View', 'Lake Access', 'Ski-in/Ski-out', 'EV Charger', 'Wheelchair Accessible'
+];
+
 export default function ListingNew() {
   const navigate = useNavigate();
 
@@ -18,7 +25,15 @@ export default function ListingNew() {
     country: '',
     price: '',
     category: 'Trending',
+    maxGuests: '10',
+    bedrooms: '1',
+    beds: '1',
+    baths: '1',
+    houseRules: '',
+    checkInTime: '3:00 PM',
+    checkOutTime: '11:00 AM',
   });
+  const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [images, setImages] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -26,6 +41,14 @@ export default function ListingNew() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const toggleAmenity = (amenity) => {
+    setSelectedAmenities(prev =>
+      prev.includes(amenity)
+        ? prev.filter(a => a !== amenity)
+        : [...prev, amenity]
+    );
   };
 
   const handleImages = (e) => {
@@ -49,6 +72,7 @@ export default function ListingNew() {
 
     const data = new FormData();
     Object.entries(form).forEach(([key, val]) => data.append(`listing[${key}]`, val));
+    selectedAmenities.forEach(a => data.append(`listing[amenities]`, a));
     images.forEach(img => data.append('listing[images]', img));
 
     try {
@@ -130,9 +154,9 @@ export default function ListingNew() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
               <div className="form-group">
-                <label htmlFor="price">Price per night (₹)</label>
+                <label htmlFor="price">Price/night (₹)</label>
                 <input
                   id="price"
                   name="price"
@@ -145,6 +169,46 @@ export default function ListingNew() {
                   required
                 />
               </div>
+              <div className="form-group">
+                <label htmlFor="maxGuests">Guests</label>
+                <input
+                  id="maxGuests"
+                  name="maxGuests"
+                  type="number"
+                  className="form-control"
+                  value={form.maxGuests}
+                  onChange={handleChange}
+                  min={1}
+                  max={20}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="bedrooms">Bedrooms</label>
+                <input
+                  id="bedrooms"
+                  name="bedrooms"
+                  type="number"
+                  className="form-control"
+                  value={form.bedrooms}
+                  onChange={handleChange}
+                  min={0}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="beds">Beds</label>
+                <input
+                  id="beds"
+                  name="beds"
+                  type="number"
+                  className="form-control"
+                  value={form.beds}
+                  onChange={handleChange}
+                  min={0}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
               <div className="form-group">
                 <label htmlFor="category">Category</label>
                 <select
@@ -160,6 +224,69 @@ export default function ListingNew() {
                   ))}
                 </select>
               </div>
+              <div className="form-group">
+                <label htmlFor="checkInTime">Check-in Time</label>
+                <input
+                  id="checkInTime"
+                  name="checkInTime"
+                  type="text"
+                  className="form-control"
+                  value={form.checkInTime}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="checkOutTime">Check-out Time</label>
+                <input
+                  id="checkOutTime"
+                  name="checkOutTime"
+                  type="text"
+                  className="form-control"
+                  value={form.checkOutTime}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Amenities</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {AMENITIES.map(amenity => (
+                  <button
+                    key={amenity}
+                    type="button"
+                    onClick={() => toggleAmenity(amenity)}
+                    style={{
+                      padding: '0.375rem 0.75rem',
+                      borderRadius: 'var(--radius-full)',
+                      border: selectedAmenities.includes(amenity)
+                        ? '2px solid var(--primary)'
+                        : '1px solid var(--border)',
+                      background: selectedAmenities.includes(amenity)
+                        ? 'var(--primary)'
+                        : 'transparent',
+                      color: selectedAmenities.includes(amenity) ? '#fff' : 'var(--text)',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                    }}
+                  >
+                    {amenity}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="houseRules">House Rules</label>
+              <textarea
+                id="houseRules"
+                name="houseRules"
+                className="form-control"
+                rows={3}
+                value={form.houseRules}
+                onChange={handleChange}
+                placeholder="No smoking, no pets, quiet hours after 10 PM..."
+              />
             </div>
 
             <div className="form-group">
@@ -176,23 +303,8 @@ export default function ListingNew() {
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
                   {previews.map((src, i) => (
                     <div key={i} style={{ position: 'relative' }}>
-                      <img
-                        src={src}
-                        alt={`Preview ${i + 1}`}
-                        style={{ width: 100, height: 80, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(i)}
-                        style={{
-                          position: 'absolute', top: -6, right: -6, width: 22, height: 22,
-                          borderRadius: '50%', background: 'var(--danger)', color: '#fff',
-                          border: 'none', cursor: 'pointer', fontSize: '0.75rem',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}
-                      >
-                        &times;
-                      </button>
+                      <img src={src} alt={`Preview ${i + 1}`} style={{ width: 100, height: 80, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                      <button type="button" onClick={() => removeImage(i)} style={{ position: 'absolute', top: -6, right: -6, width: 22, height: 22, borderRadius: '50%', background: 'var(--danger)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
                     </div>
                   ))}
                 </div>

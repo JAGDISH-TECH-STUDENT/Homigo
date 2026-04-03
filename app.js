@@ -19,6 +19,7 @@ const userRouter = require("./routes/user.js");
 const bookingRouter = require("./routes/booking.js");
 const adminRouter = require("./routes/admin.js");
 const favoriteRouter = require("./routes/favorite.js");
+const paymentRouter = require("./routes/payment.js");
 
 main().then(() => {
     console.log("connected to DB");
@@ -72,6 +73,7 @@ app.use("/api/auth", userRouter);
 app.use("/api", bookingRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/favorites", favoriteRouter);
+app.use("/api/payment", paymentRouter);
 
 if (process.env.NODE_ENV === "production") {
     app.use(express.static(path.join(__dirname, "client", "dist")));
