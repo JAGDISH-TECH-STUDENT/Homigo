@@ -1,6 +1,4 @@
 window.onload = function () {
-  console.log("Map script loaded");
-
   const defaultCoords = [77.2090, 28.6139];
 
   const listingCoords = [coords.lon,coords.lat];
@@ -8,7 +6,6 @@ window.onload = function () {
 
        
   const isValidCoords = Array.isArray(listingCoords) && listingCoords.length === 2;
-  console.log(isValidCoords);
   const map = tt.map({
    
     key: TOM_API_KEY,

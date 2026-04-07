@@ -19,6 +19,10 @@ const reviewSchema= new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref:"User",
     },
-  
+    listing: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Listing",
+    },
 });
+
 module.exports=mongoose.model("Review",reviewSchema);

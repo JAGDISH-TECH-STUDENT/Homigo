@@ -20,6 +20,13 @@ const bookingRouter = require("./routes/booking.js");
 const adminRouter = require("./routes/admin.js");
 const favoriteRouter = require("./routes/favorite.js");
 const paymentRouter = require("./routes/payment.js");
+const complaintsRouter = require("./routes/complaints.js");
+const notificationsRouter = require("./routes/notifications.js");
+const adminComplaintsRouter = require("./routes/adminComplaintsSimple.js");
+const adminAnalyticsRouter = require("./routes/adminAnalyticsSimple.js");
+const forgotRouter = require("./routes/forgot.js");
+const messagesRouter = require("./routes/messages.js");
+const hostEarningsRouter = require("./routes/hostEarnings.js");
 
 main().then(() => {
     console.log("connected to DB");
@@ -73,7 +80,14 @@ app.use("/api/auth", userRouter);
 app.use("/api", bookingRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/favorites", favoriteRouter);
+app.use("/api/admin/complaints", adminComplaintsRouter);
+app.use("/api/admin/analytics", adminAnalyticsRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api/complaints", complaintsRouter);
+app.use("/api/notifications", notificationsRouter.router);
+app.use("/api/forgot", forgotRouter);
+app.use("/api/messages", messagesRouter);
+app.use("/api/host/earnings", hostEarningsRouter);
 
 if (process.env.NODE_ENV === "production") {
     app.use(express.static(path.join(__dirname, "client", "dist")));

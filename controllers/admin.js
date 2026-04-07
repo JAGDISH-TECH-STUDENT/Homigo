@@ -2,19 +2,80 @@ const User = require("../models/user");
 const Listing = require("../models/listing");
 const Booking = require("../models/booking");
 const Review = require("../models/review");
+const Notification = require("../models/notification");
 
 module.exports.renderDashboard = async (req, res) => {
-    const totalUsers = await User.countDocuments();
-    const totalListings = await Listing.countDocuments();
-    const totalBookings = await Booking.countDocuments();
-    const totalReviews = await Review.countDocuments();
-    const guests = await User.countDocuments({ $or: [{ role: 'guest' }, { role: { $exists: false } }] });
-    const hosts = await User.countDocuments({ role: 'host' });
-    const admins = await User.countDocuments({ role: 'admin' });
-    const recentUsers = await User.find().sort({ _id: -1 }).limit(5);
-    const recentListings = await Listing.find().sort({ _id: -1 }).limit(5);
-    const recentBookings = await Booking.find().sort({ _id: -1 }).limit(5);
-    res.json({ totalUsers, totalListings, totalBookings, totalReviews, guests, hosts, admins, recentUsers, recentListings, recentBookings });
+    try {
+        const totalUsers = await User.countDocuments();
+        const totalListings = await Listing.countDocuments();
+        const totalBookings = await Booking.countDocuments();
+        const totalReviews = await Review.countDocuments();
+        const guests = await User.countDocuments({ $or: [{ role: 'guest' }, { role: { $exists: false } }] });
+        const hosts = await User.countDocuments({ role: 'host' });
+        const admins = await User.countDocuments({ role: 'admin' });
+        const recentUsers = await User.find().sort({ _id: -1 }).limit(5).select('username email role createdAt');
+        const recentBookings = await Booking.find().sort({ _id: -1 }).limit(5);
+        const activeListings = await Listing.countDocuments();
+        const confirmedBookings = await Booking.countDocuments({ status: 'confirmed' });
+        const totalRevenue = await Booking.aggregate([
+            { $match: { status: 'confirmed' } },
+            { $group: { _id: null, total: { $sum: '$totalPrice' } } }
+        ]);
+        const avgListingPrice = await Listing.aggregate([
+            { $group: { _id: null, avg: { $avg: '$price' } } }
+        ]);
+        
+        const allListings = await Listing.find();
+        const reviewIds = allListings.flatMap(l => l.reviews || []);
+        const uniqueReviewIds = [...new Set(reviewIds.map(id => id.toString()))];
+        const allReviews = await Review.find({ _id: { $in: uniqueReviewIds } });
+        
+        const reviewMap = {};
+        allReviews.forEach(r => { reviewMap[r._id.toString()] = r; });
+        
+        const listingsWithRating = allListings.map(l => {
+            const reviewsArr = (l.reviews || []).map(id => reviewMap[id.toString()]).filter(Boolean);
+            const count = reviewsArr.length;
+            const totalRating = reviewsArr.reduce((sum, r) => sum + (r.rating || 0), 0);
+            const avg = count > 0 ? Math.round((totalRating / count) * 10) / 10 : 0;
+            
+            return {
+                _id: l._id,
+                title: l.title,
+                location: l.location,
+                country: l.country,
+                price: l.price,
+                avgRating: avg,
+                reviewsCount: count
+            };
+        });
+        
+        const recentListingsWithRating = [...listingsWithRating]
+            .sort((a, b) => b._id.toString().localeCompare(a._id.toString()))
+            .slice(0, 5);
+        
+        const topListings = [...listingsWithRating]
+            .sort((a, b) => {
+                if (b.avgRating !== a.avgRating) {
+                    return b.avgRating - a.avgRating;
+                }
+                return b.reviewsCount - a.reviewsCount;
+            })
+            .slice(0, 5);
+        
+        console.log('Dashboard response - activeListings:', activeListings, 'totalListings:', totalListings);
+        
+        res.json({ 
+            totalUsers, totalListings, totalBookings, totalReviews, guests, hosts, admins, 
+            recentUsers, recentListings: recentListingsWithRating, recentBookings,
+            activeListings, confirmedBookings,
+            totalRevenue: totalRevenue[0]?.total || 0,
+            avgListingPrice: avgListingPrice[0]?.avg || 0,
+            topListings
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
 module.exports.renderUsers = async (req, res) => {
@@ -55,6 +116,97 @@ module.exports.deleteUser = async (req, res) => {
     res.json({ success: true, message: "User and associated data deleted" });
 };
 
+module.exports.blockUser = async (req, res) => {
+    const { id } = req.params;
+    const { reason } = req.body;
+    if (req.user._id.equals(id)) {
+        return res.status(400).json({ error: "Cannot block your own account" });
+    }
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    user.blocked = true;
+    user.blockReason = reason || 'Violation of terms';
+    user.blockedAt = new Date();
+    await user.save();
+    res.json({ success: true, user });
+};
+
+module.exports.unblockUser = async (req, res) => {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    user.blocked = false;
+    user.blockReason = null;
+    user.blockedAt = null;
+    await user.save();
+    res.json({ success: true, user });
+};
+
+module.exports.sendMessageToUser = async (req, res) => {
+    const { id } = req.params;
+    const { message, subject } = req.body;
+    
+    if (!message || !subject) {
+        return res.status(400).json({ error: "Subject and message are required" });
+    }
+    
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    
+    const notification = new Notification({
+        user: id,
+        type: 'system',
+        title: subject,
+        message: message,
+        link: null
+    });
+    
+    await notification.save();
+    res.json({ success: true, message: "Message sent to user" });
+};
+
+module.exports.deactivateListing = async (req, res) => {
+    const listing = await Listing.findByIdAndUpdate(
+        req.params.id,
+        { active: false },
+        { new: true }
+    ).populate("owner", "username email");
+    if (!listing) return res.status(404).json({ error: "Listing not found" });
+    
+    if (listing.owner) {
+        await Notification.create({
+            user: listing.owner._id,
+            type: 'listing',
+            title: 'Listing Deactivated',
+            message: `Your listing "${listing.title}" has been deactivated by admin. Contact support for details.`,
+            link: `/listings/${listing._id}`
+        });
+    }
+    
+    res.json({ success: true, listing });
+};
+
+module.exports.activateListing = async (req, res) => {
+    const listing = await Listing.findByIdAndUpdate(
+        req.params.id,
+        { active: true },
+        { new: true }
+    ).populate("owner", "username email");
+    if (!listing) return res.status(404).json({ error: "Listing not found" });
+    
+    if (listing.owner) {
+        await Notification.create({
+            user: listing.owner._id,
+            type: 'listing',
+            title: 'Listing Activated',
+            message: `Your listing "${listing.title}" has been activated by admin.`,
+            link: `/listings/${listing._id}`
+        });
+    }
+    
+    res.json({ success: true, listing });
+};
+
 module.exports.renderListings = async (req, res) => {
     const listings = await Listing.find().populate("owner", "username email").sort({ _id: -1 });
     res.json({ listings });
@@ -93,7 +245,8 @@ module.exports.deleteBooking = async (req, res) => {
 module.exports.renderReviews = async (req, res) => {
     const reviews = await Review.find()
         .populate("author", "username email")
-        .sort({ _id: -1 });
+        .populate("listing", "title")
+        .sort({ createdAt: -1 });
     res.json({ reviews });
 };
 

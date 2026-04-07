@@ -85,21 +85,76 @@ module.exports.createListing = async (req, res) => {
 
 module.exports.updateListing = async (req, res) => {
     const { id } = req.params;
-    if (req.body.listing.category === '') {
-        delete req.body.listing.category;
+    
+    const listingData = {
+      title: req.body.title,
+      description: req.body.description,
+      location: req.body.location,
+      country: req.body.country,
+      price: req.body.price,
+      category: req.body.category,
+    };
+    
+    let existingImages = [];
+    if (req.body.existingImages) {
+      if (Array.isArray(req.body.existingImages)) {
+        existingImages = req.body.existingImages;
+      } else {
+        existingImages = [req.body.existingImages];
+      }
     }
-    const listing = await Listing.findByIdAndUpdate(id, { ...req.body.listing }, { new: true });
+    
+    if (listingData.category === '') {
+        delete listingData.category;
+    }
+    
+    const listing = await Listing.findById(id);
     if (!listing) {
         return res.status(404).json({ error: "Listing not found" });
     }
+    
+    // Only update fields that have values
+    if (listingData.title) listing.title = listingData.title;
+    if (listingData.description) listing.description = listingData.description;
+    if (listingData.location) listing.location = listingData.location;
+    if (listingData.country) listing.country = listingData.country;
+    if (listingData.price) listing.price = listingData.price;
+    if (listingData.category) listing.category = listingData.category;
+    
+    let finalImages = [];
+    
+    // Handle existing images - preserve URLs from the database if not explicitly removed
+    if (existingImages.length > 0) {
+      finalImages = existingImages.map(url => ({
+        url: url,
+        filename: url.split('/').pop() || 'image'
+      }));
+    }
+    
+    // Handle new uploaded images
     if (req.files && req.files.length > 0) {
         const newImages = req.files.map(file => ({
             url: file.path,
             filename: file.filename
         }));
-        listing.images = [...listing.images, ...newImages];
-        await listing.save();
+        finalImages = [...finalImages, ...newImages];
     }
+    
+    // If no images at all, keep the old ones or add default
+    if (finalImages.length === 0 && listing.images && listing.images.length > 0) {
+      finalImages = listing.images;
+    }
+    
+    // If still no images, add default
+    if (finalImages.length === 0) {
+      finalImages = [{
+        url: "https://thumbs.dreamstime.com/z/no-photo-available-missing-image-no-image-symbol-isolated-white-background-no-photo-available-missing-image-no-image-272386839.jpg",
+        filename: "no-image"
+      }];
+    }
+    
+    listing.images = finalImages;
+    await listing.save();
     res.json({ success: true, listing });
 };
 

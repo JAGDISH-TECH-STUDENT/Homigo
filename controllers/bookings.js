@@ -51,7 +51,7 @@ module.exports.createBooking = async (req, res) => {
             checkOut: checkOutDate,
             guests: parseInt(guests),
             totalPrice,
-            status: "pending"
+            status: "confirmed"
         });
         await booking.save();
         res.status(201).json({ success: true, booking });

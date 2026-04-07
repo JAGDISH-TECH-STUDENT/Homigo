@@ -9,12 +9,13 @@ module.exports.createReview = async (req, res) => {
     const newReview = new Review({
         rating: req.body.review.rating,
         comment: req.body.review.comment,
-        author: req.user._id
+        author: req.user._id,
+        listing: req.params.id
     });
     listing.reviews.push(newReview);
     await newReview.save();
     await listing.save();
-    const populated = await Review.findById(newReview._id).populate("author", "username");
+    const populated = await Review.findById(newReview._id).populate("author", "username").populate("listing", "title");
     res.status(201).json({ success: true, review: populated });
 };
 

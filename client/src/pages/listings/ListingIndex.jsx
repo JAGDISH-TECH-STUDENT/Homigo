@@ -201,13 +201,14 @@ export default function ListingIndex() {
       ) : (
         <div className="listing-grid">
           {listings.map(listing => (
-            <div key={listing._id} className="card" style={{ position: 'relative' }}>
+            <div key={listing._id} className="card" style={{ position: 'relative', overflow: 'visible' }}>
               <button
                 className={`favorite-btn${favorites.has(listing._id) ? ' active' : ''}`}
                 onClick={(e) => { e.preventDefault(); toggleFavorite(listing._id); }}
                 title={favorites.has(listing._id) ? 'Remove from favorites' : 'Add to favorites'}
+                style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 100, width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                <i className={favorites.has(listing._id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'}></i>
+                <span style={{ color: favorites.has(listing._id) ? '#6D67C9' : '#ccc', fontSize: '1.2rem', lineHeight: 1 }}>♥</span>
               </button>
               <Link to={`/listings/${listing._id}`}>
                 <img

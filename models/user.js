@@ -12,6 +12,22 @@ const userSchema=new Schema({
         type: String,
         enum: ['guest', 'host', 'admin'],
         default: 'guest'
+    },
+    blocked: {
+        type: Boolean,
+        default: false
+    },
+    blockReason: {
+        type: String,
+        default: null
+    },
+    blockedAt: {
+        type: Date,
+        default: null
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
 })
 

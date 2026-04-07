@@ -10,6 +10,8 @@ import ListingEdit from './pages/listings/ListingEdit';
 import HostListings from './pages/listings/HostListings';
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import Chat from './pages/Chat';
 import BookingIndex from './pages/bookings/BookingIndex';
 import BookingShow from './pages/bookings/BookingShow';
 import HostDashboard from './pages/bookings/HostDashboard';
@@ -19,6 +21,9 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminListings from './pages/admin/AdminListings';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminReviews from './pages/admin/AdminReviews';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminComplaints from './pages/admin/AdminComplaints';
+import Complaints from './pages/Complaints';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -51,14 +56,20 @@ export default function App() {
             <Route path="/host/dashboard" element={<PrivateRoute><HostDashboard /></PrivateRoute>} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/chat" element={<PrivateRoute><Chat /></PrivateRoute>} />
+            <Route path="/chat/:userId" element={<PrivateRoute><Chat /></PrivateRoute>} />
             <Route path="/bookings" element={<PrivateRoute><BookingIndex /></PrivateRoute>} />
             <Route path="/bookings/:bookingId" element={<PrivateRoute><BookingShow /></PrivateRoute>} />
             <Route path="/favorites" element={<PrivateRoute><Favorites /></PrivateRoute>} />
+            <Route path="/complaints" element={<Complaints />} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
             <Route path="/admin/listings" element={<AdminRoute><AdminListings /></AdminRoute>} />
             <Route path="/admin/bookings" element={<AdminRoute><AdminBookings /></AdminRoute>} />
             <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
+            <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
+            <Route path="/admin/complaints" element={<AdminRoute><AdminComplaints /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

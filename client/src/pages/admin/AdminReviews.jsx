@@ -12,8 +12,12 @@ export default function AdminReviews() {
 
   useEffect(() => {
     API.get('/admin/reviews')
-      .then(res => setReviews(res.data.reviews || []))
-      .catch(err => setError(err.response?.data?.error || 'Failed to load reviews'))
+      .then(res => {
+        setReviews(res.data.reviews || []);
+      })
+      .catch(err => {
+        setError(err.response?.data?.error || 'Failed to load reviews');
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -30,7 +34,8 @@ export default function AdminReviews() {
 
   const filtered = reviews.filter(r =>
     r.author?.username?.toLowerCase().includes(search.toLowerCase()) ||
-    r.comment?.toLowerCase().includes(search.toLowerCase())
+    r.comment?.toLowerCase().includes(search.toLowerCase()) ||
+    r.listing?.title?.toLowerCase().includes(search.toLowerCase())
   );
 
   if (loading) return <div className="loading-spinner" />;
@@ -38,30 +43,37 @@ export default function AdminReviews() {
   return (
     <div className="admin-layout">
       <aside className="admin-sidebar">
-        <Link to="/admin">Dashboard</Link>
-        <Link to="/admin/users">Users</Link>
-        <Link to="/admin/listings">Listings</Link>
-        <Link to="/admin/bookings">Bookings</Link>
-        <Link to="/admin/reviews" className="active">Reviews</Link>
+        <div className="admin-sidebar-brand">Homigo<span>Admin</span></div>
+        <Link to="/admin"><i className="fa-solid fa-gauge-high"></i> Dashboard</Link>
+        <Link to="/admin/users"><i className="fa-solid fa-users"></i> Users</Link>
+        <Link to="/admin/listings"><i className="fa-solid fa-building"></i> Listings</Link>
+        <Link to="/admin/bookings"><i className="fa-solid fa-calendar-check"></i> Bookings</Link>
+        <Link to="/admin/reviews" className="active"><i className="fa-solid fa-star"></i> Reviews</Link>
+        <Link to="/admin/analytics"><i className="fa-solid fa-chart-line"></i> Analytics</Link>
+        <Link to="/admin/complaints"><i className="fa-solid fa-headset"></i> Complaints</Link>
       </aside>
       <div className="admin-content">
         {error && <FlashMessage message={error} type="error" />}
         {success && <FlashMessage message={success} type="success" />}
-        <div className="page-header">
+        <div className="admin-header">
           <h1>Manage Reviews</h1>
           <input type="text" className="form-control" placeholder="Search reviews..." value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: 300 }} />
         </div>
-        <div className="table-wrapper">
-          <table className="table">
-            <thead><tr><th>Author</th><th>Rating</th><th>Comment</th><th>Date</th><th>Actions</th></tr></thead>
+        <div className="admin-table-card">
+          <table className="table" style={{ margin: 0 }}>
+            <thead><tr><th>ID</th><th>Author</th><th>Listing</th><th>Rating</th><th>Comment</th><th>Date</th><th>Actions</th></tr></thead>
             <tbody>
-              {filtered.map(r => (
+              {filtered.length === 0 ? (
+                <tr><td colSpan={7} className="text-center text-light">No reviews found</td></tr>
+              ) : filtered.map(r => (
                 <tr key={r._id}>
-                  <td>@{r.author?.username || 'N/A'}</td>
+                  <td style={{ fontSize: '0.7rem', color: '#888' }}>{r._id?.slice(-8)}</td>
+                  <td style={{ fontWeight: 500 }}>@{r.author?.username || 'N/A'}</td>
+                  <td style={{ fontSize: '0.85rem', color: '#666' }}>{r.listing?.title || '-'}</td>
                   <td>
-                    <span className="star-rating">
+                    <span style={{ display: 'flex', gap: '2px' }}>
                       {[1, 2, 3, 4, 5].map(s => (
-                        <i key={s} className={`fa-solid fa-star ${s <= r.rating ? 'star-filled' : 'star-empty'}`}></i>
+                        <span key={s} style={{ color: s <= r.rating ? '#6D67C9' : '#ddd', fontSize: '0.9rem' }}>★</span>
                       ))}
                     </span>
                   </td>

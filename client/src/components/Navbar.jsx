@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Notifications from './Notifications';
 
 const CATEGORIES = [
   'All',
@@ -83,6 +84,8 @@ export default function Navbar() {
                   <Link to="/bookings" onClick={() => setMenuOpen(false)}>My Bookings</Link>
                 </>
               )}
+              <Link to="/chat" onClick={() => setMenuOpen(false)}>Messages</Link>
+              <Notifications />
               <span className="navbar-user">{user.username}</span>
               <button className="btn btn-secondary btn-sm" onClick={handleLogout}>Logout</button>
             </>

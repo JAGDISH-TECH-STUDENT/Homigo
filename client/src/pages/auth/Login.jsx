@@ -58,6 +58,9 @@ export default function Login() {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+        <p className="text-center" style={{ marginTop: '0.75rem' }}>
+          <Link to="/forgot-password" style={{ color: 'var(--primary)', fontSize: '0.9rem' }}>Forgot Password?</Link>
+        </p>
         <p className="text-center text-light mt-2" style={{ fontSize: '0.9rem' }}>
           Don't have an account? <Link to="/signup" style={{ color: 'var(--primary)', fontWeight: 600 }}>Sign up</Link>
         </p>

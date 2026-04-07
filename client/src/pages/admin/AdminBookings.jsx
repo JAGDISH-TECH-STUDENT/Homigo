@@ -38,26 +38,29 @@ export default function AdminBookings() {
   return (
     <div className="admin-layout">
       <aside className="admin-sidebar">
-        <Link to="/admin">Dashboard</Link>
-        <Link to="/admin/users">Users</Link>
-        <Link to="/admin/listings">Listings</Link>
-        <Link to="/admin/bookings" className="active">Bookings</Link>
-        <Link to="/admin/reviews">Reviews</Link>
+        <div className="admin-sidebar-brand">Homigo<span>Admin</span></div>
+        <Link to="/admin"><i className="fa-solid fa-gauge-high"></i> Dashboard</Link>
+        <Link to="/admin/users"><i className="fa-solid fa-users"></i> Users</Link>
+        <Link to="/admin/listings"><i className="fa-solid fa-building"></i> Listings</Link>
+        <Link to="/admin/bookings" className="active"><i className="fa-solid fa-calendar-check"></i> Bookings</Link>
+        <Link to="/admin/reviews"><i className="fa-solid fa-star"></i> Reviews</Link>
+        <Link to="/admin/analytics"><i className="fa-solid fa-chart-line"></i> Analytics</Link>
+        <Link to="/admin/complaints"><i className="fa-solid fa-headset"></i> Complaints</Link>
       </aside>
       <div className="admin-content">
         {error && <FlashMessage message={error} type="error" />}
         {success && <FlashMessage message={success} type="success" />}
-        <div className="page-header">
+        <div className="admin-header">
           <h1>Manage Bookings</h1>
           <input type="text" className="form-control" placeholder="Search bookings..." value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: 300 }} />
         </div>
-        <div className="table-wrapper">
-          <table className="table">
+        <div className="admin-table-card">
+          <table className="table" style={{ margin: 0 }}>
             <thead><tr><th>Listing</th><th>Guest</th><th>Check-in</th><th>Check-out</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
               {filtered.map(b => (
                 <tr key={b._id}>
-                  <td>{b.listing?.title || 'N/A'}</td>
+                  <td style={{ fontWeight: 500 }}>{b.listing?.title || 'N/A'}</td>
                   <td>@{b.user?.username || 'N/A'}</td>
                   <td>{new Date(b.checkIn).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                   <td>{new Date(b.checkOut).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>

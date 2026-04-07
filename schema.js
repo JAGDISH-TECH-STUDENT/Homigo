@@ -21,7 +21,8 @@ module.exports.ListingSchema = Joi.object({
         filename: Joi.string().allow("", null).optional(),
       })
     ).optional(),
-  }).required()
+  }).required(),
+  existingImages: Joi.alternatives().try(Joi.array().items(Joi.string()), Joi.string()).optional()
 });
 
 module.exports.reviewSchema = Joi.object({

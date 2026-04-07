@@ -5,8 +5,6 @@ import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
 import ListingMap from '../../components/ListingMap';
 
-const PUBLISHABLE_KEY = 'pk_test_51TIASeBN1PIqJJhZDeJRORSIX14Gwhm9sfH4wul6leHGp8YZBFUB0Pn2vvqtSjszaBtNhqQYhyitbc85NyImqr1u00n5AxMvbq';
-
 function BookingForm({ listing, user, navigate }) {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
@@ -25,12 +23,59 @@ function BookingForm({ listing, user, navigate }) {
     setBookingLoading(true);
     setError('');
     
+    const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
+    const subtotal = nights * totalPrice;
+    const grandTotal = subtotal + Math.round(subtotal * 0.12);
+
     try {
-      await API.post(`/listings/${listing._id}/bookings`, { booking: { checkIn, checkOut, guests } });
-      setSuccess('Booking confirmed!');
-      setCheckIn(''); setCheckOut(''); setGuests(1);
+      const orderRes = await API.post('/payment/create-order', {
+        amount: grandTotal,
+        listingTitle: listing.title,
+        nights,
+        checkIn,
+        checkOut
+      });
+
+      const { orderId, keyId } = orderRes.data;
+
+      const options = {
+        key: keyId,
+        amount: orderRes.data.amount,
+        order_id: orderId,
+        name: "Homigo Booking",
+        description: `${nights} night(s) - ${listing.title}`,
+        handler: async function(response) {
+          try {
+            await API.post('/payment/verify-payment', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            });
+            
+            await API.post(`/listings/${listing._id}/bookings`, { booking: { checkIn, checkOut, guests } });
+            setSuccess('Booking confirmed! Payment successful.');
+          
+          } catch (err) {
+            setError('Payment verified but booking failed. Contact support.');
+          }
+        },
+        prefill: {
+          name: user.name || user.username || "",
+          email: user.email || ""
+        },
+        theme: {
+          color: "#5f60b9"
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+      
+      rzp.on('payment.failed', function() {
+        setError('Payment failed. Please try again.');
+      });
     } catch (err) {
-      setError(err.response?.data?.error || 'Booking failed');
+      setError('Payment failed. Please try again.');
     } finally {
       setBookingLoading(false);
     }
@@ -103,10 +148,22 @@ export default function ListingShow() {
   const [success, setSuccess] = useState('');
 
   const [currentImage, setCurrentImage] = useState(0);
+  const [rotation, setRotation] = useState(0);
+  const [autoSlide, setAutoSlide] = useState(true);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
   const [deletingListing, setDeletingListing] = useState(false);
+
+  useEffect(() => {
+    const images = listing?.images || [];
+    if (autoSlide && images.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentImage(i => (i + 1) % images.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [autoSlide, listing?.images]);
 
   useEffect(() => {
     setLoading(true);
@@ -157,8 +214,10 @@ export default function ListingShow() {
     }
   };
 
-  const avgRating = listing?.reviews?.length
-    ? (listing.reviews.reduce((sum, r) => sum + r.rating, 0) / listing.reviews.length).toFixed(1)
+  const reviews = listing?.reviews || [];
+  const reviewCount = Array.isArray(reviews) ? reviews.length : 0;
+  const avgRating = reviewCount > 0
+    ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewCount).toFixed(1)
     : null;
 
   const isOwner = user && listing && (user._id === listing.owner?._id || user._id === listing.owner);
@@ -179,28 +238,15 @@ export default function ListingShow() {
       {success && <FlashMessage message={success} type="success" />}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 className="detail-title" style={{ margin: 0 }}>{listing.title}</h1>
-        {user && !isOwner && (
-          <button
-            onClick={async () => {
-              try {
-                await API.post(`/favorites/${id}/toggle`);
-                setListing(prev => ({ ...prev, isFavorited: !listing.isFavorited }));
-              } catch {}
-            }}
-            style={{ width: 44, height: 44, borderRadius: '8px', background: '#fff', border: '1px solid #ddd', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-          >
-            <i className={listing.isFavorited ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} style={{ color: listing.isFavorited ? '#ff385c' : '#666' }}></i>
-          </button>
-        )}
+        <h1 className="detail-title" style={{ margin: '0 0 0.5rem 0' }}>{listing.title}</h1>
       </div>
-      <p className="detail-location">
+      <p className="detail-location" style={{ marginBottom: '0.5rem' }}>
         {listing.location}, {listing.country}
         {avgRating && (
           <span className="star-rating" style={{ marginLeft: '1rem' }}>
             <i className="fa-solid fa-star star-filled"></i>
             <span className="rating-value">{avgRating}</span>
-            <span className="text-light" style={{ fontSize: '0.85rem' }}>({listing.reviews.length} review{listing.reviews.length !== 1 ? 's' : ''})</span>
+            <span className="text-light" style={{ fontSize: '0.85rem' }}>({reviewCount} review{reviewCount !== 1 ? 's' : ''})</span>
           </span>
         )}
       </p>
@@ -216,16 +262,43 @@ export default function ListingShow() {
 
       {images.length > 0 && (
         <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
-          <img className="detail-image" src={images[currentImage]?.url || images[currentImage]} alt={listing.title} style={{ marginBottom: 0 }} />
+          <img 
+            className="detail-image" 
+            src={images[currentImage]?.url || images[currentImage]} 
+            alt={listing.title} 
+            style={{ marginBottom: 0, transform: `rotate(${rotation}deg)`, transition: 'transform 0.3s ease' }} 
+          />
           {images.length > 1 && (
             <>
-              <button onClick={() => setCurrentImage(i => (i - 1 + images.length) % images.length)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '8px', background: 'rgba(255,255,255,0.95)', border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}><i className="fa-solid fa-chevron-left"></i></button>
-              <button onClick={() => setCurrentImage(i => (i + 1) % images.length)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '8px', background: 'rgba(255,255,255,0.95)', border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}><i className="fa-solid fa-chevron-right"></i></button>
+              <button onClick={() => { setCurrentImage(i => (i - 1 + images.length) % images.length); setRotation(0); setAutoSlide(false); }} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '8px', background: 'rgba(255,255,255,0.95)', border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}><i className="fa-solid fa-chevron-left"></i></button>
+              <button onClick={() => { setCurrentImage(i => (i + 1) % images.length); setRotation(0); setAutoSlide(false); }} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '8px', background: 'rgba(255,255,255,0.95)', border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}><i className="fa-solid fa-chevron-right"></i></button>
               <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
-                {images.map((_, i) => (<span key={i} onClick={() => setCurrentImage(i)} style={{ width: 10, height: 10, borderRadius: '3px', cursor: 'pointer', background: i === currentImage ? '#fff' : 'rgba(255,255,255,0.5)', border: '1px solid rgba(0,0,0,0.3)' }} />))}
+                {images.map((_, i) => (<span key={i} onClick={() => { setCurrentImage(i); setRotation(0); setAutoSlide(false); }} style={{ width: 10, height: 10, borderRadius: '3px', cursor: 'pointer', background: i === currentImage ? '#fff' : 'rgba(255,255,255,0.5)', border: '1px solid rgba(0,0,0,0.3)' }} />))}
               </div>
             </>
           )}
+          <button 
+            onClick={() => { setRotation(r => (r + 90) % 360); setAutoSlide(false); }} 
+            style={{ 
+              position: 'absolute', 
+              top: 12, 
+              right: 12, 
+              width: 40, 
+              height: 40, 
+              borderRadius: '8px', 
+              background: 'rgba(255,255,255,0.95)', 
+              border: 'none', 
+              cursor: 'pointer', 
+              fontSize: '1rem', 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            title="Rotate image"
+          >
+            <i className="fa-solid fa-rotate-right"></i>
+          </button>
         </div>
       )}
 
@@ -236,10 +309,10 @@ export default function ListingShow() {
               <span style={{ fontWeight: 600, fontSize: '1.1rem' }}>Hosted by {host.username || 'Unknown'}</span>
               {listing.category && <span className="badge badge-active">{listing.category}</span>}
             </div>
-            <div className="flex gap-3 text-light" style={{ fontSize: '0.9rem' }}>
-              <span><i className="fa-solid fa-user"></i> {listing.maxGuests || 10} guests</span>
-              <span><i className="fa-solid fa-bed"></i> {listing.bedrooms || 1} bedroom{listing.bedrooms !== 1 ? 's' : ''}</span>
-              <span><i className="fa-solid fa-bath"></i> {listing.baths || 1} bath{listing.baths !== 1 ? 's' : ''}</span>
+            <div style={{ fontSize: '0.9rem', marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '1rem 2rem' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-user"></i> {listing.maxGuests || 10} guests</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-bed"></i> {listing.bedrooms || 1} bedroom{listing.bedrooms !== 1 ? 's' : ''}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-bath"></i> {listing.baths || 1} bath{listing.baths !== 1 ? 's' : ''}</span>
             </div>
           </div>
 
@@ -291,12 +364,12 @@ export default function ListingShow() {
             )}
           </div>
 
-          <div className="detail-section" style={{ borderBottom: 'none' }}>
+            <div className="detail-section" style={{ borderBottom: 'none' }}>
             <h3>Reviews{avgRating && <span className="star-rating" style={{ marginLeft: '0.5rem' }}><i className="fa-solid fa-star star-filled"></i><span className="rating-value">{avgRating}</span></span>}</h3>
 
-            {(!listing.reviews || listing.reviews.length === 0) && <p className="text-light">No reviews yet.</p>}
+            {reviewCount === 0 && <p className="text-light">No reviews yet.</p>}
 
-            {(listing.reviews || []).map(review => {
+            {reviews.map(review => {
               const reviewId = review._id || review.id;
               const isReviewAuthor = user && (user._id === (review.author?._id || review.author));
               return (
@@ -305,7 +378,7 @@ export default function ListingShow() {
                     <div className="flex items-center gap-1">
                       <strong style={{ fontSize: '0.9rem' }}>{review.author?.username || 'User'}</strong>
                       <span style={{ fontSize: '0.9rem', display: 'flex', gap: '1px' }}>
-                  {[1, 2, 3, 4, 5].map(s => <span key={s} style={{ color: s <= review.rating ? '#ff385c' : '#ddd' }}>{s <= review.rating ? '★' : '☆'}</span>)}
+                  {[1, 2, 3, 4, 5].map(s => <span key={s} style={{ color: s <= review.rating ? '#6D67C9' : '#ddd' }}>{s <= review.rating ? '★' : '☆'}</span>)}
                 </span>
                     </div>
                     <span className="text-light" style={{ fontSize: '0.8rem' }}>{new Date(review.createdAt).toLocaleDateString()}</span>
@@ -327,7 +400,7 @@ export default function ListingShow() {
                       key={s} 
                       onClick={() => setReviewRating(s)}
                       style={{ 
-                        color: s <= reviewRating ? '#ff385c' : '#ddd',
+                        color: s <= reviewRating ? '#6D67C9' : '#ddd',
                         fontSize: '1.5rem',
                         fontWeight: 'bold'
                       }}
@@ -352,7 +425,9 @@ export default function ListingShow() {
         )}
         {(!user || user.role === 'host') && (
           <div className="card" style={{ position: 'sticky', top: 80, padding: '1.5rem' }}>
-            <p className="text-light text-center">Login as a guest to book this place</p>
+            <p className="text-light text-center">
+              <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>Login</Link> as a guest to book this place
+            </p>
           </div>
         )}
       </div>

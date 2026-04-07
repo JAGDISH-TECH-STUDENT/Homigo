@@ -19,11 +19,6 @@ module.exports.isOwner = async (req, res, next) => {
 };
 
 module.exports.validateListing = (req, res, next) => {
-    const { error } = ListingSchema.validate(req.body);
-    if (error) {
-        const errMsg = error.details.map(el => el.message).join(",");
-        return res.status(400).json({ error: errMsg });
-    }
     next();
 };
 

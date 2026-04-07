@@ -39,7 +39,13 @@ export default function ListingEdit() {
           price: l.price || '',
           category: l.category || 'Trending',
         });
-        setExistingImages(l.images || []);
+        
+        const images = (l.images || []).map(img => {
+          if (typeof img === 'string') return img;
+          if (img && img.url) return img.url;
+          return '';
+        }).filter(Boolean);
+        setExistingImages(images);
       })
       .catch(err => setError(err.response?.data?.error || 'Failed to load listing'))
       .finally(() => setLoading(false));
@@ -73,17 +79,24 @@ export default function ListingEdit() {
     setError('');
 
     const data = new FormData();
-    Object.entries(form).forEach(([key, val]) => data.append(`listing[${key}]`, val));
-
-    existingImages.forEach(img => {
-      const url = img.url || img;
-      data.append('existingImages', url);
+    Object.entries(form).forEach(([key, val]) => {
+      if (val) data.append(key, val);
     });
 
-    newImages.forEach(img => data.append('listing[images]', img));
+    // Append existing images
+    if (existingImages.length > 0) {
+      existingImages.forEach(img => {
+        data.append('existingImages', img);
+      });
+    }
+
+    // Append new images
+    if (newImages.length > 0) {
+      newImages.forEach(img => data.append('newImages', img));
+    }
 
     try {
-      await API.put(`/listings/${id}`, data, {
+      const res = await API.put(`/listings/${id}`, data, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       navigate(`/listings/${id}`);
@@ -195,7 +208,7 @@ export default function ListingEdit() {
                 <label>Current Images</label>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                   {existingImages.map((img, i) => {
-                    const src = img.url || img;
+                    const src = img || '';
                     return (
                       <div key={i} style={{ position: 'relative' }}>
                         <img

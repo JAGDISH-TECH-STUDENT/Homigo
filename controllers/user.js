@@ -18,9 +18,16 @@ module.exports.signUp = async (req, res, next) => {
 };
 
 module.exports.login = async (req, res) => {
+    if (req.user.blocked) {
+        req.logout((err) => {
+            if (err) return next(err);
+            return res.status(403).json({ error: "Your account has been blocked. Contact admin for support." });
+        });
+        return;
+    }
     res.json({
         success: true,
-        user: { _id: req.user._id, username: req.user.username, email: req.user.email, role: req.user.role }
+        user: { _id: req.user._id, username: req.user.username, email: req.user.email, role: req.user.role, blocked: req.user.blocked }
     });
 };
 
@@ -33,7 +40,7 @@ module.exports.logout = (req, res, next) => {
 
 module.exports.getMe = (req, res) => {
     if (req.user) {
-        res.json({ user: { _id: req.user._id, username: req.user.username, email: req.user.email, role: req.user.role } });
+        res.json({ user: { _id: req.user._id, username: req.user.username, email: req.user.email, role: req.user.role, blocked: req.user.blocked } });
     } else {
         res.json({ user: null });
     }

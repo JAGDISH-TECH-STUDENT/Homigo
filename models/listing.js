@@ -11,6 +11,10 @@ const listingSchema = new Schema({
         type: String,
         required: true,
     },
+    active: {
+        type: Boolean,
+        default: true
+    },
     images: [{
         filename: { type: String, default: "no-image" },
         url: {
@@ -90,7 +94,18 @@ const listingSchema = new Schema({
             required: true,
             default: [0, 0]
         }
-    }
+    },
+    unavailableDates: [{
+        type: Date
+    }],
+    discount: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100
+    },
+    discountStart: Date,
+    discountEnd: Date
 });
 
 listingSchema.post("findOneAndDelete", async (listing) => {

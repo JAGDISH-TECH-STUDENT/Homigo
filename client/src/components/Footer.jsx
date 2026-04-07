@@ -3,7 +3,13 @@ import { Link } from 'react-router-dom';
 const COLUMNS = [
   {
     title: 'Support',
-    links: ['Help Centre', 'AirCover', 'Anti-discrimination', 'Disability support', 'Cancellation options', 'Report neighbourhood concern'],
+    links: [
+      { name: 'Help Centre', path: '/complaints' },
+      'Anti-discrimination',
+      'Disability support',
+      'Cancellation options',
+      'Report neighbourhood concern'
+    ],
   },
   {
     title: 'Hosting',
@@ -28,8 +34,14 @@ export default function Footer() {
             <div key={col.title} className="footer-column">
               <h4>{col.title}</h4>
               <ul>
-                {col.links.map(link => (
-                  <li key={link}><Link to="/">{link}</Link></li>
+                {col.links.map((link, i) => (
+                  <li key={i}>
+                    {typeof link === 'object' && link.path ? (
+                      <Link to={link.path}>{link.name}</Link>
+                    ) : (
+                      <Link to="/">{link}</Link>
+                    )}
+                  </li>
                 ))}
               </ul>
             </div>
