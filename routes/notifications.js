@@ -24,7 +24,7 @@ router.put("/:id/read", ensureAuth, async (req, res) => {
   }
 });
 
-router.put("/read-all", ensureAuth, async (req, res) => {
+router.put("/readAll", ensureAuth, async (req, res) => {
   try {
     await Notification.updateMany({ user: req.user._id }, { isRead: true });
     res.json({ success: true });

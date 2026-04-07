@@ -28,7 +28,7 @@ export default function Notifications() {
 
   const markAllAsRead = async () => {
     try {
-      await API.put('/notifications/read-all');
+      await API.put('/notifications/readAll');
       loadNotifications();
     } catch (err) {}
   };
