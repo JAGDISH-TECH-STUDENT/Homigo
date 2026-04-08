@@ -4,14 +4,51 @@ const axios = require('axios');
 const TOMTOM_API_KEY = process.env.TOMTOM_API_KEY;
 
 module.exports.index = async (req, res) => {
-    const allListings = await Listing.find({}).populate("owner", "username");
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const listingsProjection = {
+        title: 1,
+        description: 1,
+        price: 1,
+        location: 1,
+        country: 1,
+        category: 1,
+        images: 1,
+        active: 1,
+        bedrooms: 1,
+        beds: 1,
+        baths: 1,
+        maxGuests: 1,
+        owner: 1,
+        createdAt: 1
+    };
+
+    const total = await Listing.countDocuments({});
+    const allListings = await Listing.find({})
+        .select(listingsProjection)
+        .populate("owner", "username")
+        .skip(skip)
+        .limit(limit)
+        .lean();
+
     let userFavorites = [];
     if (req.user) {
         const Favorite = require("../models/favorite");
         const favorites = await Favorite.find({ user: req.user._id });
         userFavorites = favorites.map(fav => fav.listing.toString());
     }
-    res.json({ listings: allListings, userFavorites });
+    res.json({ 
+        listings: allListings, 
+        userFavorites,
+        pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit)
+        }
+    });
 };
 
 module.exports.showListing = async (req, res) => {
@@ -176,7 +213,11 @@ module.exports.getHostListings = async (req, res) => {
 };
 
 module.exports.searchListings = async (req, res) => {
-    const { q, category, minPrice, maxPrice } = req.query;
+    const { q, category, minPrice, maxPrice, page = 1, limit = 20 } = req.query;
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
+    const skip = (pageNum - 1) * limitNum;
+    
     let query = {};
 
     if (q && q.trim() !== "") {
@@ -200,7 +241,31 @@ module.exports.searchListings = async (req, res) => {
         if (maxPrice && !isNaN(maxPrice)) query.price.$lte = parseInt(maxPrice);
     }
 
-    const allListings = await Listing.find(query).populate("owner", "username");
+    const listingsProjection = {
+        title: 1,
+        description: 1,
+        price: 1,
+        location: 1,
+        country: 1,
+        category: 1,
+        images: 1,
+        active: 1,
+        bedrooms: 1,
+        beds: 1,
+        baths: 1,
+        maxGuests: 1,
+        owner: 1,
+        createdAt: 1
+    };
+
+    const total = await Listing.countDocuments(query);
+    const allListings = await Listing.find(query)
+        .select(listingsProjection)
+        .populate("owner", "username")
+        .skip(skip)
+        .limit(limitNum)
+        .lean();
+
     let userFavorites = [];
     if (req.user) {
         const Favorite = require("../models/favorite");
@@ -211,6 +276,12 @@ module.exports.searchListings = async (req, res) => {
     res.json({
         listings: allListings,
         userFavorites,
+        pagination: {
+            page: pageNum,
+            limit: limitNum,
+            total,
+            pages: Math.ceil(total / limitNum)
+        },
         filters: { q: q || "", category: category || "", minPrice: minPrice || "", maxPrice: maxPrice || "" }
     });
 };
