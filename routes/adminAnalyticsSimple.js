@@ -4,8 +4,10 @@ const User = require("../models/user");
 const Listing = require("../models/listing");
 const Booking = require("../models/booking");
 const Review = require("../models/review");
+const apicache = require("apicache");
+const cache = apicache();
 
-router.get("/", async (req, res) => {
+router.get("/", cache("5 minutes"), async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
         const totalHosts = await User.countDocuments({ role: 'host' });

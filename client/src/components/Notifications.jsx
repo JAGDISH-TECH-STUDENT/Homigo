@@ -47,6 +47,11 @@ export default function Notifications() {
     }
   };
 
+  const getUserInitial = (name) => {
+    if (!name) return '?';
+    return name.charAt(0).toUpperCase();
+  };
+
   if (!notifications.length) return null;
 
   return (
@@ -95,7 +100,7 @@ export default function Notifications() {
           {notifications.slice(0, 10).map(n => (
             <Link 
               key={n._id} 
-              to={n.link || '#'}
+              to={n.link || (n.type === 'message' ? '/chat' : '#')}
               onClick={() => { setOpen(false); if (!n.isRead) markAsRead(n._id); }}
               style={{ 
                 display: 'block', padding: '0.75rem 1rem', 
@@ -105,16 +110,33 @@ export default function Notifications() {
               }}
             >
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <div style={{ 
-                  width: 36, height: 36, borderRadius: '50%', 
-                  background: n.isRead ? '#f1f5f9' : '#dbeafe',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: n.isRead ? '#64748b' : '#3b82f6', flexShrink: 0
-                }}>
-                  <i className={`fa-solid ${getIcon(n.type)}`} style={{ fontSize: '0.9rem' }}></i>
-                </div>
+                {n.type === 'message' && n.user ? (
+                  <div style={{ 
+                    width: 36, height: 36, borderRadius: '50%', 
+                    background: '#6D67C9',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', flexShrink: 0, fontWeight: 600, fontSize: '0.9rem'
+                  }}>
+                    {getUserInitial(n.user)}
+                  </div>
+                ) : (
+                  <div style={{ 
+                    width: 36, height: 36, borderRadius: '50%', 
+                    background: n.isRead ? '#f1f5f9' : '#dbeafe',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: n.isRead ? '#64748b' : '#3b82f6', flexShrink: 0
+                  }}>
+                    <i className={`fa-solid ${getIcon(n.type)}`} style={{ fontSize: '0.9rem' }}></i>
+                  </div>
+                )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontWeight: 500, fontSize: '0.9rem', margin: '0 0 0.25rem 0', lineHeight: 1.3 }}>{n.title}</p>
+                  {n.type === 'message' && n.user ? (
+                    <p style={{ fontWeight: 500, fontSize: '0.9rem', margin: '0 0 0.25rem 0', lineHeight: 1.3 }}>
+                      <span style={{ color: '#6D67C9' }}>{n.user}</span>
+                    </p>
+                  ) : (
+                    <p style={{ fontWeight: 500, fontSize: '0.9rem', margin: '0 0 0.25rem 0', lineHeight: 1.3 }}>{n.title}</p>
+                  )}
                   <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0, lineHeight: 1.3 }}>{n.message}</p>
                   <p style={{ fontSize: '0.7rem', color: '#94a3b8', margin: '0.25rem 0 0 0' }}>
                     {new Date(n.createdAt).toLocaleTimeString('en-IN', { hour: 'numeric', minute: 'numeric' })}

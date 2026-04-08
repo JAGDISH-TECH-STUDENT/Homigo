@@ -26,3 +26,7 @@ const reviewSchema= new mongoose.Schema({
 });
 
 module.exports=mongoose.model("Review",reviewSchema);
+
+reviewSchema.index({ listing: 1 });
+reviewSchema.index({ author: 1 });
+reviewSchema.index({ rating: 1 });

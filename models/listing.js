@@ -116,3 +116,8 @@ listingSchema.post("findOneAndDelete", async (listing) => {
 
 const Listing = mongoose.model("Listing", listingSchema);
 module.exports = Listing;
+
+listingSchema.index({ category: 1 });
+listingSchema.index({ price: 1 });
+listingSchema.index({ location: 1 });
+listingSchema.index({ owner: 1 });

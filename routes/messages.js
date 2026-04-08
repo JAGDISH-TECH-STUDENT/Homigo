@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Message = require("../models/message");
+const Notification = require("../models/notification");
 const { ensureAuth } = require("../middleware/auth");
 
 router.get("/", ensureAuth, async (req, res) => {
@@ -65,6 +66,16 @@ router.post("/", ensureAuth, async (req, res) => {
       content
     });
     await message.save();
+    
+    await Notification.create({
+      user: to,
+      type: 'message',
+      title: `New message from ${req.user.username}`,
+      message: content.substring(0, 100),
+      link: `/chat/${req.user._id}`,
+      data: { user: req.user.username }
+    });
+    
     res.json({ success: true, message });
   } catch (err) {
     res.status(500).json({ error: err.message });

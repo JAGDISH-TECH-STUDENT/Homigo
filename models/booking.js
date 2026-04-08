@@ -51,3 +51,8 @@ bookingSchema.pre("save", function(next) {
 
 const Booking = mongoose.model("Booking", bookingSchema);
 module.exports = Booking;
+
+bookingSchema.index({ user: 1 });
+bookingSchema.index({ listing: 1 });
+bookingSchema.index({ status: 1 });
+bookingSchema.index({ createdAt: -1 });
