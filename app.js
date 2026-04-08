@@ -12,10 +12,7 @@ const MongoStore = require("connect-mongo");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
-const apicache = require("apicache");
 const compression = require("compression");
-
-const cache = apicache().middleware;
 
 app.use(compression());
 

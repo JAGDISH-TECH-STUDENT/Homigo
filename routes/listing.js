@@ -11,7 +11,7 @@ const multer = require("multer");
 const { storage } = require("../cloudConfig.js");
 const upload = multer({ storage });
 const apicache = require("apicache");
-const cache = apicache();
+const cache = apicache.middleware;
 
 router.use(methodOverride("_method"));
 
