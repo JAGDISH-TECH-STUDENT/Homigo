@@ -10,8 +10,7 @@ const User = require("../models/user");
 const multer = require("multer");
 const { storage } = require("../cloudConfig.js");
 const upload = multer({ storage });
-const apicache = require("apicache");
-const cache = apicache.middleware;
+const { cache } = require("../utils/cache.js");
 
 router.use(methodOverride("_method"));
 

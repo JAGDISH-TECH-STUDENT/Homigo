@@ -4,8 +4,7 @@ const User = require("../models/user");
 const Listing = require("../models/listing");
 const Booking = require("../models/booking");
 const Review = require("../models/review");
-const apicache = require("apicache");
-const cache = apicache.middleware;
+const { cache } = require("../utils/cache.js");
 
 router.get("/", cache("5 minutes"), async (req, res) => {
     try {
