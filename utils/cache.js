@@ -1,8 +1,8 @@
 const Redis = require("ioredis");
 
 let redis = null;
-let cache = require("apicache").middleware;
-let apicacheInstance = require("apicache").newInstance();
+let cache = null;
+let apicacheInstance = null;
 
 if (process.env.REDIS_URL) {
     redis = new Redis(process.env.REDIS_URL, {
@@ -46,8 +46,12 @@ if (process.env.REDIS_URL) {
         }
     };
 
+    apicacheInstance = require("apicache").newInstance();
     apicacheInstance.options({ redis: redisStore });
     cache = apicacheInstance.middleware;
+} else {
+    const apicache = require("apicache");
+    cache = apicache.middleware;
 }
 
 module.exports = { cache, redis, apicache: apicacheInstance };

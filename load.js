@@ -11,7 +11,7 @@ export const options = {
 };
 
 export default function () {
-  let res = http.get("https://homigo-cp8k.onrender.com");
+  let res = http.get("https://homigo-cp8k.onrender.com/api/listings");
 
   check(res, {
     "Homepage status is 200": (r) => r.status === 200,
