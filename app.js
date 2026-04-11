@@ -38,7 +38,11 @@ main().then(() => {
 });
 
 async function main() {
-    await mongoose.connect(dbUrl);
+    await mongoose.connect(dbUrl, {
+        maxPoolSize: 50,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+    });
 }
 
 app.use(cors({

@@ -55,7 +55,9 @@ module.exports.showListing = async (req, res) => {
     const { id } = req.params;
     const listing = await Listing.findById(id)
         .populate({ path: "reviews", populate: { path: "author" } })
-        .populate("owner");
+        .populate("owner")
+        .select('-__v')
+        .lean();
     if (!listing) {
         return res.status(404).json({ error: "Listing not found" });
     }

@@ -121,3 +121,4 @@ listingSchema.index({ category: 1 });
 listingSchema.index({ price: 1 });
 listingSchema.index({ location: 1 });
 listingSchema.index({ owner: 1 });
+listingSchema.index({ createdAt: -1 });

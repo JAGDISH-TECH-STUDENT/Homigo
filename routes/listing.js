@@ -15,14 +15,14 @@ const { cache } = require("../utils/cache.js");
 router.use(methodOverride("_method"));
 
 router.route("/")
-    .get(cache("5 minutes"), wrapAsync(listingController.index))
+    .get(cache("15 minutes"), wrapAsync(listingController.index))
     .post(isHost, upload.array("images"), wrapAsync(listingController.createListing));
 
-router.get("/search", cache("2 minutes"), wrapAsync(listingController.searchListings));
+router.get("/search", cache("10 minutes"), wrapAsync(listingController.searchListings));
 
 router.get("/host/listings", isLoggedIn, wrapAsync(listingController.getHostListings));
 
-router.get("/hosts", cache("5 minutes"), async (req, res) => {
+router.get("/hosts", cache("15 minutes"), async (req, res) => {
     try {
         const hosts = await User.find({ role: 'host' }).select('_id username email createdAt');
         res.json({ users: hosts });
