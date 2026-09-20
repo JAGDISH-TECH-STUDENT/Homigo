@@ -36,7 +36,7 @@ app.use(
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "https://checkout.razorpay.com", "https://unpkg.com", "https://cdn.razorpay.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://unpkg.com"],
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://*.tile.openstreetmap.org", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://tile.thunderforest.com", "https://fonts.gstatic.com"],
       connectSrc: ["'self'", "https://checkout.razorpay.com", "https://api.razorpay.com", "https://lumberjack.razorpay.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       objectSrc: ["'none'"],
