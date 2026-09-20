@@ -34,13 +34,13 @@ app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "https://checkout.razorpay.com", "https://unpkg.com"],
+      scriptSrc: ["'self'", "https://checkout.razorpay.com", "https://unpkg.com", "https://cdn.razorpay.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://unpkg.com"],
       imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://*.tile.openstreetmap.org", "https://fonts.gstatic.com"],
       connectSrc: ["'self'"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       objectSrc: ["'none'"],
-      frameSrc: ["'none'", "https://checkout.razorpay.com"],
+      frameSrc: ["https://checkout.razorpay.com", "https://api.razorpay.com"],
       mediaSrc: ["'self'"],
       manifestSrc: ["'self'"],
       workerSrc: ["'none'"],
