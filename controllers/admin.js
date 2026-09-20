@@ -3,6 +3,7 @@ const Listing = require("../models/listing");
 const Booking = require("../models/booking");
 const Review = require("../models/review");
 const Notification = require("../models/notification");
+const Message = require("../models/message");
 
 module.exports.renderDashboard = async (req, res) => {
     try {
@@ -79,8 +80,14 @@ module.exports.renderDashboard = async (req, res) => {
 };
 
 module.exports.renderUsers = async (req, res) => {
-    const users = await User.find().sort({ _id: -1 });
-    res.json({ users });
+    const { page = 1, limit = 20 } = req.query;
+    const safePage = Math.max(parseInt(page) || 1, 1);
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
+    const [users, total] = await Promise.all([
+        User.find().sort({ _id: -1 }).skip((safePage - 1) * safeLimit).limit(safeLimit),
+        User.countDocuments()
+    ]);
+    res.json({ users, pagination: { page: safePage, limit: safeLimit, total, pages: Math.ceil(total / safeLimit) } });
 };
 
 module.exports.renderEditUser = async (req, res) => {
@@ -92,10 +99,17 @@ module.exports.renderEditUser = async (req, res) => {
 module.exports.updateUser = async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
+    if (!['guest', 'host', 'admin'].includes(role)) {
+        return res.status(400).json({ error: "Invalid user role" });
+    }
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ error: "User not found" });
     if (user._id.equals(req.user._id) && role !== 'admin') {
-        return res.status(400).json({ error: "Cannot change your own admin role" });
+        return res.status(400).json({ error: "Cannot remove your own admin role" });
+    }
+    if (user.role === 'admin' && role !== 'admin') {
+        const adminCount = await User.countDocuments({ role: 'admin' });
+        if (adminCount <= 1) return res.status(400).json({ error: "At least one admin account must remain" });
     }
     user.role = role;
     await user.save();
@@ -109,6 +123,10 @@ module.exports.deleteUser = async (req, res) => {
     }
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ error: "User not found" });
+    if (user.role === 'admin') {
+        const adminCount = await User.countDocuments({ role: 'admin' });
+        if (adminCount <= 1) return res.status(400).json({ error: "Cannot delete the last admin account" });
+    }
     await Listing.deleteMany({ owner: id });
     await Booking.deleteMany({ user: id });
     await Review.deleteMany({ author: id });
@@ -124,6 +142,7 @@ module.exports.blockUser = async (req, res) => {
     }
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ error: "User not found" });
+    if (user.role === 'admin') return res.status(400).json({ error: "Admin accounts cannot be blocked" });
     user.blocked = true;
     user.blockReason = reason || 'Violation of terms';
     user.blockedAt = new Date();
@@ -152,17 +171,31 @@ module.exports.sendMessageToUser = async (req, res) => {
     
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    const content = `${subject.trim()}\n\n${message.trim()}`;
+    const chatMessage = await Message.create({
+        from: req.user._id,
+        to: user._id,
+        content
+    });
     
     const notification = new Notification({
         user: id,
-        type: 'system',
-        title: subject,
+        type: 'message',
+        title: 'Message from Admin',
         message: message,
-        link: null
+        link: `/chat/${req.user._id}`,
+        data: {
+            senderId: req.user._id,
+            senderName: 'Admin',
+            senderRole: 'admin',
+            subject,
+            messageId: chatMessage._id
+        }
     });
     
     await notification.save();
-    res.json({ success: true, message: "Message sent to user" });
+    res.json({ success: true, message: "Message sent to user", chatMessage });
 };
 
 module.exports.deactivateListing = async (req, res) => {
@@ -208,8 +241,14 @@ module.exports.activateListing = async (req, res) => {
 };
 
 module.exports.renderListings = async (req, res) => {
-    const listings = await Listing.find().populate("owner", "username email").sort({ _id: -1 });
-    res.json({ listings });
+    const { page = 1, limit = 20 } = req.query;
+    const safePage = Math.max(parseInt(page) || 1, 1);
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
+    const [listings, total] = await Promise.all([
+        Listing.find().populate("owner", "username email").sort({ _id: -1 }).skip((safePage - 1) * safeLimit).limit(safeLimit),
+        Listing.countDocuments()
+    ]);
+    res.json({ listings, pagination: { page: safePage, limit: safeLimit, total, pages: Math.ceil(total / safeLimit) } });
 };
 
 module.exports.renderEditListing = async (req, res) => {
@@ -228,11 +267,16 @@ module.exports.deleteListing = async (req, res) => {
 };
 
 module.exports.renderBookings = async (req, res) => {
-    const bookings = await Booking.find()
+    const { page = 1, limit = 20 } = req.query;
+    const safePage = Math.max(parseInt(page) || 1, 1);
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
+    const [bookings, total] = await Promise.all([Booking.find()
         .populate("listing", "title")
         .populate("user", "username email")
-        .sort({ _id: -1 });
-    res.json({ bookings });
+        .sort({ _id: -1 })
+        .skip((safePage - 1) * safeLimit)
+        .limit(safeLimit), Booking.countDocuments()]);
+    res.json({ bookings, pagination: { page: safePage, limit: safeLimit, total, pages: Math.ceil(total / safeLimit) } });
 };
 
 module.exports.deleteBooking = async (req, res) => {

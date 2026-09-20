@@ -96,7 +96,7 @@ export default function ListingEdit() {
     }
 
     try {
-      const res = await API.put(`/listings/${id}`, data, {
+      await API.put(`/listings/${id}`, data, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       navigate(`/listings/${id}`);

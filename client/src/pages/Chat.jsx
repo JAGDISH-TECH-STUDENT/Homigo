@@ -1,45 +1,78 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/useAuth';
 import API from '../api/axios';
 
 export default function Chat() {
   const { userId } = useParams();
-  const { user } = useAuth();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
+  const loadConversations = useCallback(async () => {
+    try {
+      const [messageResponse, notificationResponse] = await Promise.all([
+        API.get('/messages'),
+        API.get('/notifications')
+      ]);
+      const existingConversations = messageResponse.data.conversations || [];
+      const notificationConversations = (notificationResponse.data.notifications || [])
+        .filter(notification => notification.type === 'message' && notification.data?.senderId)
+        .map(notification => ({
+          userId: notification.data.senderId,
+          username: notification.data.senderRole === 'admin' ? 'Admin' : (notification.data.senderName || 'User'),
+          lastMessage: {
+            content: notification.data.subject
+              ? `${notification.data.subject}\n\n${notification.message}`
+              : notification.message,
+            createdAt: notification.createdAt,
+            from: {
+              _id: notification.data.senderId,
+              username: notification.data.senderRole === 'admin' ? 'Admin' : (notification.data.senderName || 'User'),
+              role: notification.data.senderRole
+            }
+          },
+          unread: notification.isRead ? 0 : 1
+        }));
+      const merged = [...existingConversations];
+      notificationConversations.forEach(notificationConversation => {
+        if (!merged.some(conversation => conversation.userId === notificationConversation.userId)) {
+          merged.push(notificationConversation);
+        }
+      });
+      setConversations(merged);
+      if (!userId && user?.role === 'guest' && merged.length > 0) {
+        navigate(`/chat/${merged[0].userId}`, { replace: true });
+      }
+    } catch {
+      return;
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate, user, userId]);
+
+  const loadMessages = useCallback(async (uid) => {
+    try {
+      const res = await API.get(`/messages/${uid}`);
+      setMessages(res.data.messages || []);
+    } catch {
+      return;
+    }
+  }, []);
+
   useEffect(() => {
     loadConversations();
-  }, []);
+  }, [loadConversations]);
 
   useEffect(() => {
     if (userId) {
       loadMessages(userId);
     }
-  }, [userId]);
-
-  const loadConversations = async () => {
-    try {
-      const res = await API.get('/messages');
-      setConversations(res.data.conversations || []);
-    } catch (err) {
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMessages = async (uid) => {
-    try {
-      const res = await API.get(`/messages/${uid}`);
-      setMessages(res.data.messages || []);
-    } catch (err) {
-    }
-  };
+  }, [userId, loadMessages]);
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -49,7 +82,8 @@ export default function Chat() {
       const res = await API.post('/messages', { to: userId, content: newMessage });
       setMessages([...messages, res.data.message]);
       setNewMessage('');
-    } catch (err) {
+    } catch {
+      return;
     } finally {
       setSending(false);
     }
@@ -113,13 +147,22 @@ export default function Chat() {
         {userId ? (
           <div className="card" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', height: '70vh' }}>
             <div style={{ padding: '1rem', borderBottom: '1px solid var(--border)', marginBottom: '1rem' }}>
-              <Link to={`/listings/${messages[0]?.listing?._id}`} style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>
-                Re: {messages[0]?.listing?.title || 'Chat'}
-              </Link>
+              {messages[0]?.listing?._id ? (
+                <Link to={`/listings/${messages[0].listing._id}`} style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>
+                  Re: {messages[0].listing.title || 'Listing'}
+                </Link>
+              ) : (
+                <span style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>
+                  Chat
+                </span>
+              )}
             </div>
             <div style={{ flex: 1, overflow: 'auto', padding: '1rem' }}>
               {messages.map((msg, i) => {
                 const isMe = msg.from?._id === user._id || msg.from === user._id;
+                const senderName = msg.from?.role === 'admin'
+                  ? 'Admin'
+                  : (msg.from?.username || (isMe ? user.username : 'User'));
                 return (
                   <div key={i} style={{
                     display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start',
@@ -130,27 +173,37 @@ export default function Chat() {
                       padding: '0.75rem 1rem',
                       borderRadius: 'var(--radius-md)',
                       background: isMe ? 'var(--primary)' : 'var(--bg-secondary)',
-                      color: isMe ? '#fff' : 'inherit'
+                      color: isMe ? '#fff' : 'inherit',
+                      whiteSpace: 'pre-wrap'
                     }}>
+                      <div style={{ fontSize: '0.72rem', fontWeight: 700, marginBottom: '0.25rem', opacity: 0.8 }}>
+                        {senderName}
+                      </div>
                       {msg.content}
                     </div>
                   </div>
                 );
               })}
             </div>
-            <form onSubmit={sendMessage} style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-              <input
-                type="text"
-                className="form-control"
-                value={newMessage}
-                onChange={e => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
-                style={{ flex: 1 }}
-              />
-              <button type="submit" className="btn btn-primary" disabled={sending}>
-                {sending ? '...' : 'Send'}
-              </button>
-            </form>
+            {user.role === 'guest' ? (
+              <p style={{ marginTop: '1rem', padding: '0.75rem', textAlign: 'center', color: '#64748b', background: '#f8fafc', borderRadius: 'var(--radius-sm)' }}>
+                Guests can view messages but cannot send messages.
+              </p>
+            ) : (
+              <form onSubmit={sendMessage} style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={newMessage}
+                  onChange={e => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  style={{ flex: 1 }}
+                />
+                <button type="submit" className="btn btn-primary" disabled={sending}>
+                  {sending ? '...' : 'Send'}
+                </button>
+              </form>
+            )}
           </div>
         ) : (
           <div className="card" style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>

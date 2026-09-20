@@ -1,2 +1,18 @@
+# Secrets and local environment files
 .env
+.env.*
+!.env.example
+
+# Dependencies
 node_modules/
+
+# Build and test output
+client/dist/
+dist/
+coverage/
+
+# Logs and local tooling files
+*.log
+.vscode/
+.DS_Store
+Thumbs.db

@@ -184,6 +184,18 @@ h3 { font-size: 1.25rem; font-weight: 600; }
   color: var(--primary);
 }
 
+.navbar-host-link {
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0;
+  cursor: pointer;
+}
+
+.navbar-host-link:hover {
+  color: var(--primary);
+}
+
 .navbar-user {
   font-size: 0.875rem;
   color: var(--text-lighter);
@@ -417,6 +429,74 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 
 .btn-outline:hover {
   background: var(--bg);
+}
+
+.back-button-bar {
+  width: 100%;
+  padding: clamp(2rem, 4vw, 3rem) clamp(5rem, 12vw, 10rem) 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .back-button-bar {
+    padding: 1rem 1.5rem 0.5rem;
+  }
+
+  .listing-search-form {
+    border-radius: var(--radius-sm) !important;
+    flex-wrap: wrap;
+  }
+
+  .listing-search-form input,
+  .listing-search-form select,
+  .listing-search-form button {
+    min-height: 42px;
+  }
+
+  .listing-search-form input:first-child {
+    flex: 1 1 100%;
+  }
+
+  .listing-search-form select,
+  .listing-search-form input[type='number'] {
+    flex: 1 1 32%;
+    width: auto !important;
+  }
+
+  .listing-search-form button {
+    flex: 1 1 100%;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important;
+  }
+
+  .listing-detail-layout {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--secondary);
+  border-radius: var(--radius-full);
+  background: var(--secondary);
+  color: #fff;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.back-button:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.back-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 /* ========== FORMS ========== */

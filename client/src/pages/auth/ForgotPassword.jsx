@@ -1,15 +1,17 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
 
 export default function ForgotPassword() {
+  const [searchParams] = useSearchParams();
+  const resetToken = searchParams.get('token') || '';
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [step, setStep] = useState(1);
-  const [token, setToken] = useState('');
+  const [step] = useState(resetToken ? 2 : 1);
+  const [token] = useState(resetToken);
   const [newPassword, setNewPassword] = useState('');
 
   const handleSendEmail = async (e) => {
@@ -17,12 +19,8 @@ export default function ForgotPassword() {
     setLoading(true);
     setError('');
     try {
-      const res = await API.post('/forgot', { email });
-      setMessage(res.data.message || 'Reset link sent to your email');
-      if (res.data.debugToken) {
-        setToken(res.data.debugToken);
-        setStep(2);
-      }
+      await API.post('/forgot', { email: email.trim() });
+      setMessage('Password reset link sent. Please check your Inbox, Spam, Promotions, and All Mail folders.');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to send reset email');
     }
@@ -34,7 +32,7 @@ export default function ForgotPassword() {
     setLoading(true);
     setError('');
     try {
-      const res = await API.post('/forgot/reset', { token, newPassword });
+      await API.post('/forgot/reset', { token, newPassword });
       setMessage('Password reset successful! Redirecting to login...');
       setTimeout(() => {
         window.location.href = '/login';

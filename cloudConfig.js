@@ -16,7 +16,11 @@ const storage = new CloudinaryStorage({
     params: {
         folder: "Homigo_dev",
         allowed_formats: ["png", "jpg", "jpeg", "gif", "webp"],
-        resource_type: "auto"
+        resource_type: "image",
+        transformation: [
+            { width: 1600, height: 1200, crop: "limit" },
+            { quality: "auto", fetch_format: "auto" }
+        ]
     }
 });
 

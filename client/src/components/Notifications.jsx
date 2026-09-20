@@ -7,30 +7,50 @@ export default function Notifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    loadNotifications();
-  }, []);
-
-  const loadNotifications = async () => {
+  async function loadNotifications() {
     try {
       const res = await API.get('/notifications');
       setNotifications(res.data.notifications || []);
       setUnreadCount(res.data.unreadCount || 0);
-    } catch (err) {}
-  };
+    } catch {
+      return;
+    }
+  }
+
+  useEffect(() => {
+    const initialLoad = setTimeout(loadNotifications, 0);
+    const interval = setInterval(loadNotifications, 30 * 1000);
+    return () => {
+      clearTimeout(initialLoad);
+      clearInterval(interval);
+    };
+  }, []);
 
   const markAsRead = async (id) => {
     try {
       await API.put(`/notifications/${id}/read`);
       loadNotifications();
-    } catch (err) {}
+    } catch {
+      return;
+    }
   };
 
   const markAllAsRead = async () => {
     try {
       await API.put('/notifications/readAll');
       loadNotifications();
-    } catch (err) {}
+    } catch {
+      return;
+    }
+  };
+
+  const clearRead = async () => {
+    try {
+      await API.delete('/notifications/read');
+      loadNotifications();
+    } catch {
+      return;
+    }
   };
 
   const getIcon = (type) => {
@@ -87,6 +107,7 @@ export default function Notifications() {
             padding: '1rem', borderBottom: '1px solid #e2e8f0'
           }}>
             <h4 style={{ margin: 0, fontSize: '1rem' }}>Notifications</h4>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             {unreadCount > 0 && (
               <button 
                 onClick={markAllAsRead} 
@@ -95,6 +116,10 @@ export default function Notifications() {
                 Mark all read
               </button>
             )}
+              <button onClick={clearRead} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.8rem', cursor: 'pointer' }}>
+                Clear read
+              </button>
+            </div>
           </div>
           
           {notifications.slice(0, 10).map(n => (
@@ -110,7 +135,7 @@ export default function Notifications() {
               }}
             >
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                {n.type === 'message' && n.user ? (
+                {n.type === 'message' ? (
                   <div style={{ 
                     width: 36, height: 36, borderRadius: '50%', 
                     background: '#6D67C9',
@@ -130,14 +155,20 @@ export default function Notifications() {
                   </div>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  {n.type === 'message' && n.user ? (
+                  {n.type === 'message' ? (
                     <p style={{ fontWeight: 500, fontSize: '0.9rem', margin: '0 0 0.25rem 0', lineHeight: 1.3 }}>
-                      <span style={{ color: '#6D67C9' }}>{n.user}</span>
+                      <span style={{ color: '#6D67C9' }}>{n.data?.senderRole === 'admin' ? 'Admin' : (n.data?.senderName || 'New message')}</span>
+                      {n.data?.subject ? `: ${n.data.subject}` : ''}
                     </p>
                   ) : (
                     <p style={{ fontWeight: 500, fontSize: '0.9rem', margin: '0 0 0.25rem 0', lineHeight: 1.3 }}>{n.title}</p>
                   )}
                   <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0, lineHeight: 1.3 }}>{n.message}</p>
+                  {n.type === 'message' && (
+                    <p style={{ fontSize: '0.75rem', color: '#6D67C9', margin: '0.35rem 0 0', fontWeight: 600 }}>
+                      Reply in Messages →
+                    </p>
+                  )}
                   <p style={{ fontSize: '0.7rem', color: '#94a3b8', margin: '0.25rem 0 0 0' }}>
                     {new Date(n.createdAt).toLocaleTimeString('en-IN', { hour: 'numeric', minute: 'numeric' })}
                   </p>

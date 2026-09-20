@@ -1,11 +1,20 @@
 const Booking = require("../models/booking.js");
 const Listing = require("../models/listing.js");
+const Razorpay = require("razorpay");
+
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+});
 
 module.exports.createBooking = async (req, res) => {
     try {
         const listing = await Listing.findById(req.params.id);
         if (!listing) {
             return res.status(404).json({ error: "Listing not found" });
+        }
+        if (!listing.active) {
+            return res.status(400).json({ error: "This listing is not available" });
         }
         if (listing.owner.equals(req.user._id)) {
             return res.status(400).json({ error: "You cannot book your own listing" });
@@ -14,7 +23,7 @@ module.exports.createBooking = async (req, res) => {
             return res.status(400).json({ error: "Hosts cannot book listings" });
         }
 
-        const { checkIn, checkOut, guests } = req.body.booking;
+        const { checkIn, checkOut, guests } = req.body.booking || {};
         const checkInDate = new Date(checkIn);
         const checkOutDate = new Date(checkOut);
 
@@ -23,38 +32,65 @@ module.exports.createBooking = async (req, res) => {
         }
 
         const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-        if (nights < 1) {
+        if (nights < 1 || checkInDate < new Date(new Date().setHours(0, 0, 0, 0))) {
             return res.status(400).json({ error: "Check-out must be after check-in" });
         }
 
-        const overlapping = await Booking.find({
-            listing: listing._id,
-            status: "confirmed",
-            $or: [{ checkIn: { $lt: checkOutDate }, checkOut: { $gt: checkInDate } }]
-        });
-        if (overlapping.length > 0) {
-            return res.status(400).json({ error: "These dates are already booked" });
+        const guestCount = Number(guests);
+        if (!Number.isInteger(guestCount) || guestCount < 1 || (listing.maxGuests && guestCount > listing.maxGuests)) {
+            return res.status(400).json({ error: `Guests must be between 1 and ${listing.maxGuests || 20}` });
         }
 
-        const subtotal = listing.price * nights;
-        const serviceFee = Math.round(subtotal * 0.12);
-        const totalPrice = subtotal + serviceFee;
-
-        if (listing.maxGuests && parseInt(guests) > listing.maxGuests) {
-            return res.status(400).json({ error: `Maximum ${listing.maxGuests} guests allowed` });
+        const lockUntil = new Date(Date.now() + 30 * 1000);
+        const lockedListing = await Listing.findOneAndUpdate(
+            {
+                _id: listing._id,
+                active: true,
+                $or: [
+                    { bookingLockUntil: null },
+                    { bookingLockUntil: { $lt: new Date() } }
+                ]
+            },
+            { $set: { bookingLockUntil: lockUntil } },
+            { new: true }
+        );
+        if (!lockedListing) {
+            return res.status(409).json({ error: "This listing is busy. Please try again in a moment." });
         }
 
-        const booking = new Booking({
-            user: req.user._id,
-            listing: listing._id,
-            checkIn: checkInDate,
-            checkOut: checkOutDate,
-            guests: parseInt(guests),
-            totalPrice,
-            status: "confirmed"
-        });
-        await booking.save();
-        res.status(201).json({ success: true, booking });
+        try {
+            const overlapping = await Booking.findOne({
+                listing: listing._id,
+                $or: [{ checkIn: { $lt: checkOutDate }, checkOut: { $gt: checkInDate } }],
+                $and: [{
+                    $or: [
+                        { status: "confirmed" },
+                        { status: "pending", createdAt: { $gte: new Date(Date.now() - 15 * 60 * 1000) } }
+                    ]
+                }]
+            });
+            if (overlapping) {
+                return res.status(400).json({ error: "These dates are already booked or being reserved" });
+            }
+
+            const subtotal = listing.price * nights;
+            const serviceFee = Math.round(subtotal * 0.12);
+            const totalPrice = subtotal + serviceFee;
+
+            const booking = new Booking({
+                user: req.user._id,
+                listing: listing._id,
+                checkIn: checkInDate,
+                checkOut: checkOutDate,
+                guests: guestCount,
+                totalPrice,
+                status: "pending"
+            });
+            await booking.save();
+            res.status(201).json({ success: true, booking });
+        } finally {
+            await Listing.updateOne({ _id: listing._id, bookingLockUntil: lockUntil }, { $set: { bookingLockUntil: null } });
+        }
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -90,6 +126,19 @@ module.exports.cancelBooking = async (req, res) => {
     }
     if (booking.status !== "confirmed") {
         return res.status(400).json({ error: "Only confirmed bookings can be cancelled" });
+    }
+    if (booking.paymentId && booking.paymentStatus === "paid") {
+        try {
+            const refund = await razorpay.payments.refund(booking.paymentId, {
+                amount: Math.round(booking.totalPrice * 100),
+                notes: { bookingId: booking._id.toString() }
+            });
+            booking.refundId = refund.id;
+            booking.paymentStatus = "refunded";
+        } catch (error) {
+            console.error("Razorpay refund error:", error);
+            return res.status(502).json({ error: "Unable to process the payment refund. Booking was not cancelled." });
+        }
     }
     booking.status = "cancelled";
     await booking.save();

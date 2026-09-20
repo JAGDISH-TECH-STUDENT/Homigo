@@ -17,7 +17,11 @@ router.get("/", ensureAuth, async (req, res) => {
 
 router.put("/:id/read", ensureAuth, async (req, res) => {
   try {
-    await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+    const notification = await Notification.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      { isRead: true }
+    );
+    if (!notification) return res.status(404).json({ error: "Notification not found" });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -33,9 +37,19 @@ router.put("/readAll", ensureAuth, async (req, res) => {
   }
 });
 
+router.delete("/read", ensureAuth, async (req, res) => {
+  try {
+    const result = await Notification.deleteMany({ user: req.user._id, isRead: true });
+    res.json({ success: true, deleted: result.deletedCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.delete("/:id", ensureAuth, async (req, res) => {
   try {
-    await Notification.findByIdAndDelete(req.params.id);
+    const notification = await Notification.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+    if (!notification) return res.status(404).json({ error: "Notification not found" });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

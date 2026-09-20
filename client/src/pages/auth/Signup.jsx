@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import FlashMessage from '../../components/FlashMessage';
 
 export default function Signup() {
   const { signup } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: '', email: '', password: '', role: 'guest' });
+  const [form, setForm] = useState({ username: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -16,8 +16,7 @@ export default function Signup() {
     setError('');
     try {
       await signup(form);
-      if (form.role === 'host') navigate('/host/dashboard');
-      else navigate('/listings');
+      navigate('/listings');
     } catch (err) {
       setError(err.response?.data?.error || 'Signup failed');
     } finally {
@@ -64,18 +63,6 @@ export default function Signup() {
               minLength={6}
               required
             />
-          </div>
-          <div className="form-group">
-            <label htmlFor="role">I want to</label>
-            <select
-              id="role"
-              className="form-control"
-              value={form.role}
-              onChange={e => setForm({ ...form, role: e.target.value })}
-            >
-              <option value="guest">Book places (Guest)</option>
-              <option value="host">List my property (Host)</option>
-            </select>
           </div>
           <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={loading}>
             {loading ? 'Creating account...' : 'Sign Up'}

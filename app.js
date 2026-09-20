@@ -12,9 +12,31 @@ const MongoStore = require("connect-mongo");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
+const Booking = require("./models/booking.js");
 const compression = require("compression");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 
 app.use(compression());
+app.use(helmet());
+if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
+
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 300,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    skip: () => process.env.NODE_ENV !== "production",
+    handler: (req, res) => res.status(429).json({ error: "Too many requests. Please try again later." })
+});
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 15,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    skip: () => process.env.NODE_ENV !== "production",
+    handler: (req, res) => res.status(429).json({ error: "Too many authentication attempts. Please try again later." })
+});
 
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
@@ -33,9 +55,30 @@ const hostEarningsRouter = require("./routes/hostEarnings.js");
 
 main().then(() => {
     console.log("connected to DB");
+    cleanupExpiredBookings();
+    if (require.main === module) {
+        setInterval(cleanupExpiredBookings, 10 * 60 * 1000).unref();
+    }
 }).catch((err) => {
     console.log(err);
 });
+
+async function cleanupExpiredBookings() {
+    try {
+        const cutoff = new Date(Date.now() - 15 * 60 * 1000);
+        const result = await Booking.updateMany(
+            {
+                status: "pending",
+                paymentStatus: { $in: ["unpaid", "created"] },
+                createdAt: { $lt: cutoff }
+            },
+            { $set: { status: "rejected", paymentStatus: "failed" } }
+        );
+        if (result.modifiedCount) console.log(`Expired ${result.modifiedCount} pending booking(s)`);
+    } catch (error) {
+        console.error("Pending booking cleanup failed", error);
+    }
+}
 
 async function main() {
     await mongoose.connect(dbUrl, {
@@ -46,11 +89,17 @@ async function main() {
 }
 
 app.use(cors({
-    origin: process.env.NODE_ENV === "production" ? true : "http://localhost:5173",
+    origin: process.env.NODE_ENV === "production"
+        ? (process.env.CLIENT_ORIGIN || "")
+        : "http://localhost:5173",
     credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
+app.use(express.json({ limit: "100kb" }));
+app.use(express.urlencoded({ extended: true, limit: "100kb" }));
+app.use("/api", apiLimiter);
+app.use("/api/auth", authLimiter);
+app.use("/api/forgot", authLimiter);
 
 const store = MongoStore.create({
     mongoUrl: dbUrl,
@@ -70,7 +119,7 @@ const sessionOptions = {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         httpOnly: true,
         sameSite: "lax",
-        secure: false
+        secure: process.env.NODE_ENV === "production"
     }
 };
 
@@ -104,12 +153,31 @@ if (process.env.NODE_ENV === "production") {
 }
 
 app.use((err, req, res, next) => {
+    console.error("Request failed", {
+        method: req.method,
+        path: req.originalUrl,
+        statusCode: err.statusCode || 500,
+        message: err.message,
+        stack: process.env.NODE_ENV === "production" ? undefined : err.stack
+    });
     const statusCode = err.statusCode || 500;
-    const message = err.message || "Something went wrong";
+    const message = statusCode >= 500 ? "Something went wrong" : (err.message || "Request failed");
     res.status(statusCode).json({ error: message });
 });
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+if (require.main === module) {
+    const PORT = process.env.PORT || 8080;
+    const server = app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+    server.on("error", (error) => {
+        if (error.code === "EADDRINUSE") {
+            console.warn(`Port ${PORT} is already in use. Reusing the existing server on http://localhost:${PORT}.`);
+            process.exit(0);
+        }
+        console.error("Server failed to start", error);
+        process.exit(1);
+    });
+}
+
+module.exports = app;

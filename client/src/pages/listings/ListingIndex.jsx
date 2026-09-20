@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
 
@@ -50,18 +50,22 @@ export default function ListingIndex() {
       ? `/listings/search?${params.toString()}`
       : '/listings';
 
-    setLoading(true);
-    setError('');
-    API.get(endpoint)
-      .then(res => {
-        setListings(res.data.listings || []);
-        const favSet = new Set(res.data.userFavorites || []);
-        setFavorites(favSet);
-      })
-      .catch(err => {
-        setError(err.response?.data?.error || 'Failed to load listings');
-      })
-      .finally(() => setLoading(false));
+    const timer = setTimeout(() => {
+      setLoading(true);
+      setError('');
+      API.get(endpoint)
+        .then(res => {
+          setListings(res.data.listings || []);
+          const favSet = new Set(res.data.userFavorites || []);
+          setFavorites(favSet);
+        })
+        .catch(err => {
+          setError(err.response?.data?.error || 'Failed to load listings');
+        })
+        .finally(() => setLoading(false));
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [searchParams]);
 
   const handleSearch = (e) => {
@@ -114,7 +118,7 @@ export default function ListingIndex() {
     <div className="container" style={{ padding: '1.5rem 1.5rem' }}>
       {error && <FlashMessage message={error} type="error" />}
 
-      <form className="navbar-search" onSubmit={handleSearch} style={{ maxWidth: 720, margin: '0 auto 1.5rem', background: '#fff', borderRadius: 'var(--radius-full)', overflow: 'hidden', border: '1px solid var(--border)', display: 'flex' }}>
+      <form className="navbar-search listing-search-form" onSubmit={handleSearch} style={{ maxWidth: 720, margin: '0 auto 1.5rem', background: '#fff', borderRadius: 'var(--radius-full)', overflow: 'hidden', border: '1px solid var(--border)', display: 'flex' }}>
         <input
           type="text"
           placeholder="Search destinations..."
@@ -215,6 +219,8 @@ export default function ListingIndex() {
                   className="card-img"
                   src={listing.images?.[0]?.url || listing.images?.[0] || '/placeholder.jpg'}
                   alt={listing.title}
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="card-body">
                   <div className="flex justify-between items-center">

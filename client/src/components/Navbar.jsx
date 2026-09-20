@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import Notifications from './Notifications';
 
 const CATEGORIES = [
@@ -19,7 +19,7 @@ const CATEGORIES = [
 ];
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, upgradeToHost } = useAuth();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
@@ -38,6 +38,15 @@ export default function Navbar() {
     await logout();
     navigate('/');
     setMenuOpen(false);
+  };
+
+  const handleBecomeHost = async () => {
+    try {
+      await upgradeToHost();
+      navigate('/host/dashboard');
+    } finally {
+      setMenuOpen(false);
+    }
   };
 
   return (
@@ -80,6 +89,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
+                  <button type="button" className="navbar-host-link" onClick={handleBecomeHost}>Become a Host</button>
                   <Link to="/favorites" onClick={() => setMenuOpen(false)}>Favorites</Link>
                   <Link to="/bookings" onClick={() => setMenuOpen(false)}>My Bookings</Link>
                 </>

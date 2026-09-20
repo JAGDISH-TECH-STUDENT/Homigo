@@ -98,6 +98,10 @@ const listingSchema = new Schema({
     unavailableDates: [{
         type: Date
     }],
+    bookingLockUntil: {
+        type: Date,
+        default: null
+    },
     discount: {
         type: Number,
         default: 0,

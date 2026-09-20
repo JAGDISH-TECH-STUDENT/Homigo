@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
 import ListingMap from '../../components/ListingMap';
@@ -12,6 +12,9 @@ function BookingForm({ listing, user, navigate }) {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('checkout');
+  const [qrImageUrl, setQrImageUrl] = useState('');
+  const [qrBookingId, setQrBookingId] = useState('');
   
   const totalPrice = listing?.price || 0;
 
@@ -24,17 +27,10 @@ function BookingForm({ listing, user, navigate }) {
     setError('');
     
     const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
-    const subtotal = nights * totalPrice;
-    const grandTotal = subtotal + Math.round(subtotal * 0.12);
-
     try {
-      const orderRes = await API.post('/payment/create-order', {
-        amount: grandTotal,
-        listingTitle: listing.title,
-        nights,
-        checkIn,
-        checkOut
-      });
+      const bookingRes = await API.post(`/listings/${listing._id}/bookings`, { booking: { checkIn, checkOut, guests } });
+      const booking = bookingRes.data.booking;
+      const orderRes = await API.post('/payment/create-order', { bookingId: booking._id });
 
       const { orderId, keyId } = orderRes.data;
 
@@ -52,10 +48,9 @@ function BookingForm({ listing, user, navigate }) {
               razorpay_signature: response.razorpay_signature
             });
             
-            await API.post(`/listings/${listing._id}/bookings`, { booking: { checkIn, checkOut, guests } });
             setSuccess('Booking confirmed! Payment successful.');
           
-          } catch (err) {
+          } catch {
             setError('Payment verified but booking failed. Contact support.');
           }
         },
@@ -74,8 +69,50 @@ function BookingForm({ listing, user, navigate }) {
       rzp.on('payment.failed', function() {
         setError('Payment failed. Please try again.');
       });
-    } catch (err) {
+    } catch {
       setError('Payment failed. Please try again.');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!qrBookingId) return undefined;
+    let cancelled = false;
+    const checkPayment = async () => {
+      try {
+        const response = await API.get(`/payment/qr-status/${qrBookingId}`);
+        if (!cancelled && response.data.paid) {
+          setQrBookingId('');
+          setQrImageUrl('');
+          setSuccess('Booking confirmed! QR payment successful.');
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.response?.data?.error || 'Unable to check QR payment');
+      }
+    };
+    const interval = setInterval(checkPayment, 3000);
+    checkPayment();
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [qrBookingId]);
+
+  const handleQrBooking = async (e) => {
+    e.preventDefault();
+    if (!user) { navigate('/login'); return; }
+    if (!checkIn || !checkOut) { setError('Please select check-in and check-out dates'); return; }
+    setBookingLoading(true);
+    setError('');
+    try {
+      const bookingRes = await API.post(`/listings/${listing._id}/bookings`, { booking: { checkIn, checkOut, guests } });
+      const qrRes = await API.post('/payment/create-qr', { bookingId: bookingRes.data.booking._id });
+      setQrBookingId(bookingRes.data.booking._id);
+      setQrImageUrl(qrRes.data.imageUrl);
+      setSuccess('Scan the QR code with any UPI app. This page will update after payment.');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Unable to create QR payment');
     } finally {
       setBookingLoading(false);
     }
@@ -95,7 +132,16 @@ function BookingForm({ listing, user, navigate }) {
         ₹{totalPrice?.toLocaleString('en-IN')} <span>/ night</span>
       </p>
 
-      <form onSubmit={handleBooking}>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+        <button type="button" className={paymentMethod === 'checkout' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setPaymentMethod('checkout')}>
+          Card / UPI Checkout
+        </button>
+        <button type="button" className={paymentMethod === 'qr' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setPaymentMethod('qr')}>
+          Pay with QR
+        </button>
+      </div>
+
+      <form onSubmit={paymentMethod === 'qr' ? handleQrBooking : handleBooking}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: '1rem' }}>
           <div style={{ borderRight: '1px solid var(--border)', padding: '0.625rem 0.75rem' }}>
             <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Check-in</label>
@@ -112,10 +158,18 @@ function BookingForm({ listing, user, navigate }) {
           <input type="number" className="form-control" min={1} max={listing?.maxGuests || 20} value={guests} onChange={e => setGuests(Number(e.target.value))} required />
         </div>
 
-        <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={bookingLoading}>
-          {bookingLoading ? 'Processing...' : 'Book Now'}
+        <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={bookingLoading || Boolean(qrBookingId)}>
+          {bookingLoading ? 'Processing...' : paymentMethod === 'qr' ? 'Generate Payment QR' : 'Book Now'}
         </button>
       </form>
+
+      {qrImageUrl && (
+        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+          <p style={{ fontWeight: 600 }}>Scan with your UPI app</p>
+          <img src={qrImageUrl} alt="Razorpay payment QR code" style={{ width: 220, height: 220, objectFit: 'contain' }} />
+          <p className="text-light" style={{ fontSize: '0.85rem' }}>Waiting for payment confirmation...</p>
+        </div>
+      )}
 
       {nights > 0 && (
         <div style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
@@ -166,6 +220,12 @@ export default function ListingShow() {
   }, [autoSlide, listing?.images]);
 
   useEffect(() => {
+    if (!id) {
+      setError('Listing ID is missing');
+      setLoading(false);
+      return undefined;
+    }
+
     setLoading(true);
     API.get(`/listings/${id}`)
       .then(res => setListing(res.data.listing || res.data))
@@ -266,6 +326,8 @@ export default function ListingShow() {
             className="detail-image" 
             src={images[currentImage]?.url || images[currentImage]} 
             alt={listing.title} 
+                  fetchPriority={currentImage === 0 ? 'high' : 'auto'}
+                  decoding="async"
             style={{ marginBottom: 0, transform: `rotate(${rotation}deg)`, transition: 'transform 0.3s ease' }} 
           />
           {images.length > 1 && (
@@ -302,7 +364,7 @@ export default function ListingShow() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2rem', alignItems: 'start' }}>
+      <div className="listing-detail-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2rem', alignItems: 'start' }}>
         <div>
           <div className="detail-section">
             <div className="flex items-center gap-2 mb-2">

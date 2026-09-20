@@ -3,7 +3,7 @@ const Review = require("./models/review.js");
 const { ListingSchema, reviewSchema } = require("./schema.js");
 
 module.exports.isLoggedIn = (req, res, next) => {
-    if (!req.isAuthenticated()) {
+    if (!req.isAuthenticated() || req.user.blocked) {
         return res.status(401).json({ error: "You must be logged in" });
     }
     next();
@@ -19,6 +19,11 @@ module.exports.isOwner = async (req, res, next) => {
 };
 
 module.exports.validateListing = (req, res, next) => {
+    const payload = req.body.listing || req.body;
+    const { error } = ListingSchema.validate({ listing: payload }, { abortEarly: false });
+    if (error) {
+        return res.status(400).json({ error: error.details.map(detail => detail.message).join(", ") });
+    }
     next();
 };
 

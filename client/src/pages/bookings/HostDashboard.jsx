@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 
 export default function HostDashboard() {
   const [data, setData] = useState(null);

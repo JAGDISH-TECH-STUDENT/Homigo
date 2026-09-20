@@ -25,6 +25,14 @@ const userSchema=new Schema({
         type: Date,
         default: null
     },
+    resetPasswordTokenHash: {
+        type: String,
+        select: false
+    },
+    resetPasswordExpiresAt: {
+        type: Date,
+        select: false
+    },
     createdAt: {
         type: Date,
         default: Date.now

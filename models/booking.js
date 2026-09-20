@@ -27,7 +27,35 @@ const bookingSchema = new Schema({
     },
     totalPrice: {
         type: Number,
-        required: true
+        required: true,
+        min: 1
+    },
+    paymentOrderId: {
+        type: String,
+        index: true,
+        sparse: true
+    },
+    paymentQrCodeId: {
+        type: String,
+        index: true,
+        sparse: true
+    },
+    paymentQrImageUrl: String,
+    paymentId: {
+        type: String,
+        index: true,
+        sparse: true,
+        unique: true
+    },
+    paymentStatus: {
+        type: String,
+        enum: ["unpaid", "created", "paid", "failed", "refunded"],
+        default: "unpaid"
+    },
+    refundId: {
+        type: String,
+        index: true,
+        sparse: true
     },
     status: {
         type: String,

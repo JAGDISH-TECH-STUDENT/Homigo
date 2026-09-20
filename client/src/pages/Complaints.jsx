@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import API from '../api/axios';
 import FlashMessage from '../components/FlashMessage';
 
@@ -26,7 +26,8 @@ export default function Complaints() {
       setLoading(true);
       const res = await API.get('/listings/hosts');
       setUsers(res.data.users || []);
-    } catch (err) {
+    } catch {
+      return;
     } finally {
       setLoading(false);
     }
@@ -57,8 +58,6 @@ export default function Complaints() {
   };
 
   const canSubmitComplaint = user && user.role !== 'host' && user.role !== 'admin';
-  const showHelpContent = !user || user.role !== 'host' || user.role !== 'admin';
-
   const filteredHosts = users.filter(h => 
     hostSearch === '' || 
     h.username.toLowerCase().includes(hostSearch.toLowerCase()) ||

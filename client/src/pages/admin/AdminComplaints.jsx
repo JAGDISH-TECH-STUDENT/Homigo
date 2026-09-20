@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
@@ -17,21 +17,21 @@ export default function AdminComplaints() {
   const [messageSubject, setMessageSubject] = useState('');
   const [messageText, setMessageText] = useState('');
 
-  useEffect(() => {
-    loadComplaints();
-  }, [filter]);
-
-  const loadComplaints = async () => {
+  const loadComplaints = useCallback(async () => {
     try {
       const res = await API.get(`/admin/complaints${filter ? `?status=${filter}` : ''}`);
       setComplaints(res.data.complaints || []);
       setStats(res.data.stats || {});
-    } catch (err) {
+    } catch {
       setError('Failed to load complaints');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    loadComplaints();
+  }, [loadComplaints]);
 
   const handleResolve = async (id, status) => {
     try {
@@ -39,7 +39,7 @@ export default function AdminComplaints() {
       setSuccess(`Complaint ${status}`);
       setResolution('');
       loadComplaints();
-    } catch (err) {
+    } catch {
       setError('Failed to update complaint');
     }
   };
@@ -52,7 +52,7 @@ export default function AdminComplaints() {
         subject: messageSubject,
         message: messageText
       });
-      setSuccess('Message sent to host');
+      setSuccess('Message sent. The user can reply from Messages.');
       setShowMessageModal(false);
       setMessageUser(null);
       setMessageSubject('');

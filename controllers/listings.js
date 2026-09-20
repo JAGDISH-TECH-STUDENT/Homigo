@@ -25,12 +25,13 @@ module.exports.index = async (req, res) => {
         createdAt: 1
     };
 
-    const total = await Listing.countDocuments({});
-    const allListings = await Listing.find({})
+    const safeLimit = Math.min(Math.max(limit, 1), 50);
+    const total = await Listing.countDocuments({ active: true });
+    const allListings = await Listing.find({ active: true })
         .select(listingsProjection)
         .populate("owner", "username")
         .skip(skip)
-        .limit(limit)
+        .limit(safeLimit)
         .lean();
 
     let userFavorites = [];
@@ -44,25 +45,28 @@ module.exports.index = async (req, res) => {
         userFavorites,
         pagination: {
             page,
-            limit,
+            limit: safeLimit,
             total,
-            pages: Math.ceil(total / limit)
+            pages: Math.ceil(total / safeLimit)
         }
     });
 };
 
 module.exports.showListing = async (req, res) => {
     const { id } = req.params;
-    const listing = await Listing.findById(id)
-        .populate({ path: "reviews", populate: { path: "author" } })
-        .populate("owner")
+    const listing = await Listing.findOne({ _id: id, active: true })
+        .populate({ path: "reviews", populate: { path: "author", select: "username" } })
+        .populate("owner", "username")
         .select('-__v')
         .lean();
     if (!listing) {
         return res.status(404).json({ error: "Listing not found" });
     }
-    let coords = { lat: 28.6139, lon: 77.2090 };
-    if (process.env.TOMTOM_API_KEY) {
+    const storedCoordinates = listing.geometry?.coordinates;
+    let coords = storedCoordinates?.length === 2
+        ? { lat: storedCoordinates[1], lon: storedCoordinates[0] }
+        : { lat: 28.6139, lon: 77.2090 };
+    if ((!storedCoordinates || storedCoordinates.length !== 2) && process.env.TOMTOM_API_KEY) {
         try {
             const geoRes = await axios.get(`https://api.tomtom.com/search/2/geocode/${encodeURIComponent(listing.location)}.json?key=${process.env.TOMTOM_API_KEY}`);
             if (geoRes.data.results && geoRes.data.results[0]?.position) {
@@ -216,11 +220,11 @@ module.exports.getHostListings = async (req, res) => {
 
 module.exports.searchListings = async (req, res) => {
     const { q, category, minPrice, maxPrice, page = 1, limit = 20 } = req.query;
-    const pageNum = parseInt(page) || 1;
-    const limitNum = parseInt(limit) || 20;
+    const pageNum = Math.max(parseInt(page) || 1, 1);
+    const limitNum = Math.min(Math.max(parseInt(limit) || 20, 1), 50);
     const skip = (pageNum - 1) * limitNum;
     
-    let query = {};
+    let query = { active: true };
 
     if (q && q.trim() !== "") {
         const searchQuery = q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
