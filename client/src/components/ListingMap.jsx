@@ -16,7 +16,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 const THUNDERFOREST_API_KEY = import.meta.env.VITE_THUNDERFOREST_API_KEY;
 const tileUrl = THUNDERFOREST_API_KEY
-  ? `https://tile.thunderforest.com/{z}/{x}/{y}.png?apikey=${THUNDERFOREST_API_KEY}`
+  ? `https://api.thunderforest.com/neighbourhood/{z}/{x}/{y}.png?apikey=${THUNDERFOREST_API_KEY}`
   : null;
 
 export default function ListingMap({ lat, lng, title, zoom = 13 }) {
