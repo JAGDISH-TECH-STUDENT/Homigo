@@ -2,6 +2,9 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage} = require('multer-storage-cloudinary');
 
 if (!process.env.CLOUD_NAME || !process.env.CLOUD_API_KEY || !process.env.CLOUD_API_SECRET) {
+    if (process.env.NODE_ENV === "production") {
+        throw new Error("Cloudinary credentials are not configured. Set CLOUD_NAME, CLOUD_API_KEY, and CLOUD_API_SECRET.");
+    }
     console.warn("Warning: Cloudinary credentials not configured. Image uploads will fail.");
 }
 
