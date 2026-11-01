@@ -34,18 +34,27 @@ router.get("/", ensureAdmin, async (req, res) => {
         { $match: { status: 'confirmed' } },
         { $group: { _id: null, total: { $sum: '$totalPrice' } } }
       ]),
-      Listing.countDocuments({ active: true }),
+      Listing.countDocuments({ active: { $ne: false } }),
       Complaint.countDocuments({ status: { $in: ['open', 'in_progress'] } }),
       User.countDocuments({ createdAt: { $gte: startDate } }),
       Listing.countDocuments({ createdAt: { $gte: startDate } }),
       Booking.countDocuments({ createdAt: { $gte: startDate } })
     ]);
 
-    const monthlyRevenue = await Booking.aggregate([
-      { $match: { status: 'confirmed', createdAt: { $gte: new Date(new Date().getFullYear(), 0, 1) } } },
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = new Date().getFullYear();
+    const monthlyRevenueAgg = await Booking.aggregate([
+      { $match: { createdAt: { $gte: new Date(currentYear, 0, 1) } } },
       { $group: { _id: { $month: '$createdAt' }, total: { $sum: '$totalPrice' } } },
       { $sort: { _id: 1 } }
     ]);
+    const revByMonth = {};
+    monthlyRevenueAgg.forEach(m => { revByMonth[m._id] = m.total; });
+    const fullMonthlyRevenue = Array.from({ length: 12 }, (_, i) => ({
+      month: i + 1,
+      name: monthNames[i],
+      revenue: revByMonth[i + 1] || 0
+    }));
 
     const bookingsByStatus = await Booking.aggregate([
       { $group: { _id: '$status', count: { $sum: 1 } } }
@@ -88,7 +97,7 @@ router.get("/", ensureAdmin, async (req, res) => {
         newBookings
       },
       charts: {
-        monthlyRevenue: monthlyRevenue.map(m => ({ month: m._id, revenue: m.total })),
+        monthlyRevenue: fullMonthlyRevenue,
         bookingsByStatus: bookingsByStatus.reduce((acc, s) => ({ ...acc, [s._id]: s.count }), {}),
         topLocations: topLocations.map(l => ({ location: l._id, count: l.count })),
         topHosts

@@ -3,33 +3,146 @@ const Listing = require("../models/listing");
 const Booking = require("../models/booking");
 const Review = require("../models/review");
 const Notification = require("../models/notification");
+const Complaint = require("../models/complaint");
 const Message = require("../models/message");
+const { clearCache } = require("../utils/cache.js");
+
+function generateAnalyticsData(bookings = [], listings = [], now = new Date()) {
+    const ranges = ['7D', '30D', '3M', '1Y'];
+    const result = {};
+
+    // Strictly real confirmed bookings count as platform revenue
+    const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
+
+    ranges.forEach(range => {
+        let days = 7;
+        let numPoints = 7;
+        if (range === '30D') { days = 30; numPoints = 10; }
+        if (range === '3M') { days = 90; numPoints = 12; }
+        if (range === '1Y') { days = 365; numPoints = 12; }
+
+        const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+        const prevPeriodStart = new Date(now.getTime() - days * 2 * 24 * 60 * 60 * 1000);
+
+        // Filter bookings in current period
+        const periodBookings = confirmedBookings.filter(b => {
+            const d = new Date(b.createdAt);
+            return d >= periodStart && d <= now;
+        });
+
+        // Filter bookings in previous period
+        const prevPeriodBookings = confirmedBookings.filter(b => {
+            const d = new Date(b.createdAt);
+            return d >= prevPeriodStart && d < periodStart;
+        });
+
+        const periodRevenue = periodBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+        const prevPeriodRevenue = prevPeriodBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+
+        let changePct = 0;
+        let isUp = true;
+        if (prevPeriodRevenue > 0) {
+            changePct = Math.round(((periodRevenue - prevPeriodRevenue) / prevPeriodRevenue) * 100 * 10) / 10;
+            isUp = changePct >= 0;
+        } else if (periodRevenue > 0) {
+            changePct = 100;
+            isUp = true;
+        } else {
+            changePct = 0;
+            isUp = true;
+        }
+
+        const points = [];
+        const intervalMs = (days * 24 * 60 * 60 * 1000) / (numPoints - 1);
+
+        for (let i = 0; i < numPoints; i++) {
+            const pointTime = new Date(periodStart.getTime() + i * intervalMs);
+            const bucketStart = new Date(pointTime.getTime() - intervalMs / 2);
+            const bucketEnd = new Date(pointTime.getTime() + intervalMs / 2);
+
+            // 100% accurate: sum confirmed bookings in this exact interval
+            const bucketRevenue = periodBookings
+                .filter(b => {
+                    const d = new Date(b.createdAt);
+                    return d >= bucketStart && d < bucketEnd;
+                })
+                .reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+
+            let label = '';
+            if (days <= 7) {
+                label = pointTime.toLocaleDateString('en-US', { weekday: 'short' });
+            } else if (days <= 90) {
+                label = pointTime.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+            } else {
+                label = pointTime.toLocaleDateString('en-US', { month: 'short' });
+            }
+
+            const fullDate = pointTime.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            points.push({
+                label,
+                date: fullDate,
+                value: bucketRevenue // Exactly 0 if no booking on this date!
+            });
+        }
+
+        result[range] = {
+            revenue: periodRevenue, // Exactly 0 if no confirmed bookings!
+            change: changePct >= 0 ? `+${changePct}%` : `${changePct}%`,
+            isUp,
+            points
+        };
+    });
+
+    return result;
+}
 
 module.exports.renderDashboard = async (req, res) => {
     try {
-        const totalUsers = await User.countDocuments();
-        const totalListings = await Listing.countDocuments();
-        const totalBookings = await Booking.countDocuments();
-        const totalReviews = await Review.countDocuments();
-        const guests = await User.countDocuments({ $or: [{ role: 'guest' }, { role: { $exists: false } }] });
-        const hosts = await User.countDocuments({ role: 'host' });
-        const admins = await User.countDocuments({ role: 'admin' });
-        const recentUsers = await User.find().sort({ _id: -1 }).limit(5).select('username email role createdAt');
-        const recentBookings = await Booking.find().sort({ _id: -1 }).limit(5);
-        const activeListings = await Listing.countDocuments();
-        const confirmedBookings = await Booking.countDocuments({ status: 'confirmed' });
-        const totalRevenue = await Booking.aggregate([
-            { $match: { status: 'confirmed' } },
-            { $group: { _id: null, total: { $sum: '$totalPrice' } } }
+        const [
+            totalUsers,
+            totalListings,
+            totalBookings,
+            totalReviews,
+            guests,
+            hosts,
+            admins,
+            recentUsers,
+            recentBookings,
+            activeListings,
+            confirmedBookings,
+            totalRevenueAgg,
+            avgListingPriceAgg,
+            allListings,
+            allBookings
+        ] = await Promise.all([
+            User.countDocuments(),
+            Listing.countDocuments(),
+            Booking.countDocuments(),
+            Review.countDocuments(),
+            User.countDocuments({ $or: [{ role: 'guest' }, { role: { $exists: false } }] }),
+            User.countDocuments({ role: 'host' }),
+            User.countDocuments({ role: 'admin' }),
+            User.find().sort({ _id: -1 }).limit(5).select('username email role createdAt').lean(),
+            Booking.find().sort({ _id: -1 }).limit(5).lean(),
+            Listing.countDocuments({ active: { $ne: false } }),
+            Booking.countDocuments({ status: 'confirmed' }),
+            Booking.aggregate([
+                { $match: { status: 'confirmed' } },
+                { $group: { _id: null, total: { $sum: '$totalPrice' } } }
+            ]),
+            Listing.aggregate([
+                { $group: { _id: null, avg: { $avg: '$price' } } }
+            ]),
+            Listing.find().select('title location country price reviews image images').lean(),
+            Booking.find().select('createdAt totalPrice status').lean()
         ]);
-        const avgListingPrice = await Listing.aggregate([
-            { $group: { _id: null, avg: { $avg: '$price' } } }
-        ]);
-        
-        const allListings = await Listing.find();
+
         const reviewIds = allListings.flatMap(l => l.reviews || []);
         const uniqueReviewIds = [...new Set(reviewIds.map(id => id.toString()))];
-        const allReviews = await Review.find({ _id: { $in: uniqueReviewIds } });
+        const allReviews = uniqueReviewIds.length > 0 
+            ? await Review.find({ _id: { $in: uniqueReviewIds } }).select('rating').lean()
+            : [];
         
         const reviewMap = {};
         allReviews.forEach(r => { reviewMap[r._id.toString()] = r; });
@@ -46,6 +159,7 @@ module.exports.renderDashboard = async (req, res) => {
                 location: l.location,
                 country: l.country,
                 price: l.price,
+                image: l.image || (l.images && l.images[0]) || null,
                 avgRating: avg,
                 reviewsCount: count
             };
@@ -63,16 +177,17 @@ module.exports.renderDashboard = async (req, res) => {
                 return b.reviewsCount - a.reviewsCount;
             })
             .slice(0, 5);
-        
-        console.log('Dashboard response - activeListings:', activeListings, 'totalListings:', totalListings);
+
+        const platformAnalytics = generateAnalyticsData(allBookings, allListings);
         
         res.json({ 
             totalUsers, totalListings, totalBookings, totalReviews, guests, hosts, admins, 
             recentUsers, recentListings: recentListingsWithRating, recentBookings,
             activeListings, confirmedBookings,
-            totalRevenue: totalRevenue[0]?.total || 0,
-            avgListingPrice: avgListingPrice[0]?.avg || 0,
-            topListings
+            totalRevenue: totalRevenueAgg[0]?.total || 0,
+            avgListingPrice: avgListingPriceAgg[0]?.avg || 0,
+            topListings,
+            platformAnalytics
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -182,14 +297,14 @@ module.exports.sendMessageToUser = async (req, res) => {
     const notification = new Notification({
         user: id,
         type: 'message',
-        title: 'Message from Admin',
-        message: message,
-        link: `/chat/${req.user._id}`,
+        title: subject ? `Admin Message: ${subject.trim()}` : 'Message from Admin',
+        message: message.trim(),
+        link: null,
         data: {
             senderId: req.user._id,
             senderName: 'Admin',
             senderRole: 'admin',
-            subject,
+            subject: subject.trim(),
             messageId: chatMessage._id
         }
     });
@@ -216,6 +331,7 @@ module.exports.deactivateListing = async (req, res) => {
         });
     }
     
+    clearCache();
     res.json({ success: true, listing });
 };
 
@@ -237,6 +353,7 @@ module.exports.activateListing = async (req, res) => {
         });
     }
     
+    clearCache();
     res.json({ success: true, listing });
 };
 
@@ -263,6 +380,7 @@ module.exports.deleteListing = async (req, res) => {
     await Review.deleteMany({ _id: { $in: listing.reviews } });
     await Booking.deleteMany({ listing: req.params.id });
     await Listing.findByIdAndDelete(req.params.id);
+    clearCache();
     res.json({ success: true, message: "Listing and associated data deleted" });
 };
 
@@ -300,4 +418,114 @@ module.exports.deleteReview = async (req, res) => {
     await Listing.updateMany({ reviews: req.params.id }, { $pull: { reviews: req.params.id } });
     await Review.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Review deleted" });
+};
+
+module.exports.renderNotifications = async (req, res) => {
+    try {
+        const [recentUsers, recentListings, recentReviews, recentComplaints] = await Promise.all([
+            User.find()
+                .sort({ _id: -1 })
+                .limit(8)
+                .select('username email role createdAt')
+                .lean(),
+            Listing.find()
+                .sort({ _id: -1 })
+                .limit(8)
+                .populate('owner', 'username email')
+                .select('title location country price owner createdAt')
+                .lean(),
+            Review.find()
+                .sort({ _id: -1 })
+                .limit(8)
+                .populate('author', 'username')
+                .populate('listing', 'title')
+                .select('rating comment author listing createdAt')
+                .lean(),
+            Complaint.find()
+                .sort({ _id: -1 })
+                .limit(8)
+                .populate('createdBy', 'username email')
+                .populate('listing', 'title')
+                .select('subject description category priority status createdBy listing createdAt')
+                .lean()
+        ]);
+
+        const notifs = [];
+
+        // 1. Users
+        recentUsers.forEach(u => {
+            const time = u.createdAt || (u._id && typeof u._id.getTimestamp === 'function' ? u._id.getTimestamp() : new Date());
+            notifs.push({
+                id: `user-${u._id}`,
+                type: 'user',
+                title: 'New User Registered',
+                message: `@${u.username} joined as ${u.role || 'guest'}.`,
+                meta: { username: u.username, role: u.role, email: u.email },
+                link: '/admin/users',
+                createdAt: time
+            });
+        });
+
+        // 2. Listings
+        recentListings.forEach(l => {
+            const time = l.createdAt || (l._id && typeof l._id.getTimestamp === 'function' ? l._id.getTimestamp() : new Date());
+            notifs.push({
+                id: `listing-${l._id}`,
+                type: 'listing',
+                title: 'New Listing Added',
+                message: `"${l.title}" listed in ${l.location || 'Unknown'}${l.owner?.username ? ` by @${l.owner.username}` : ''}.`,
+                meta: { title: l.title, location: l.location, price: l.price, owner: l.owner?.username },
+                link: '/admin/listings',
+                createdAt: time
+            });
+        });
+
+        // 3. Reviews
+        recentReviews.forEach(r => {
+            const time = r.createdAt || (r._id && typeof r._id.getTimestamp === 'function' ? r._id.getTimestamp() : new Date());
+            notifs.push({
+                id: `review-${r._id}`,
+                type: 'review',
+                title: 'New Review Posted',
+                message: `@${r.author?.username || 'Guest'} rated ${r.rating}★ for "${r.listing?.title || 'Listing'}".`,
+                meta: { rating: r.rating, comment: r.comment, author: r.author?.username, listing: r.listing?.title },
+                link: '/admin/reviews',
+                createdAt: time
+            });
+        });
+
+        // 4. Complaints
+        recentComplaints.forEach(c => {
+            const time = c.createdAt || (c._id && typeof c._id.getTimestamp === 'function' ? c._id.getTimestamp() : new Date());
+            notifs.push({
+                id: `complaint-${c._id}`,
+                type: 'complaint',
+                title: `Complaint: ${c.subject}`,
+                message: `${c.createdBy?.username ? `@${c.createdBy.username}` : 'User'} reported [${c.category}]: "${(c.description || '').slice(0, 65)}${c.description && c.description.length > 65 ? '...' : ''}"`,
+                meta: { category: c.category, priority: c.priority, status: c.status, subject: c.subject },
+                link: '/admin/complaints',
+                createdAt: time
+            });
+        });
+
+        // Sort descending by time
+        notifs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        const counts = {
+            all: notifs.length,
+            user: notifs.filter(n => n.type === 'user').length,
+            listing: notifs.filter(n => n.type === 'listing').length,
+            review: notifs.filter(n => n.type === 'review').length,
+            complaint: notifs.filter(n => n.type === 'complaint').length
+        };
+
+        res.json({
+            success: true,
+            notifications: notifs.slice(0, 25),
+            counts
+        });
+    } catch (err) {
+        console.error("renderNotifications error:", err);
+        res.status(500).json({ error: "Failed to fetch notifications" });
+    }
 };

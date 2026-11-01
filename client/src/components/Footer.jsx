@@ -49,7 +49,10 @@ export default function Footer() {
         </div>
         <hr />
         <div className="footer-bottom">
-          <span className="footer-brand">Homigo</span>
+          <span className="footer-brand">
+            <i className="fa-solid fa-house-chimney" style={{ color: '#818cf8', marginRight: '0.6rem' }}></i>
+            Homigo<span style={{ color: '#818cf8' }}>.</span>
+          </span>
           <span>&copy; {new Date().getFullYear()} Homigo, Inc. All rights reserved.</span>
         </div>
       </div>

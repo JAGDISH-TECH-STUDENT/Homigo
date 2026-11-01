@@ -7,6 +7,7 @@ const adminController = require("../controllers/admin");
 router.use(isAdmin);
 
 router.get("/dashboard", wrapAsync(adminController.renderDashboard));
+router.get("/notifications", wrapAsync(adminController.renderNotifications));
 
 router.get("/users", wrapAsync(adminController.renderUsers));
 router.get("/users/:id/edit", wrapAsync(adminController.renderEditUser));

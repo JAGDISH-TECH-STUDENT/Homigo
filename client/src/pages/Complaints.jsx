@@ -124,21 +124,21 @@ export default function Complaints() {
         <div>
           {canSubmitComplaint && (
             <div style={{ 
-              background: 'linear-gradient(135deg, #6D67C9 0%, #5a54b3 100%)',
+              background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
               borderRadius: 16, padding: '2rem', color: '#fff', marginBottom: '2rem',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              flexWrap: 'wrap', gap: '1rem'
+              flexWrap: 'wrap', gap: '1rem', boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)'
             }}>
               <div>
-                <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>Need to file a complaint?</h3>
-                <p style={{ opacity: 0.9, margin: 0 }}>Our support team will review and respond within 24-48 hours.</p>
+                <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem', color: '#fff' }}>Need to file a complaint?</h3>
+                <p style={{ opacity: 0.9, margin: 0, color: 'rgba(255,255,255,0.85)' }}>Our support team will review and respond within 24-48 hours.</p>
               </div>
               <button 
                 onClick={() => setShowForm(true)}
                 style={{
-                  background: '#fff', color: '#6D67C9', border: 'none',
-                  padding: '0.875rem 2rem', borderRadius: 8, fontWeight: 600,
-                  cursor: 'pointer', fontSize: '1rem'
+                  background: '#fff', color: '#4f46e5', border: 'none',
+                  padding: '0.875rem 2rem', borderRadius: 10, fontWeight: 700,
+                  cursor: 'pointer', fontSize: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                 }}
               >
                 Submit Complaint
@@ -148,12 +148,12 @@ export default function Complaints() {
 
           {!user && (
             <div style={{ 
-              background: '#f8f9fc', borderRadius: 12, padding: '1.5rem', 
-              textAlign: 'center', marginBottom: '2rem', border: '2px dashed #ddd'
+              background: '#111827', borderRadius: 12, padding: '1.5rem', 
+              textAlign: 'center', marginBottom: '2rem', border: '1px dashed rgba(255,255,255,0.15)'
             }}>
-              <i className="fa-solid fa-user-lock" style={{ fontSize: '2rem', color: '#666', marginBottom: '0.75rem' }}></i>
-              <p style={{ color: '#666', margin: 0 }}>
-                <Link to="/login" style={{ color: '#6D67C9', fontWeight: 600, textDecoration: 'none' }}>Login</Link> as a guest to submit complaints
+              <i className="fa-solid fa-user-lock" style={{ fontSize: '2rem', color: 'rgba(255,255,255,0.4)', marginBottom: '0.75rem' }}></i>
+              <p style={{ color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+                <Link to="/login" style={{ color: '#818cf8', fontWeight: 600, textDecoration: 'none' }}>Login</Link> as a guest to submit complaints
               </p>
             </div>
           )}
@@ -161,32 +161,32 @@ export default function Complaints() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
             {helpCards.filter(card => card.show).map((card, index) => (
               <div key={index} style={{
-                background: '#fff', borderRadius: 12, padding: '1.5rem',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.08)', border: '1px solid #f0f0f0',
+                background: '#111827', borderRadius: 16, padding: '1.5rem',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.07)',
                 transition: 'transform 0.2s, box-shadow 0.2s', cursor: card.link ? 'pointer' : 'default'
               }}
               onClick={() => card.link && navigate(card.link)}
               >
                 <div style={{ 
                   width: 50, height: 50, borderRadius: 12, 
-                  background: 'linear-gradient(135deg, #6D67C920 0%, #5a54b320 100%)',
+                  background: 'rgba(99, 102, 241, 0.15)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  marginBottom: '1rem', fontSize: '1.25rem', color: '#6D67C9'
+                  marginBottom: '1rem', fontSize: '1.25rem', color: '#818cf8'
                 }}>
                   <i className={`fa-solid ${card.icon}`}></i>
                 </div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#1a1a2e' }}>{card.title}</h3>
-                <p style={{ fontSize: '0.9rem', color: '#666', margin: 0, lineHeight: 1.5 }}>{card.description}</p>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#fff' }}>{card.title}</h3>
+                <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.5 }}>{card.description}</p>
               </div>
             ))}
           </div>
 
           <div style={{ 
-            background: '#fff', borderRadius: 16, padding: '2rem',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #f0f0f0'
+            background: '#111827', borderRadius: 16, padding: '2rem',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.07)'
           }}>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 600, marginBottom: '1.5rem', color: '#1a1a2e', textAlign: 'center' }}>
-              <i className="fa-regular fa-paper-plane" style={{ marginRight: '0.5rem', color: '#6D67C9' }}></i>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 600, marginBottom: '1.5rem', color: '#fff', textAlign: 'center' }}>
+              <i className="fa-regular fa-paper-plane" style={{ marginRight: '0.5rem', color: '#818cf8' }}></i>
               Get in Touch
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
@@ -194,18 +194,18 @@ export default function Complaints() {
                 <div key={index} style={{ textAlign: 'center', padding: '1rem' }}>
                   <div style={{ 
                     width: 48, height: 48, borderRadius: '50%', 
-                    background: '#f8f9fc', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 0.75rem', fontSize: '1.1rem', color: '#6D67C9'
+                    background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 0.75rem', fontSize: '1.1rem', color: '#818cf8'
                   }}>
                     <i className={`fa-solid ${method.icon}`}></i>
                   </div>
-                  <p style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.25rem' }}>{method.title}</p>
+                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', marginBottom: '0.25rem' }}>{method.title}</p>
                   {method.action ? (
-                    <a href={method.action} style={{ color: '#6D67C9', fontWeight: 500, textDecoration: 'none' }}>
+                    <a href={method.action} style={{ color: '#818cf8', fontWeight: 500, textDecoration: 'none' }}>
                       {method.value}
                     </a>
                   ) : (
-                    <p style={{ fontSize: '0.95rem', color: '#333', margin: 0, fontWeight: 500 }}>{method.value}</p>
+                    <p style={{ fontSize: '0.95rem', color: '#fff', margin: 0, fontWeight: 500 }}>{method.value}</p>
                   )}
                 </div>
               ))}
@@ -213,24 +213,24 @@ export default function Complaints() {
           </div>
 
           <div style={{ 
-            marginTop: '2rem', padding: '1.5rem', background: '#fef9e7', 
-            borderRadius: 12, border: '1px solid #f9e79f', textAlign: 'center'
+            marginTop: '2rem', padding: '1.5rem', background: 'rgba(251, 191, 36, 0.1)', 
+            borderRadius: 12, border: '1px solid rgba(251, 191, 36, 0.25)', textAlign: 'center'
           }}>
-            <i className="fa-solid fa-lightbulb" style={{ color: '#f39c12', marginRight: '0.5rem' }}></i>
-            <span style={{ color: '#7d6608', fontSize: '0.95rem' }}>
+            <i className="fa-solid fa-lightbulb" style={{ color: '#fbbf24', marginRight: '0.5rem' }}></i>
+            <span style={{ color: '#fde68a', fontSize: '0.95rem' }}>
               <strong>Tip:</strong> For fastest response, include your booking ID when contacting us about booking issues.
             </span>
           </div>
         </div>
       ) : (
         <div style={{ 
-          background: '#fff', borderRadius: 16, padding: '2rem',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)', border: '1px solid #f0f0f0',
-          maxWidth: 600, margin: '0 auto'
+          background: '#111827', borderRadius: 16, padding: '2rem',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)',
+          maxWidth: 600, margin: '0 auto', color: '#fff'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1a1a2e', margin: 0 }}>
-              <i className="fa-solid fa-file-circle-exclamation" style={{ marginRight: '0.5rem', color: '#6D67C9' }}></i>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#fff', margin: 0 }}>
+              <i className="fa-solid fa-file-circle-exclamation" style={{ marginRight: '0.5rem', color: '#818cf8' }}></i>
               Submit Complaint
             </h2>
             <button 

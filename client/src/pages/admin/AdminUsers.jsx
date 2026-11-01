@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
+import AdminSidebar from './AdminSidebar';
+
+let usersCache = null;
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [users, setUsers] = useState(usersCache || []);
+  const [loading, setLoading] = useState(!usersCache);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [editRole, setEditRole] = useState('');
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -18,17 +23,29 @@ export default function AdminUsers() {
 
   useEffect(() => {
     API.get('/admin/users')
-      .then(res => setUsers(res.data.users || []))
-      .catch(err => setError(err.response?.data?.error || 'Failed to load users'))
+      .then(res => {
+        const data = res.data.users || [];
+        usersCache = data;
+        setUsers(data);
+      })
+      .catch(err => {
+        if (!usersCache) {
+          setError(err.response?.data?.error || 'Failed to load users');
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const handleEdit = async (id) => {
     try {
       await API.put(`/admin/users/${id}`, { role: editRole });
-      setUsers(prev => prev.map(u => u._id === id ? { ...u, role: editRole } : u));
+      setUsers(prev => {
+        const next = prev.map(u => u._id === id ? { ...u, role: editRole } : u);
+        usersCache = next;
+        return next;
+      });
       setEditingId(null);
-      setSuccess('User updated');
+      setSuccess('User updated successfully');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update user');
     }
@@ -38,8 +55,12 @@ export default function AdminUsers() {
     if (!window.confirm('Delete this user and all associated data?')) return;
     try {
       await API.delete(`/admin/users/${id}`);
-      setUsers(prev => prev.filter(u => u._id !== id));
-      setSuccess('User deleted');
+      setUsers(prev => {
+        const next = prev.filter(u => u._id !== id);
+        usersCache = next;
+        return next;
+      });
+      setSuccess('User deleted successfully');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to delete user');
     }
@@ -48,8 +69,12 @@ export default function AdminUsers() {
   const handleBlock = async (id, reason) => {
     try {
       await API.post(`/admin/users/${id}/block`, { reason });
-      setUsers(prev => prev.map(u => u._id === id ? { ...u, blocked: true } : u));
-      setSuccess('User blocked');
+      setUsers(prev => {
+        const next = prev.map(u => u._id === id ? { ...u, blocked: true } : u);
+        usersCache = next;
+        return next;
+      });
+      setSuccess('User blocked successfully');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to block user');
     }
@@ -58,8 +83,12 @@ export default function AdminUsers() {
   const handleUnblock = async (id) => {
     try {
       await API.post(`/admin/users/${id}/unblock`);
-      setUsers(prev => prev.map(u => u._id === id ? { ...u, blocked: false } : u));
-      setSuccess('User unblocked');
+      setUsers(prev => {
+        const next = prev.map(u => u._id === id ? { ...u, blocked: false } : u);
+        usersCache = next;
+        return next;
+      });
+      setSuccess('User unblocked successfully');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to unblock user');
     }
@@ -83,135 +112,318 @@ export default function AdminUsers() {
     }
   };
 
-  const filtered = users.filter(u =>
-    u.username?.toLowerCase().includes(search.toLowerCase()) ||
-    u.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const avatarColors = ['#818cf8', '#f472b6', '#34d399', '#fbbf24', '#60a5fa', '#f97316'];
+  const getAvatarColor = (name) => avatarColors[(name || '').charCodeAt(0) % avatarColors.length];
+  const getInitial = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
-  if (loading) return <div className="loading-spinner" />;
+  const formatJoined = (dStr) => {
+    if (!dStr) return <span className="admin-td-muted">N/A</span>;
+    const d = new Date(dStr);
+    return (
+      <div className="admin-joined-cell">
+        <div className="admin-joined-date">{d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+        <div className="admin-joined-time">{d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
+      </div>
+    );
+  };
+
+  const filtered = users.filter(u => {
+    const matchSearch = u.username?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase()) ||
+      u._id?.toLowerCase().includes(search.toLowerCase());
+
+    if (!matchSearch) return false;
+    if (roleFilter === 'all') return true;
+    if (roleFilter === 'blocked') return u.blocked;
+    return (u.role || 'guest') === roleFilter;
+  });
+
+  if (loading) {
+    return (
+      <div className="admin-layout admin-dark">
+        <AdminSidebar />
+        <div className="admin-content">
+          <div className="admin-page-header-dark">
+            <div>
+              <h1>
+                <i className="fa-solid fa-users" style={{ color: '#818cf8', marginRight: '0.6rem', fontSize: '1.4rem' }}></i>
+                Manage Users
+              </h1>
+              <p>View registered users, edit privileges, manage account status and direct communications.</p>
+            </div>
+          </div>
+          <div className="admin-loading-container">
+            <div className="admin-spinner"></div>
+            <div className="admin-loading-text">Loading users directory...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="admin-layout">
-      <aside className="admin-sidebar">
-        <div className="admin-sidebar-brand">Homigo<span>Admin</span></div>
-        <Link to="/admin"><i className="fa-solid fa-gauge-high"></i> Dashboard</Link>
-        <Link to="/admin/users" className="active"><i className="fa-solid fa-users"></i> Users</Link>
-        <Link to="/admin/listings"><i className="fa-solid fa-building"></i> Listings</Link>
-        <Link to="/admin/bookings"><i className="fa-solid fa-calendar-check"></i> Bookings</Link>
-        <Link to="/admin/reviews"><i className="fa-solid fa-star"></i> Reviews</Link>
-        <Link to="/admin/analytics"><i className="fa-solid fa-chart-line"></i> Analytics</Link>
-        <Link to="/admin/complaints"><i className="fa-solid fa-headset"></i> Complaints</Link>
-      </aside>
+    <div className="admin-layout admin-dark">
+      <AdminSidebar />
+
       <div className="admin-content">
         {error && <FlashMessage message={error} type="error" />}
         {success && <FlashMessage message={success} type="success" />}
 
-        <div className="admin-header">
-          <h1>Manage Users</h1>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search users..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ maxWidth: 300 }}
-          />
+        {/* Page Header */}
+        <div className="admin-page-header-dark">
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '0.4rem' }}>
+              <button
+                type="button"
+                className="admin-back-btn admin-back-btn-sm"
+                onClick={() => {
+                  if (window.history.state?.idx > 0) {
+                    navigate(-1);
+                  } else {
+                    navigate('/admin');
+                  }
+                }}
+                title="Go back"
+              >
+                <i className="fa-solid fa-arrow-left"></i>
+                <span>Back</span>
+              </button>
+              <h1 style={{ margin: 0 }}>
+                <i className="fa-solid fa-users" style={{ color: '#818cf8', marginRight: '0.6rem', fontSize: '1.4rem' }}></i>
+                Manage Users
+              </h1>
+            </div>
+            <p>View registered users, edit privileges, manage account status and direct communications.</p>
+          </div>
+          <div className="admin-header-actions-dark">
+            <div style={{ position: 'relative' }}>
+              <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}></i>
+              <input
+                type="text"
+                className="admin-input-dark"
+                placeholder="Search username or email..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ paddingLeft: '2.4rem', width: '260px' }}
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="admin-table-card">
-          <table className="table" style={{ margin: 0 }}>
-            <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody>
-              {filtered.map(u => (
-                <tr key={u._id}>
-                  <td style={{ fontSize: '0.75rem', color: '#888' }}>{u._id}</td>
-                  <td style={{ fontWeight: 500 }}>{u.username}</td>
-                  <td style={{ color: '#64748b' }}>{u.email}</td>
-                  <td>
-                    {editingId === u._id ? (
-                      <select value={editRole} onChange={e => setEditRole(e.target.value)} className="form-control" style={{ width: 'auto', padding: '0.25rem 0.5rem' }}>
-                        <option value="guest">Guest</option>
-                        <option value="host">Host</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    ) : (
-                      <span className={`badge ${u.role === 'admin' ? 'badge-danger' : u.role === 'host' ? 'badge-success' : ''}`} style={{ background: u.role === 'admin' ? '#fef2f2' : u.role === 'host' ? '#f0fdf4' : '#f8fafc', color: u.role === 'admin' ? '#dc2626' : u.role === 'host' ? '#16a34a' : '#64748b' }}>{u.role || 'guest'}</span>
-                    )}
-                  </td>
-                  <td style={{ color: '#64748b', fontSize: '0.85rem' }}>
-                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
-                  </td>
-                  <td>
-                    {u.blocked ? (
-                      <span style={{ background: '#fee2e2', color: '#dc2626', padding: '0.25rem 0.5rem', borderRadius: 4, fontSize: '0.75rem', fontWeight: 600 }}>Blocked</span>
-                    ) : (
-                      <span style={{ background: '#d1fae5', color: '#059669', padding: '0.25rem 0.5rem', borderRadius: 4, fontSize: '0.75rem', fontWeight: 600 }}>Active</span>
-                    )}
-                  </td>
-                  <td>
-                    {editingId === u._id ? (
-                      <div className="flex gap-1">
-                        <button className="btn btn-success btn-sm" onClick={() => handleEdit(u._id)}>Save</button>
-                        <button className="btn btn-outline btn-sm" onClick={() => setEditingId(null)}>Cancel</button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-1">
-                        <button className="btn btn-outline btn-sm" onClick={() => { setEditingId(u._id); setEditRole(u.role); }}>Edit</button>
-                        <button className="btn btn-info btn-sm" onClick={() => { setMessageUser(u); setShowMessageModal(true); }}>Message</button>
-                        {u.role !== 'admin' && (
-                          u.blocked ? (
-                            <button className="btn btn-success btn-sm" onClick={() => handleUnblock(u._id)}>Unblock</button>
-                          ) : (
-                            <button className="btn btn-warning btn-sm" onClick={() => handleBlock(u._id, 'Violation of terms')}>Block</button>
-                          )
-                        )}
-                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u._id)}>Delete</button>
-                      </div>
-                    )}
-                  </td>
+        {/* Filter Pills */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          {[
+            { id: 'all', label: 'All Users', count: users.length },
+            { id: 'guest', label: 'Guests', count: users.filter(u => (u.role || 'guest') === 'guest').length },
+            { id: 'host', label: 'Hosts', count: users.filter(u => u.role === 'host').length },
+            { id: 'admin', label: 'Admins', count: users.filter(u => u.role === 'admin').length },
+            { id: 'blocked', label: 'Blocked', count: users.filter(u => u.blocked).length },
+          ].map(f => (
+            <button
+              key={f.id}
+              onClick={() => setRoleFilter(f.id)}
+              className={`admin-btn ${roleFilter === f.id ? 'admin-btn-primary' : 'admin-btn-outline'}`}
+              style={{ fontSize: '0.78rem' }}
+            >
+              {f.label} <span style={{ opacity: 0.75, marginLeft: '0.3rem' }}>({f.count})</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Users Table Card */}
+        <div className="admin-card-dark">
+          <div className="admin-card-dark-header">
+            <h3>
+              User Directory
+              <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginLeft: '0.5rem', fontWeight: 400 }}>
+                ({filtered.length} {filtered.length === 1 ? 'user' : 'users'})
+              </span>
+            </h3>
+          </div>
+
+          <div className="admin-table-container">
+            <table className="admin-table-dark">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Joined</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.4)' }}>
+                      <i className="fa-solid fa-user-slash" style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block' }}></i>
+                      No users match your criteria
+                    </td>
+                  </tr>
+                ) : filtered.map(u => (
+                  <tr key={u._id}>
+                    <td>
+                      <div className="admin-user-cell">
+                        <div className="admin-avatar-circle" style={{ background: getAvatarColor(u.username) }}>
+                          {getInitial(u.username)}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, color: '#fff' }}>{u.username}</div>
+                          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)' }}>ID: {u._id.slice(-6)}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="admin-td-muted" title={u.email}>{u.email}</span>
+                    </td>
+                    <td>
+                      {editingId === u._id ? (
+                        <select
+                          value={editRole}
+                          onChange={e => setEditRole(e.target.value)}
+                          className="admin-input-dark"
+                          style={{ padding: '0.25rem 0.5rem', minWidth: '90px', fontSize: '0.75rem' }}
+                        >
+                          <option value="guest">Guest</option>
+                          <option value="host">Host</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      ) : (
+                        <span className={`admin-role-badge ${u.role === 'admin' ? 'role-admin' : u.role === 'host' ? 'role-host' : 'role-guest'}`}>
+                          {u.role ? u.role.charAt(0).toUpperCase() + u.role.slice(1) : 'Guest'}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      {formatJoined(u.createdAt)}
+                    </td>
+                    <td>
+                      {u.blocked ? (
+                        <span className="admin-badge admin-badge-inactive">
+                          <i className="fa-solid fa-ban" style={{ fontSize: '0.65rem' }}></i> Blocked
+                        </span>
+                      ) : (
+                        <span className="admin-badge admin-badge-active">
+                          <i className="fa-solid fa-circle-check" style={{ fontSize: '0.65rem' }}></i> Active
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        {editingId === u._id ? (
+                          <>
+                            <button className="admin-btn admin-btn-success admin-btn-sm" onClick={() => handleEdit(u._id)}>
+                              <i className="fa-solid fa-check"></i> Save
+                            </button>
+                            <button className="admin-btn admin-btn-outline admin-btn-sm" onClick={() => setEditingId(null)}>
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              className="admin-btn admin-btn-outline admin-btn-sm"
+                              title="Edit Role"
+                              onClick={() => { setEditingId(u._id); setEditRole(u.role || 'guest'); }}
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button
+                              className="admin-btn admin-btn-info admin-btn-sm"
+                              title="Send Message"
+                              onClick={() => { setMessageUser(u); setShowMessageModal(true); }}
+                            >
+                              <i className="fa-solid fa-envelope"></i> Message
+                            </button>
+                            {u.role !== 'admin' && (
+                              u.blocked ? (
+                                <button
+                                  className="admin-btn admin-btn-success admin-btn-sm"
+                                  onClick={() => handleUnblock(u._id)}
+                                  title="Unblock User"
+                                >
+                                  Unblock
+                                </button>
+                              ) : (
+                                <button
+                                  className="admin-btn admin-btn-warning admin-btn-sm"
+                                  onClick={() => handleBlock(u._id, 'Violation of terms')}
+                                  title="Block User"
+                                >
+                                  Block
+                                </button>
+                              )
+                            )}
+                            <button
+                              className="admin-btn admin-btn-danger admin-btn-sm"
+                              title="Delete User"
+                              onClick={() => handleDelete(u._id)}
+                            >
+                              <i className="fa-solid fa-trash-can"></i>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
+      {/* Dark Message Modal */}
       {showMessageModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div style={{ background: '#fff', padding: '1.5rem', borderRadius: 12, maxWidth: 450, width: '90%', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Send Message to {messageUser?.username}</h3>
-              <button 
-                onClick={() => { setShowMessageModal(false); setMessageUser(null); }} 
-                style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', padding: 0, lineHeight: 1 }}
-              >×</button>
+        <div className="admin-modal-overlay" onClick={() => { setShowMessageModal(false); setMessageUser(null); }}>
+          <div className="admin-modal-dark" onClick={e => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h3>
+                <i className="fa-solid fa-envelope" style={{ color: '#818cf8', marginRight: '0.5rem' }}></i>
+                Message @{messageUser?.username}
+              </h3>
+              <button
+                className="admin-modal-close"
+                onClick={() => { setShowMessageModal(false); setMessageUser(null); }}
+              >
+                &times;
+              </button>
             </div>
             <form onSubmit={handleSendMessage}>
-              <div className="form-group">
-                <label style={{ fontWeight: 500, fontSize: '0.9rem' }}>Subject</label>
+              <div className="admin-form-group-dark">
+                <label>Subject</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="admin-input-dark"
                   value={messageSubject}
                   onChange={e => setMessageSubject(e.target.value)}
-                  placeholder="Enter subject"
+                  placeholder="e.g. Account notification or inquiry"
                   required
                 />
               </div>
-              <div className="form-group">
-                <label style={{ fontWeight: 500, fontSize: '0.9rem' }}>Message</label>
+              <div className="admin-form-group-dark">
+                <label>Message Content</label>
                 <textarea
-                  className="form-control"
-                  rows={3}
+                  className="admin-input-dark"
+                  rows={4}
                   value={messageText}
                   onChange={e => setMessageText(e.target.value)}
-                  placeholder="Enter your message to the user..."
+                  placeholder="Type your message to this user..."
                   required
                 />
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Send</button>
-                <button type="button" className="btn btn-outline" onClick={() => { setShowMessageModal(false); setMessageUser(null); }}>Cancel</button>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-outline"
+                  onClick={() => { setShowMessageModal(false); setMessageUser(null); }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="admin-btn admin-btn-primary">
+                  <i className="fa-solid fa-paper-plane"></i> Send Message
+                </button>
               </div>
             </form>
           </div>

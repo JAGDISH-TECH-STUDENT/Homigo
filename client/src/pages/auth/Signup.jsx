@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
 import FlashMessage from '../../components/FlashMessage';
 
 export default function Signup() {
   const { signup } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [searchParams] = useSearchParams();
+  const emailParam = searchParams.get('email') || '';
+  const [form, setForm] = useState({ username: '', email: emailParam, password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -16,7 +18,7 @@ export default function Signup() {
     setError('');
     try {
       await signup(form);
-      navigate('/listings');
+      navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || 'Signup failed');
     } finally {

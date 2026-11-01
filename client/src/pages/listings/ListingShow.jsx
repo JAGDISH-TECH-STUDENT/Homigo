@@ -142,14 +142,14 @@ function BookingForm({ listing, user, navigate }) {
       </div>
 
       <form onSubmit={paymentMethod === 'qr' ? handleQrBooking : handleBooking}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: '1rem', background: 'rgba(255,255,255,0.04)' }}>
           <div style={{ borderRight: '1px solid var(--border)', padding: '0.625rem 0.75rem' }}>
-            <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Check-in</label>
-            <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 2 }} required />
+            <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block', color: 'rgba(255,255,255,0.6)' }}>Check-in</label>
+            <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 2, background: 'transparent', color: '#fff', colorScheme: 'dark' }} required />
           </div>
           <div style={{ padding: '0.625rem 0.75rem' }}>
-            <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Check-out</label>
-            <input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} min={checkIn || new Date().toISOString().split('T')[0]} style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 2 }} required />
+            <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block', color: 'rgba(255,255,255,0.6)' }}>Check-out</label>
+            <input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} min={checkIn || new Date().toISOString().split('T')[0]} style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 2, background: 'transparent', color: '#fff', colorScheme: 'dark' }} required />
           </div>
         </div>
 
@@ -332,10 +332,10 @@ export default function ListingShow() {
           />
           {images.length > 1 && (
             <>
-              <button onClick={() => { setCurrentImage(i => (i - 1 + images.length) % images.length); setRotation(0); setAutoSlide(false); }} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '8px', background: 'rgba(255,255,255,0.95)', border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}><i className="fa-solid fa-chevron-left"></i></button>
-              <button onClick={() => { setCurrentImage(i => (i + 1) % images.length); setRotation(0); setAutoSlide(false); }} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '8px', background: 'rgba(255,255,255,0.95)', border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}><i className="fa-solid fa-chevron-right"></i></button>
+              <button onClick={() => { setCurrentImage(i => (i - 1 + images.length) % images.length); setRotation(0); setAutoSlide(false); }} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '8px', background: 'rgba(17, 24, 39, 0.85)', backdropFilter: 'blur(8px)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}><i className="fa-solid fa-chevron-left"></i></button>
+              <button onClick={() => { setCurrentImage(i => (i + 1) % images.length); setRotation(0); setAutoSlide(false); }} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '8px', background: 'rgba(17, 24, 39, 0.85)', backdropFilter: 'blur(8px)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}><i className="fa-solid fa-chevron-right"></i></button>
               <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
-                {images.map((_, i) => (<span key={i} onClick={() => { setCurrentImage(i); setRotation(0); setAutoSlide(false); }} style={{ width: 10, height: 10, borderRadius: '3px', cursor: 'pointer', background: i === currentImage ? '#fff' : 'rgba(255,255,255,0.5)', border: '1px solid rgba(0,0,0,0.3)' }} />))}
+                {images.map((_, i) => (<span key={i} onClick={() => { setCurrentImage(i); setRotation(0); setAutoSlide(false); }} style={{ width: 10, height: 10, borderRadius: '3px', cursor: 'pointer', background: i === currentImage ? '#818cf8' : 'rgba(255,255,255,0.3)', border: '1px solid rgba(0,0,0,0.3)' }} />))}
               </div>
             </>
           )}
@@ -348,11 +348,13 @@ export default function ListingShow() {
               width: 40, 
               height: 40, 
               borderRadius: '8px', 
-              background: 'rgba(255,255,255,0.95)', 
-              border: 'none', 
+              background: 'rgba(17, 24, 39, 0.85)', 
+              backdropFilter: 'blur(8px)',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.15)', 
               cursor: 'pointer', 
               fontSize: '1rem', 
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
@@ -439,8 +441,8 @@ export default function ListingShow() {
                   <div className="flex items-center justify-between" style={{ marginBottom: '0.35rem' }}>
                     <div className="flex items-center gap-1">
                       <strong style={{ fontSize: '0.9rem' }}>{review.author?.username || 'User'}</strong>
-                      <span style={{ fontSize: '0.9rem', display: 'flex', gap: '1px' }}>
-                  {[1, 2, 3, 4, 5].map(s => <span key={s} style={{ color: s <= review.rating ? '#6D67C9' : '#ddd' }}>{s <= review.rating ? '★' : '☆'}</span>)}
+                      <span style={{ fontSize: '0.9rem', display: 'flex', gap: '2px' }}>
+                  {[1, 2, 3, 4, 5].map(s => <span key={s} style={{ color: s <= review.rating ? '#fbbf24' : 'rgba(255,255,255,0.2)' }}>{s <= review.rating ? '★' : '☆'}</span>)}
                 </span>
                     </div>
                     <span className="text-light" style={{ fontSize: '0.8rem' }}>{new Date(review.createdAt).toLocaleDateString()}</span>
@@ -462,7 +464,7 @@ export default function ListingShow() {
                       key={s} 
                       onClick={() => setReviewRating(s)}
                       style={{ 
-                        color: s <= reviewRating ? '#6D67C9' : '#ddd',
+                        color: s <= reviewRating ? '#fbbf24' : 'rgba(255,255,255,0.2)',
                         fontSize: '1.5rem',
                         fontWeight: 'bold'
                       }}

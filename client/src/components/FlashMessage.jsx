@@ -4,9 +4,11 @@ export default function FlashMessage({ message, type = 'success' }) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(false), 3000);
+    setVisible(true);
+    if (!message) return;
+    const timer = setTimeout(() => setVisible(false), 5000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [message]);
 
   if (!visible || !message) return null;
 

@@ -6,16 +6,34 @@ const { sendPasswordResetEmail } = require("../utils/mailer");
 
 const TOKEN_TTL_MS = 15 * 60 * 1000;
 
+function maskEmail(email) {
+  if (!email || !email.includes("@")) return email || "";
+  const [name, domain] = email.split("@");
+  if (name.length <= 2) return `${name[0]}***@${domain}`;
+  return `${name.slice(0, 2)}***${name.slice(-1)}@${domain}`;
+}
+
 router.post("/", async (req, res) => {
   try {
-    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
-    if (!email) {
-      return res.status(400).json({ error: "Email is required" });
+    const input = typeof req.body.email === "string" ? req.body.email.trim() : "";
+    if (!input) {
+      return res.status(400).json({ error: "Please enter your registered email address or username" });
     }
-    const user = await User.findOne({ email: { $regex: `^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" } });
+
+    const escaped = input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const user = await User.findOne({
+      $or: [
+        { email: { $regex: `^${escaped}$`, $options: "i" } },
+        { username: { $regex: `^${escaped}$`, $options: "i" } }
+      ]
+    });
     
     if (!user) {
-      return res.json({ success: true, message: "If email exists, reset link sent" });
+      return res.status(404).json({
+        error: `This account does not exist. Please sign up first before attempting to reset your password.`,
+        notRegistered: true,
+        email: input
+      });
     }
     
     const resetToken = crypto.randomBytes(32).toString("hex");
@@ -25,22 +43,47 @@ router.post("/", async (req, res) => {
 
     const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
     const resetUrl = `${clientOrigin}/forgot-password?token=${encodeURIComponent(resetToken)}`;
-    const mailResult = await sendPasswordResetEmail({ recipient: user.email, resetUrl });
-    console.log("Password reset email accepted by SMTP", {
-      recipient: user.email,
-      messageId: mailResult.messageId,
-      accepted: mailResult.accepted,
-      rejected: mailResult.rejected,
-      response: mailResult.response
-    });
-    
+
+    console.log("\n========================================");
+    console.log("🔑 PASSWORD RESET REQUESTED");
+    console.log(`User: ${user.username} (${user.email})`);
+    console.log(`Reset Link: ${resetUrl}`);
+    console.log("========================================\n");
+
+    let mailSent = false;
+    let mailError = null;
+    try {
+      const mailResult = await sendPasswordResetEmail({
+        recipient: user.email,
+        username: user.username,
+        resetUrl
+      });
+      console.log("Password reset email accepted by SMTP", {
+        recipient: user.email,
+        messageId: mailResult?.messageId,
+        accepted: mailResult?.accepted,
+        response: mailResult?.response
+      });
+      mailSent = true;
+    } catch (sendErr) {
+      console.error("Nodemailer send error:", sendErr);
+      mailError = sendErr.message;
+    }
+
+    const masked = maskEmail(user.email);
     res.json({ 
       success: true, 
-      message: "If the email exists, a password reset link has been sent"
+      message: mailSent 
+        ? `Password reset link sent to ${masked}. Please check your Inbox and Spam/Junk folder.`
+        : `Password reset link generated for ${masked}.`,
+      email: masked,
+      resetUrl,
+      mailSent,
+      warning: "Be sure to check your Spam or Junk folder if the email is not in your Inbox."
     });
   } catch (err) {
     console.error("Password reset email failed", err);
-    res.status(500).json({ error: "Unable to send password reset email. Please try again later." });
+    res.status(500).json({ error: "Unable to process password reset. Please try again later." });
   }
 });
 
@@ -56,7 +99,7 @@ router.post("/reset", async (req, res) => {
       resetPasswordExpiresAt: { $gt: new Date() }
     }).select("+resetPasswordTokenHash +resetPasswordExpiresAt");
     if (!user) {
-      return res.status(400).json({ error: "Invalid token" });
+      return res.status(400).json({ error: "Invalid or expired reset token. Please request a new link." });
     }
     
     await user.setPassword(newPassword);
@@ -64,7 +107,7 @@ router.post("/reset", async (req, res) => {
     user.resetPasswordExpiresAt = undefined;
     await user.save();
     
-    res.json({ success: true, message: "Password reset successful" });
+    res.json({ success: true, message: "Password reset successful! You can now log in." });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

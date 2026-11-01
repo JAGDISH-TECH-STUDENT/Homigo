@@ -39,7 +39,12 @@ export default function BookingShow() {
       {error && <FlashMessage message={error} type="error" />}
       {success && <FlashMessage message={success} type="success" />}
 
-      <Link to="/bookings" style={{ color: 'var(--primary)', fontSize: '0.9rem' }}>&larr; Back to bookings</Link>
+      <div style={{ marginBottom: '1.25rem' }}>
+        <Link to="/bookings" className="back-button">
+          <i className="fa-solid fa-arrow-left"></i>
+          <span>Back to bookings</span>
+        </Link>
+      </div>
 
       <div className="card mt-2" style={{ overflow: 'hidden' }}>
         {img && <img src={img} alt={listing.title} style={{ width: '100%', height: 260, objectFit: 'cover' }} />}

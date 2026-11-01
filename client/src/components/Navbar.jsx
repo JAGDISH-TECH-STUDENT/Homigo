@@ -52,7 +52,10 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-inner">
-        <Link to="/" className="navbar-brand">Homigo</Link>
+        <Link to="/" className="navbar-brand">
+          <i className="fa-solid fa-house-chimney" style={{ color: '#818cf8', marginRight: '0.6rem' }}></i>
+          Homigo<span style={{ color: '#818cf8' }}>.</span>
+        </Link>
 
         <form className="navbar-search" onSubmit={handleSearch}>
           <input
@@ -66,7 +69,9 @@ export default function Navbar() {
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
-          <button type="submit" className="btn btn-primary">Search</button>
+          <button type="submit" className="btn btn-primary">
+            <i className="fa-solid fa-magnifying-glass"></i>
+          </button>
         </form>
 
         <button
@@ -94,7 +99,6 @@ export default function Navbar() {
                   <Link to="/bookings" onClick={() => setMenuOpen(false)}>My Bookings</Link>
                 </>
               )}
-              <Link to="/chat" onClick={() => setMenuOpen(false)}>Messages</Link>
               <Notifications />
               <span className="navbar-user">{user.username}</span>
               <button className="btn btn-secondary btn-sm" onClick={handleLogout}>Logout</button>

@@ -13,7 +13,7 @@ module.exports.createBooking = async (req, res) => {
         if (!listing) {
             return res.status(404).json({ error: "Listing not found" });
         }
-        if (!listing.active) {
+        if (listing.active === false) {
             return res.status(400).json({ error: "This listing is not available" });
         }
         if (listing.owner.equals(req.user._id)) {
@@ -45,7 +45,7 @@ module.exports.createBooking = async (req, res) => {
         const lockedListing = await Listing.findOneAndUpdate(
             {
                 _id: listing._id,
-                active: true,
+                active: { $ne: false },
                 $or: [
                     { bookingLockUntil: null },
                     { bookingLockUntil: { $lt: new Date() } }

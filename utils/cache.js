@@ -1,4 +1,5 @@
 const Redis = require("ioredis");
+const apicacheModule = require("apicache");
 
 let redis = null;
 let cache = null;
@@ -46,12 +47,25 @@ if (process.env.REDIS_URL) {
         }
     };
 
-    apicacheInstance = require("apicache").newInstance();
+    apicacheInstance = apicacheModule.newInstance();
     apicacheInstance.options({ redis: redisStore });
     cache = apicacheInstance.middleware;
 } else {
-    const apicache = require("apicache");
-    cache = apicache.middleware;
+    apicacheInstance = apicacheModule.newInstance();
+    cache = apicacheInstance.middleware;
 }
 
-module.exports = { cache, redis, apicache: apicacheInstance };
+function clearCache(target) {
+    try {
+        if (apicacheInstance && typeof apicacheInstance.clear === "function") {
+            apicacheInstance.clear(target);
+        }
+        if (typeof apicacheModule.clear === "function") {
+            apicacheModule.clear(target);
+        }
+    } catch (e) {
+        // fail silently
+    }
+}
+
+module.exports = { cache, redis, apicache: apicacheInstance, clearCache };

@@ -118,7 +118,7 @@ export default function ListingIndex() {
     <div className="container" style={{ padding: '1.5rem 1.5rem' }}>
       {error && <FlashMessage message={error} type="error" />}
 
-      <form className="navbar-search listing-search-form" onSubmit={handleSearch} style={{ maxWidth: 720, margin: '0 auto 1.5rem', background: '#fff', borderRadius: 'var(--radius-full)', overflow: 'hidden', border: '1px solid var(--border)', display: 'flex' }}>
+      <form className="navbar-search listing-search-form" onSubmit={handleSearch} style={{ maxWidth: 720, margin: '0 auto 1.5rem', background: 'rgba(255, 255, 255, 0.05)', borderRadius: 'var(--radius-full)', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex' }}>
         <input
           type="text"
           placeholder="Search destinations..."
@@ -136,16 +136,18 @@ export default function ListingIndex() {
           placeholder="Min ₹"
           value={minPrice}
           onChange={e => setMinPrice(e.target.value)}
-          style={{ width: 90, border: 'none', borderLeft: '1px solid var(--border)', padding: '0.5rem', fontSize: '0.85rem', outline: 'none' }}
+          style={{ width: 90, border: 'none', borderLeft: '1px solid rgba(255, 255, 255, 0.1)', padding: '0.5rem', fontSize: '0.85rem', outline: 'none', background: 'transparent', color: '#fff' }}
         />
         <input
           type="number"
           placeholder="Max ₹"
           value={maxPrice}
           onChange={e => setMaxPrice(e.target.value)}
-          style={{ width: 90, border: 'none', borderLeft: '1px solid var(--border)', padding: '0.5rem', fontSize: '0.85rem', outline: 'none' }}
+          style={{ width: 90, border: 'none', borderLeft: '1px solid rgba(255, 255, 255, 0.1)', padding: '0.5rem', fontSize: '0.85rem', outline: 'none', background: 'transparent', color: '#fff' }}
         />
-        <button type="submit" className="btn btn-primary">Search</button>
+        <button type="submit" className="btn btn-primary">
+          <i className="fa-solid fa-magnifying-glass"></i>
+        </button>
       </form>
 
       {minPrice && maxPrice && (
@@ -210,9 +212,9 @@ export default function ListingIndex() {
                 className={`favorite-btn${favorites.has(listing._id) ? ' active' : ''}`}
                 onClick={(e) => { e.preventDefault(); toggleFavorite(listing._id); }}
                 title={favorites.has(listing._id) ? 'Remove from favorites' : 'Add to favorites'}
-                style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 100, width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 100, width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', background: 'rgba(17, 24, 39, 0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                <span style={{ color: favorites.has(listing._id) ? '#6D67C9' : '#ccc', fontSize: '1.2rem', lineHeight: 1 }}>♥</span>
+                <span style={{ color: favorites.has(listing._id) ? '#818cf8' : 'rgba(255,255,255,0.4)', fontSize: '1.2rem', lineHeight: 1 }}>♥</span>
               </button>
               <Link to={`/listings/${listing._id}`}>
                 <img

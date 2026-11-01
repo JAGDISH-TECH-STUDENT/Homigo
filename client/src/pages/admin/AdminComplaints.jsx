@@ -1,12 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
+import AdminSidebar from './AdminSidebar';
+
+let complaintsCache = null;
+let complaintsStatsCache = null;
 
 export default function AdminComplaints() {
-  const [complaints, setComplaints] = useState([]);
-  const [stats, setStats] = useState({});
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [complaints, setComplaints] = useState(complaintsCache || []);
+  const [stats, setStats] = useState(complaintsStatsCache || {});
+  const [loading, setLoading] = useState(!complaintsCache);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [filter, setFilter] = useState('');
@@ -20,8 +25,14 @@ export default function AdminComplaints() {
   const loadComplaints = useCallback(async () => {
     try {
       const res = await API.get(`/admin/complaints${filter ? `?status=${filter}` : ''}`);
-      setComplaints(res.data.complaints || []);
-      setStats(res.data.stats || {});
+      const compList = res.data.complaints || [];
+      const st = res.data.stats || {};
+      if (!filter) {
+        complaintsCache = compList;
+        complaintsStatsCache = st;
+      }
+      setComplaints(compList);
+      setStats(st);
     } catch {
       setError('Failed to load complaints');
     } finally {
@@ -36,9 +47,12 @@ export default function AdminComplaints() {
   const handleResolve = async (id, status) => {
     try {
       await API.put(`/admin/complaints/${id}/status`, { status, message: resolution });
-      setSuccess(`Complaint ${status}`);
+      setSuccess(`Complaint marked as ${status}`);
       setResolution('');
       loadComplaints();
+      if (selected && selected._id === id) {
+        setSelected(prev => ({ ...prev, status }));
+      }
     } catch {
       setError('Failed to update complaint');
     }
@@ -52,7 +66,7 @@ export default function AdminComplaints() {
         subject: messageSubject,
         message: messageText
       });
-      setSuccess('Message sent. The user can reply from Messages.');
+      setSuccess('Message sent to user');
       setShowMessageModal(false);
       setMessageUser(null);
       setMessageSubject('');
@@ -62,145 +76,341 @@ export default function AdminComplaints() {
     }
   };
 
-  if (loading) return <div className="loading-spinner" />;
+  if (loading) {
+    return (
+      <div className="admin-layout admin-dark">
+        <AdminSidebar />
+        <div className="admin-content">
+          <div className="admin-page-header-dark">
+            <div>
+              <h1>
+                <i className="fa-solid fa-headset" style={{ color: '#60a5fa', marginRight: '0.6rem', fontSize: '1.4rem' }}></i>
+                Complaints & Support Tickets
+              </h1>
+              <p>Manage customer issues, resolve dispute inquiries, and message parties directly.</p>
+            </div>
+          </div>
+          <div className="admin-loading-container">
+            <div className="admin-spinner"></div>
+            <div className="admin-loading-text">Loading support tickets...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const statusColors = {
-    open: { bg: '#fee2e2', color: '#dc2626' },
-    in_progress: { bg: '#fef3c7', color: '#d97706' },
-    resolved: { bg: '#d1fae5', color: '#059669' },
-    closed: { bg: '#f1f5f9', color: '#64748b' }
+  const getPriorityBadge = (p) => {
+    if (p === 'urgent') {
+      return (
+        <span className="admin-badge" style={{ background: 'rgba(239,68,68,0.2)', color: '#f87171' }}>
+          <i className="fa-solid fa-triangle-exclamation" style={{ fontSize: '0.65rem' }}></i> Urgent
+        </span>
+      );
+    }
+    if (p === 'high') {
+      return (
+        <span className="admin-badge" style={{ background: 'rgba(251,191,36,0.2)', color: '#fbbf24' }}>
+          <i className="fa-solid fa-circle-exclamation" style={{ fontSize: '0.65rem' }}></i> High
+        </span>
+      );
+    }
+    return (
+      <span className="admin-badge admin-badge-neutral">
+        Normal
+      </span>
+    );
+  };
+
+  const getStatusBadge = (s) => {
+    switch (s) {
+      case 'resolved':
+        return (
+          <span className="admin-badge admin-badge-active">
+            <i className="fa-solid fa-check-double" style={{ fontSize: '0.65rem' }}></i> Resolved
+          </span>
+        );
+      case 'in_progress':
+        return (
+          <span className="admin-badge admin-badge-pending">
+            <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: '0.65rem' }}></i> In Progress
+          </span>
+        );
+      case 'open':
+        return (
+          <span className="admin-badge admin-badge-inactive">
+            <i className="fa-solid fa-envelope-open" style={{ fontSize: '0.65rem' }}></i> Open
+          </span>
+        );
+      case 'closed':
+      default:
+        return (
+          <span className="admin-badge admin-badge-neutral">
+            Closed
+          </span>
+        );
+    }
   };
 
   return (
-    <div className="admin-layout">
-      <aside className="admin-sidebar">
-        <div className="admin-sidebar-brand">Homigo<span>Admin</span></div>
-        <Link to="/admin"><i className="fa-solid fa-gauge-high"></i> Dashboard</Link>
-        <Link to="/admin/users"><i className="fa-solid fa-users"></i> Users</Link>
-        <Link to="/admin/listings"><i className="fa-solid fa-building"></i> Listings</Link>
-        <Link to="/admin/bookings"><i className="fa-solid fa-calendar-check"></i> Bookings</Link>
-        <Link to="/admin/reviews"><i className="fa-solid fa-star"></i> Reviews</Link>
-        <Link to="/admin/analytics"><i className="fa-solid fa-chart-line"></i> Analytics</Link>
-        <Link to="/admin/complaints" className="active"><i className="fa-solid fa-headset"></i> Complaints</Link>
-      </aside>
-      
+    <div className="admin-layout admin-dark">
+      <AdminSidebar />
+
       <div className="admin-content">
         {error && <FlashMessage message={error} type="error" />}
         {success && <FlashMessage message={success} type="success" />}
 
-        <div className="admin-header">
-          <h1>Complaints & Support</h1>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className={`btn ${!filter ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilter('')}>All ({complaints.length})</button>
-            <button className={`btn ${filter === 'open' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilter('open')}>Open ({stats.open || 0})</button>
-            <button className={`btn ${filter === 'in_progress' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilter('in_progress')}>In Progress ({stats.in_progress || 0})</button>
-            <button className={`btn ${filter === 'resolved' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilter('resolved')}>Resolved ({stats.resolved || 0})</button>
+        {/* Page Header */}
+        <div className="admin-page-header-dark">
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '0.4rem' }}>
+              <button
+                type="button"
+                className="admin-back-btn admin-back-btn-sm"
+                onClick={() => {
+                  if (window.history.state?.idx > 0) {
+                    navigate(-1);
+                  } else {
+                    navigate('/admin');
+                  }
+                }}
+                title="Go back"
+              >
+                <i className="fa-solid fa-arrow-left"></i>
+                <span>Back</span>
+              </button>
+              <h1 style={{ margin: 0 }}>
+                <i className="fa-solid fa-headset" style={{ color: '#60a5fa', marginRight: '0.6rem', fontSize: '1.4rem' }}></i>
+                Complaints & Support Tickets
+              </h1>
+            </div>
+            <p>Manage customer issues, resolve dispute inquiries, and message parties directly.</p>
+          </div>
+          <div className="admin-header-actions-dark">
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+              <button
+                className={`admin-btn ${!filter ? 'admin-btn-primary' : 'admin-btn-outline'}`}
+                onClick={() => setFilter('')}
+                style={{ fontSize: '0.78rem' }}
+              >
+                All ({complaints.length})
+              </button>
+              <button
+                className={`admin-btn ${filter === 'open' ? 'admin-btn-primary' : 'admin-btn-outline'}`}
+                onClick={() => setFilter('open')}
+                style={{ fontSize: '0.78rem' }}
+              >
+                Open ({stats.open || 0})
+              </button>
+              <button
+                className={`admin-btn ${filter === 'in_progress' ? 'admin-btn-primary' : 'admin-btn-outline'}`}
+                onClick={() => setFilter('in_progress')}
+                style={{ fontSize: '0.78rem' }}
+              >
+                In Progress ({stats.in_progress || 0})
+              </button>
+              <button
+                className={`admin-btn ${filter === 'resolved' ? 'admin-btn-primary' : 'admin-btn-outline'}`}
+                onClick={() => setFilter('resolved')}
+                style={{ fontSize: '0.78rem' }}
+              >
+                Resolved ({stats.resolved || 0})
+              </button>
+            </div>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 350px' : '1fr', gap: '1.5rem' }}>
-          <div className="admin-table-card">
-            <table className="table" style={{ margin: 0 }}>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Subject</th>
-                  <th>Category</th>
-                  <th>Priority</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {complaints.length === 0 ? (
-                  <tr><td colSpan={7} className="text-center text-light">No complaints found</td></tr>
-                ) : complaints.map(c => (
-                  <tr key={c._id}>
-                    <td style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{c._id.slice(-6)}</td>
-                    <td style={{ fontWeight: 500 }}>{c.subject}</td>
-                    <td style={{ textTransform: 'capitalize' }}>{c.category}</td>
-                    <td>
-                      <span style={{ 
-                        fontSize: '0.7rem', fontWeight: 600, padding: '0.2rem 0.5rem', borderRadius: 4,
-                        background: c.priority === 'urgent' ? '#fee2e2' : c.priority === 'high' ? '#fef3c7' : '#f1f5f9',
-                        color: c.priority === 'urgent' ? '#dc2626' : c.priority === 'high' ? '#d97706' : '#64748b'
-                      }}>{c.priority}</span>
-                    </td>
-                    <td>
-                      <span style={{ 
-                        fontSize: '0.75rem', fontWeight: 600, padding: '0.25rem 0.5rem', borderRadius: 20,
-                        background: statusColors[c.status]?.bg, color: statusColors[c.status]?.color, textTransform: 'capitalize'
-                      }}>{c.status.replace('_', ' ')}</span>
-                    </td>
-                    <td style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}</td>
-                    <td>
-                      <button className="btn btn-outline btn-sm" onClick={() => setSelected(c)}>View</button>
-                    </td>
+        {/* Grid: Tickets table + Details side card */}
+        <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 380px' : '1fr', gap: '1.25rem', alignItems: 'flex-start' }}>
+          <div className="admin-card-dark">
+            <div className="admin-card-dark-header">
+              <h3>Support Inquiries</h3>
+            </div>
+            <div className="admin-table-container">
+              <table className="admin-table-dark">
+                <thead>
+                  <tr>
+                    <th>Ticket ID</th>
+                    <th>Subject</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th style={{ textAlign: 'right' }}>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {complaints.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.4)' }}>
+                        <i className="fa-solid fa-circle-check" style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block', color: '#34d399' }}></i>
+                        No complaints matching this view
+                      </td>
+                    </tr>
+                  ) : (
+                    complaints.map(c => (
+                      <tr
+                        key={c._id}
+                        style={{
+                          background: selected?._id === c._id ? 'rgba(99, 102, 241, 0.12)' : 'transparent',
+                          transition: 'background 0.2s',
+                        }}
+                      >
+                        <td>
+                          <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>
+                            #{c._id.slice(-6).toUpperCase()}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: '#fff', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.subject}>
+                            {c.subject}
+                          </div>
+                        </td>
+                        <td>
+                          <span className="admin-badge admin-badge-neutral" style={{ textTransform: 'capitalize' }}>
+                            {c.category}
+                          </span>
+                        </td>
+                        <td>
+                          {getPriorityBadge(c.priority)}
+                        </td>
+                        <td>
+                          {getStatusBadge(c.status)}
+                        </td>
+                        <td>
+                          <span className="admin-td-muted" style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                            {new Date(c.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <button
+                              className={`admin-btn admin-btn-sm ${selected?._id === c._id ? 'admin-btn-primary' : 'admin-btn-outline'}`}
+                              onClick={() => setSelected(selected?._id === c._id ? null : c)}
+                            >
+                              <i className="fa-solid fa-eye"></i> {selected?._id === c._id ? 'Close' : 'View'}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
+          {/* Details Side Panel */}
           {selected && (
-            <div className="admin-table-card" style={{ height: 'fit-content' }}>
-              <div className="admin-table-header">
-                <div className="admin-table-title">Complaint Details</div>
-                <button className="btn btn-outline btn-sm" onClick={() => setSelected(null)}>X</button>
+            <div className="admin-card-dark" style={{ border: '1px solid rgba(129, 140, 248, 0.3)' }}>
+              <div className="admin-card-dark-header">
+                <h3>Ticket Details</h3>
+                <button
+                  className="admin-modal-close"
+                  onClick={() => setSelected(null)}
+                  style={{ fontSize: '1rem' }}
+                >
+                  &times;
+                </button>
               </div>
-              <div style={{ padding: '1.5rem' }}>
-                <h3 style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{selected.subject}</h3>
-                <p className="text-light" style={{ marginBottom: '1rem' }}>{selected.description}</p>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
-                  <div><span className="text-light">Category:</span> <strong>{selected.category}</strong></div>
-                  <div><span className="text-light">Priority:</span> <strong>{selected.priority}</strong></div>
+              <div style={{ padding: '1.25rem' }}>
+                <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 600, margin: '0 0 0.5rem 0' }}>
+                  {selected.subject}
+                </h4>
+                <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: 8, margin: '0 0 1rem 0' }}>
+                  {selected.description}
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem', fontSize: '0.8rem' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.5rem', borderRadius: 6 }}>
+                    <div className="admin-td-muted" style={{ fontSize: '0.7rem' }}>Category</div>
+                    <strong style={{ color: '#fff', textTransform: 'capitalize' }}>{selected.category}</strong>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.5rem', borderRadius: 6 }}>
+                    <div className="admin-td-muted" style={{ fontSize: '0.7rem' }}>Priority</div>
+                    {getPriorityBadge(selected.priority)}
+                  </div>
                 </div>
-                
-                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem', marginTop: '1rem' }}>
-                  <p className="text-light" style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>Reporter: {selected.createdBy?.username} ({selected.createdBy?.email})</p>
+
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.85rem', marginBottom: '1rem', fontSize: '0.8rem' }}>
+                  <div style={{ marginBottom: '0.4rem' }}>
+                    <span className="admin-td-muted">Filed by:</span>{' '}
+                    <strong style={{ color: '#818cf8' }}>{selected.createdBy?.username}</strong>{' '}
+                    <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>({selected.createdBy?.email})</span>
+                  </div>
+
                   {selected.againstUser && (
-                    <p className="text-light" style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                      Against: <strong>{selected.againstUser?.username}</strong> ({selected.againstUser?.email})
-                      <button 
-                        className="btn btn-info btn-sm" 
-                        style={{ marginLeft: '0.5rem' }}
-                        onClick={() => { setMessageUser(selected.againstUser); setShowMessageModal(true); setMessageSubject(`Regarding Complaint: ${selected.subject}`); }}
-                      >
-                        Send Message
-                      </button>
-                    </p>
+                    <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(239,68,68,0.1)', borderRadius: 8 }}>
+                      <span className="admin-td-muted">Reported User:</span>{' '}
+                      <strong style={{ color: '#f87171' }}>{selected.againstUser?.username}</strong>
+                      <div style={{ marginTop: '0.35rem' }}>
+                        <button
+                          className="admin-btn admin-btn-info admin-btn-sm"
+                          onClick={() => {
+                            setMessageUser(selected.againstUser);
+                            setShowMessageModal(true);
+                            setMessageSubject(`Regarding Complaint: ${selected.subject}`);
+                          }}
+                        >
+                          <i className="fa-solid fa-envelope"></i> Message Reported User
+                        </button>
+                      </div>
+                    </div>
                   )}
-                  <p className="text-light" style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>Created: {new Date(selected.createdAt).toLocaleString('en-IN')}</p>
+
+                  <div style={{ marginTop: '0.5rem', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)' }}>
+                    Created on {new Date(selected.createdAt).toLocaleString('en-IN')}
+                  </div>
                 </div>
 
                 {selected.responses?.length > 0 && (
                   <div style={{ marginBottom: '1rem' }}>
-                    <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.5rem' }}>Responses ({selected.responses.length})</h4>
+                    <h5 style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem' }}>
+                      Updates ({selected.responses.length})
+                    </h5>
                     {selected.responses.map((r, i) => (
-                      <div key={i} style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: 8, marginBottom: '0.5rem' }}>
-                        <p style={{ marginBottom: '0.25rem' }}>{r.message}</p>
-                        <p className="text-light" style={{ fontSize: '0.75rem' }}>{r.respondedBy?.username} - {new Date(r.createdAt).toLocaleDateString('en-IN')}</p>
+                      <div key={i} style={{ background: 'rgba(255,255,255,0.04)', padding: '0.6rem', borderRadius: 8, marginBottom: '0.4rem' }}>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#fff' }}>{r.message}</p>
+                        <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.3rem' }}>
+                          {r.respondedBy?.username} &bull; {new Date(r.createdAt).toLocaleDateString('en-IN')}
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
 
                 {selected.status !== 'resolved' && selected.status !== 'closed' && (
-                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
-                    <textarea 
-                      className="form-control" 
-                      placeholder="Resolution message..." 
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.85rem' }}>
+                    <label style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: '0.4rem' }}>
+                      Resolution Note / Reply
+                    </label>
+                    <textarea
+                      className="admin-input-dark"
+                      placeholder="Add an internal note or action taken..."
                       value={resolution}
                       onChange={e => setResolution(e.target.value)}
                       rows={3}
-                      style={{ marginBottom: '0.5rem' }}
+                      style={{ width: '100%', marginBottom: '0.75rem' }}
                     />
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button className="btn btn-success" onClick={() => handleResolve(selected._id, 'resolved')}>Resolve</button>
-                      <button className="btn btn-warning" onClick={() => handleResolve(selected._id, 'in_progress')}>In Progress</button>
-                      <button className="btn btn-outline" onClick={() => handleResolve(selected._id, 'closed')}>Close</button>
+                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      <button
+                        className="admin-btn admin-btn-success admin-btn-sm"
+                        style={{ flex: 1 }}
+                        onClick={() => handleResolve(selected._id, 'resolved')}
+                      >
+                        <i className="fa-solid fa-check"></i> Resolve
+                      </button>
+                      <button
+                        className="admin-btn admin-btn-warning admin-btn-sm"
+                        onClick={() => handleResolve(selected._id, 'in_progress')}
+                      >
+                        In Progress
+                      </button>
+                      <button
+                        className="admin-btn admin-btn-outline admin-btn-sm"
+                        onClick={() => handleResolve(selected._id, 'closed')}
+                      >
+                        Close
+                      </button>
                     </div>
                   </div>
                 )}
@@ -210,42 +420,56 @@ export default function AdminComplaints() {
         </div>
       </div>
 
+      {/* Message Modal */}
       {showMessageModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div style={{ background: '#fff', padding: '1.5rem', borderRadius: 12, maxWidth: 450, width: '90%', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Send Message to {messageUser?.username}</h3>
-              <button 
-                onClick={() => { setShowMessageModal(false); setMessageUser(null); }} 
-                style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', padding: 0, lineHeight: 1 }}
-              >×</button>
+        <div className="admin-modal-overlay" onClick={() => { setShowMessageModal(false); setMessageUser(null); }}>
+          <div className="admin-modal-dark" onClick={e => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h3>
+                <i className="fa-solid fa-envelope" style={{ color: '#818cf8', marginRight: '0.5rem' }}></i>
+                Message @{messageUser?.username}
+              </h3>
+              <button
+                className="admin-modal-close"
+                onClick={() => { setShowMessageModal(false); setMessageUser(null); }}
+              >
+                &times;
+              </button>
             </div>
             <form onSubmit={handleSendMessage}>
-              <div className="form-group">
-                <label style={{ fontWeight: 500, fontSize: '0.9rem' }}>Subject</label>
+              <div className="admin-form-group-dark">
+                <label>Subject</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="admin-input-dark"
                   value={messageSubject}
                   onChange={e => setMessageSubject(e.target.value)}
-                  placeholder="Enter subject"
+                  placeholder="Subject line"
                   required
                 />
               </div>
-              <div className="form-group">
-                <label style={{ fontWeight: 500, fontSize: '0.9rem' }}>Message</label>
+              <div className="admin-form-group-dark">
+                <label>Message Content</label>
                 <textarea
-                  className="form-control"
-                  rows={3}
+                  className="admin-input-dark"
+                  rows={4}
                   value={messageText}
                   onChange={e => setMessageText(e.target.value)}
-                  placeholder="Enter your message..."
+                  placeholder="Type your message regarding this ticket..."
                   required
                 />
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Send</button>
-                <button type="button" className="btn btn-outline" onClick={() => { setShowMessageModal(false); setMessageUser(null); }}>Cancel</button>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-outline"
+                  onClick={() => { setShowMessageModal(false); setMessageUser(null); }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="admin-btn admin-btn-primary">
+                  <i className="fa-solid fa-paper-plane"></i> Send Message
+                </button>
               </div>
             </form>
           </div>

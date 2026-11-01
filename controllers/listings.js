@@ -1,5 +1,6 @@
 const Listing = require("../models/listing");
 const axios = require('axios');
+const { clearCache } = require("../utils/cache.js");
 
 const TOMTOM_API_KEY = process.env.TOMTOM_API_KEY;
 
@@ -26,8 +27,8 @@ module.exports.index = async (req, res) => {
     };
 
     const safeLimit = Math.min(Math.max(limit, 1), 50);
-    const total = await Listing.countDocuments({ active: true });
-    const allListings = await Listing.find({ active: true })
+    const total = await Listing.countDocuments({ active: { $ne: false } });
+    const allListings = await Listing.find({ active: { $ne: false } })
         .select(listingsProjection)
         .populate("owner", "username")
         .skip(skip)
@@ -54,7 +55,7 @@ module.exports.index = async (req, res) => {
 
 module.exports.showListing = async (req, res) => {
     const { id } = req.params;
-    const listing = await Listing.findOne({ _id: id, active: true })
+    const listing = await Listing.findOne({ _id: id, active: { $ne: false } })
         .populate({ path: "reviews", populate: { path: "author", select: "username" } })
         .populate("owner", "username")
         .select('-__v')
@@ -115,6 +116,7 @@ module.exports.createListing = async (req, res) => {
 
         newListing.geometry = { type: 'Point', coordinates: [lon, lat] };
         const savedListing = await newListing.save();
+        clearCache();
         res.status(201).json({ success: true, listing: savedListing });
     } catch (err) {
         console.error("Create listing error:", err);
@@ -198,6 +200,7 @@ module.exports.updateListing = async (req, res) => {
     
     listing.images = finalImages;
     await listing.save();
+    clearCache();
     res.json({ success: true, listing });
 };
 
@@ -207,6 +210,7 @@ module.exports.deleteListing = async (req, res) => {
     if (!listing) {
         return res.status(404).json({ error: "Listing not found" });
     }
+    clearCache();
     res.json({ success: true, message: "Listing deleted" });
 };
 
@@ -224,7 +228,7 @@ module.exports.searchListings = async (req, res) => {
     const limitNum = Math.min(Math.max(parseInt(limit) || 20, 1), 50);
     const skip = (pageNum - 1) * limitNum;
     
-    let query = { active: true };
+    let query = { active: { $ne: false } };
 
     if (q && q.trim() !== "") {
         const searchQuery = q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

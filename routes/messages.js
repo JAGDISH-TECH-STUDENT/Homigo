@@ -76,8 +76,8 @@ router.get("/:userId", ensureAuth, async (req, res) => {
 
 router.post("/", ensureAuth, async (req, res) => {
   try {
-    if (req.user.role === "guest") {
-      return res.status(403).json({ error: "Guests can view messages but cannot send messages" });
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Direct messaging between users has been disabled. Only administrators can send messages." });
     }
     const { to, listing, content } = req.body;
     if (!mongoose.isValidObjectId(to)) {
