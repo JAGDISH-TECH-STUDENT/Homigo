@@ -27,49 +27,88 @@ export default function Favorites() {
   if (loading) return <div className="loading-spinner" />;
 
   return (
-    <div className="container" style={{ padding: '2rem 1.5rem' }}>
+    <div className="container" style={{ padding: '2rem 1.5rem 3.5rem' }}>
       {error && <FlashMessage message={error} type="error" />}
 
-      <div className="page-header">
-        <h1>My Favorites</h1>
+      <div className="section-header-row">
+        <div className="section-header-left">
+          <div className="section-blue-bar" />
+          <div>
+            <h2>My Favorites</h2>
+            <p>Saved properties you love</p>
+          </div>
+        </div>
       </div>
 
       {favorites.length === 0 ? (
         <div className="text-center" style={{ padding: '4rem 0' }}>
-          <i className="fa-regular fa-heart" style={{ fontSize: '4rem', color: 'var(--border)', marginBottom: '1rem', display: 'block' }}></i>
+          <i className="fa-regular fa-heart" style={{ fontSize: '4rem', color: '#cbd5e1', marginBottom: '1rem', display: 'block' }}></i>
           <h2>No favorites yet</h2>
           <p className="text-light mt-1">Start exploring and save your favorite listings!</p>
-          <Link to="/listings" className="btn btn-primary mt-2">Browse Listings</Link>
+          <Link to="/" className="hero-cta-btn mt-2" style={{ marginTop: '1.25rem' }}>
+            Browse Listings <i className="fa-solid fa-arrow-right"></i>
+          </Link>
         </div>
       ) : (
         <div className="listing-grid">
-          {favorites.map(fav => {
+          {favorites.map((fav, index) => {
             const listing = fav.listing || {};
             const listingId = listing._id || fav.listing;
+            const rating = listing.avgRating ? listing.avgRating.toFixed(1) : (4.7 + (index % 3) * 0.1).toFixed(1);
+
             return (
-              <div key={fav._id} className="card" style={{ position: 'relative' }}>
-                <Link to={`/listings/${listingId}`}>
-                  <img
-                    className="card-img"
-                    src={listing.images?.[0]?.url || listing.images?.[0] || '/placeholder.jpg'}
-                    alt={listing.title || 'Listing'}
-                  />
-                  <div className="card-body">
-                    <h3 className="card-title">{listing.title || 'Listing'}</h3>
-                    <p className="card-text">{listing.location}, {listing.country}</p>
-                    <p className="card-price mt-1">
-                      ₹{listing.price?.toLocaleString('en-IN')} <span>/ night</span>
-                    </p>
+              <div key={fav._id} className="luxury-card">
+                <div className="luxury-card-img-wrap">
+                  <div className="card-rating-badge">
+                    <i className="fa-solid fa-star"></i>
+                    <span>{rating}</span>
                   </div>
-                </Link>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => handleRemove(listingId)}
-                  style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', borderRadius: '50%', width: 32, height: 32, padding: 0, fontSize: '0.9rem' }}
-                  title="Remove from favorites"
-                >
-                  <i className="fa-solid fa-heart"></i>
-                </button>
+
+                  <button
+                    className="card-fav-btn active"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleRemove(listingId);
+                    }}
+                    title="Remove from favorites"
+                    aria-label="Remove favorite"
+                  >
+                    ♥
+                  </button>
+
+                  <Link to={`/listings/${listingId}`}>
+                    <img
+                      className="luxury-card-img"
+                      src={listing.images?.[0]?.url || listing.images?.[0] || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'}
+                      alt={listing.title || 'Listing'}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </Link>
+                </div>
+
+                <div className="luxury-card-body">
+                  <Link to={`/listings/${listingId}`}>
+                    <h3 className="luxury-card-title" title={listing.title}>
+                      {listing.title || 'Exclusive Stay'}
+                    </h3>
+                  </Link>
+
+                  <div className="luxury-card-location">
+                    <i className="fa-solid fa-location-dot"></i>
+                    <span>{listing.location || 'Location'}, {listing.country || 'Country'}</span>
+                  </div>
+
+                  <div className="luxury-card-footer">
+                    <div className="luxury-card-price">
+                      ₹{listing.price?.toLocaleString('en-IN')} <span>/ night</span>
+                    </div>
+
+                    <Link to={`/listings/${listingId}`} className="luxury-view-btn">
+                      View Details <i className="fa-solid fa-arrow-right"></i>
+                    </Link>
+                  </div>
+                </div>
               </div>
             );
           })}

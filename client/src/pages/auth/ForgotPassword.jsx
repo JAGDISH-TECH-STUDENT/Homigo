@@ -87,10 +87,10 @@ export default function ForgotPassword() {
     <div className="auth-page">
       <div className="auth-card">
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#fff', marginBottom: '0.5rem' }}>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>
             {step === 1 ? 'Forgot Password' : 'Reset Password'}
           </h1>
-          <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+          <p style={{ color: '#64748b' }}>
             {step === 1 
               ? 'Enter your registered email address or username' 
               : 'Enter your new password'}
@@ -118,18 +118,18 @@ export default function ForgotPassword() {
           <div style={{
             marginBottom: '1.25rem',
             padding: '1.2rem',
-            background: 'rgba(99, 102, 241, 0.08)',
-            border: '1px solid rgba(99, 102, 241, 0.25)',
-            borderRadius: '12px',
+            background: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            borderRadius: '16px',
             textAlign: 'center'
           }}>
-            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.6rem', fontSize: '1.1rem' }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.6rem', fontSize: '1.2rem' }}>
               <i className="fa-solid fa-user-xmark"></i>
             </div>
-            <h4 style={{ margin: '0 0 0.4rem 0', color: '#fff', fontSize: '0.98rem', fontWeight: 600 }}>
+            <h4 style={{ margin: '0 0 0.4rem 0', color: '#0f172a', fontSize: '1rem', fontWeight: 700 }}>
               Account Not Registered
             </h4>
-            <p style={{ margin: '0 0 0.9rem 0', color: '#cbd5e1', fontSize: '0.84rem', lineHeight: '1.45' }}>
+            <p style={{ margin: '0 0 0.9rem 0', color: '#475569', fontSize: '0.85rem', lineHeight: '1.45' }}>
               You cannot reset a password for an email that is not registered. Please create your account first!
             </p>
             <Link
@@ -142,7 +142,8 @@ export default function ForgotPassword() {
                 padding: '0.6rem 1.4rem',
                 fontSize: '0.86rem',
                 fontWeight: 600,
-                textDecoration: 'none'
+                textDecoration: 'none',
+                borderRadius: 'var(--radius-full)'
               }}
             >
               <i className="fa-solid fa-user-plus"></i> Sign Up First
@@ -179,14 +180,14 @@ export default function ForgotPassword() {
               <div style={{
                 marginTop: '1.5rem',
                 padding: '1rem',
-                background: 'rgba(99, 102, 241, 0.08)',
-                border: '1px solid rgba(99, 102, 241, 0.25)',
-                borderRadius: '12px'
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '14px'
               }}>
                 <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                  <i className="fa-solid fa-circle-exclamation" style={{ color: '#fbbf24', marginTop: 3 }}></i>
-                  <div style={{ fontSize: '0.82rem', color: '#cbd5e1', lineHeight: '1.45' }}>
-                    <strong style={{ color: '#fff' }}>Check your Spam / Junk folder:</strong>
+                  <i className="fa-solid fa-circle-exclamation" style={{ color: '#f59e0b', marginTop: 3 }}></i>
+                  <div style={{ fontSize: '0.85rem', color: '#475569', lineHeight: '1.45' }}>
+                    <strong style={{ color: '#0f172a' }}>Check your Spam / Junk folder:</strong>
                     <br />
                     Automated reset emails may land in your <strong>Spam</strong>, <strong>Junk</strong>, or <strong>Promotions</strong> folder depending on your email provider.
                   </div>
@@ -196,7 +197,7 @@ export default function ForgotPassword() {
                   <div style={{
                     marginTop: '0.75rem',
                     paddingTop: '0.75rem',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderTop: '1px solid #e2e8f0',
                     textAlign: 'center'
                   }}>
                     <a
@@ -204,13 +205,13 @@ export default function ForgotPassword() {
                       style={{
                         display: 'inline-block',
                         padding: '0.5rem 1rem',
-                        fontSize: '0.8rem',
+                        fontSize: '0.82rem',
                         fontWeight: 600,
-                        color: '#818cf8',
+                        color: '#0066ff',
                         textDecoration: 'none',
-                        background: 'rgba(99, 102, 241, 0.15)',
-                        border: '1px solid rgba(99, 102, 241, 0.3)',
-                        borderRadius: '8px'
+                        background: '#e0f0fe',
+                        border: '1px solid #bfdbfe',
+                        borderRadius: 'var(--radius-full)'
                       }}
                     >
                       <i className="fa-solid fa-arrow-up-right-from-square" style={{ marginRight: 6 }}></i>
@@ -247,7 +248,7 @@ export default function ForgotPassword() {
         )}
 
         <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-          <Link to="/login" style={{ color: '#818cf8', fontWeight: 500 }}>
+          <Link to="/login" style={{ color: '#0066ff', fontWeight: 600 }}>
             Back to Login
           </Link>
         </div>

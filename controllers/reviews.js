@@ -2,6 +2,9 @@ const Review = require("../models/review.js");
 const Listing = require("../models/listing.js");
 
 module.exports.createReview = async (req, res) => {
+    if (!req.user || req.user.role !== 'guest') {
+        return res.status(403).json({ error: "Only logged-in guests can submit a review" });
+    }
     const listing = await Listing.findById(req.params.id);
     if (!listing) {
         return res.status(404).json({ error: "Listing not found" });

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
 import AdminSidebar from './AdminSidebar';
@@ -144,7 +144,7 @@ export default function AdminBookings() {
           </div>
           <div className="admin-header-actions-dark">
             <div style={{ position: 'relative' }}>
-              <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}></i>
+              <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.8rem' }}></i>
               <input
                 type="text"
                 className="admin-input-dark"
@@ -181,7 +181,7 @@ export default function AdminBookings() {
           <div className="admin-card-dark-header">
             <h3>
               Reservations
-              <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginLeft: '0.5rem', fontWeight: 400 }}>
+              <span style={{ fontSize: '0.78rem', color: '#94a3b8', marginLeft: '0.5rem', fontWeight: 400 }}>
                 ({filtered.length} {filtered.length === 1 ? 'booking' : 'bookings'})
               </span>
             </h3>
@@ -204,7 +204,7 @@ export default function AdminBookings() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.4)' }}>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
                       <i className="fa-solid fa-calendar-xmark" style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block' }}></i>
                       No bookings match your filter
                     </td>
@@ -212,13 +212,21 @@ export default function AdminBookings() {
                 ) : filtered.map(b => (
                   <tr key={b._id}>
                     <td>
-                      <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'monospace', fontWeight: 600 }}>
                         #{b._id.slice(-6).toUpperCase()}
                       </span>
                     </td>
                     <td>
-                      <div style={{ fontWeight: 600, color: '#fff', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={b.listing?.title}>
-                        {b.listing?.title || 'Unknown Property'}
+                      <div style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={b.listing?.title}>
+                        {b.listing?._id ? (
+                          <Link to={`/listings/${b.listing._id}`} style={{ color: '#0066ff', textDecoration: 'none', fontWeight: 600 }}>
+                            {b.listing.title}
+                          </Link>
+                        ) : (
+                          <span style={{ color: '#0f172a', fontWeight: 600 }}>
+                            {b.listing?.title || 'Unknown Property'}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td>
@@ -226,7 +234,7 @@ export default function AdminBookings() {
                         <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#fff' }}>
                           {(b.user?.username || 'G')[0].toUpperCase()}
                         </div>
-                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.82rem' }}>
+                        <span style={{ color: '#0f172a', fontSize: '0.85rem', fontWeight: 500 }}>
                           @{b.user?.username || 'N/A'}
                         </span>
                       </div>
@@ -242,7 +250,7 @@ export default function AdminBookings() {
                       </span>
                     </td>
                     <td>
-                      <span style={{ fontWeight: 600, color: '#34d399' }}>
+                      <span style={{ fontWeight: 700, color: '#059669', fontSize: '0.9rem' }}>
                         ₹{b.totalPrice?.toLocaleString('en-IN')}
                       </span>
                     </td>

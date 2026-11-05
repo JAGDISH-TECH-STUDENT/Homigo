@@ -241,8 +241,8 @@ export default function AdminComplaints() {
                 <tbody>
                   {complaints.length === 0 ? (
                     <tr>
-                      <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.4)' }}>
-                        <i className="fa-solid fa-circle-check" style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block', color: '#34d399' }}></i>
+                      <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+                        <i className="fa-solid fa-circle-check" style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block', color: '#10b981' }}></i>
                         No complaints matching this view
                       </td>
                     </tr>
@@ -251,17 +251,17 @@ export default function AdminComplaints() {
                       <tr
                         key={c._id}
                         style={{
-                          background: selected?._id === c._id ? 'rgba(99, 102, 241, 0.12)' : 'transparent',
+                          background: selected?._id === c._id ? '#e0f0fe' : 'transparent',
                           transition: 'background 0.2s',
                         }}
                       >
                         <td>
-                          <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'monospace', fontWeight: 600 }}>
                             #{c._id.slice(-6).toUpperCase()}
                           </span>
                         </td>
                         <td>
-                          <div style={{ fontWeight: 600, color: '#fff', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.subject}>
+                          <div style={{ fontWeight: 600, color: '#0f172a', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.subject}>
                             {c.subject}
                           </div>
                         </td>
@@ -301,7 +301,7 @@ export default function AdminComplaints() {
 
           {/* Details Side Panel */}
           {selected && (
-            <div className="admin-card-dark" style={{ border: '1px solid rgba(129, 140, 248, 0.3)' }}>
+            <div className="admin-card-dark" style={{ border: '1px solid #bfdbfe' }}>
               <div className="admin-card-dark-header">
                 <h3>Ticket Details</h3>
                 <button
@@ -313,35 +313,35 @@ export default function AdminComplaints() {
                 </button>
               </div>
               <div style={{ padding: '1.25rem' }}>
-                <h4 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 600, margin: '0 0 0.5rem 0' }}>
+                <h4 style={{ color: '#0f172a', fontSize: '1.05rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>
                   {selected.subject}
                 </h4>
-                <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: 8, margin: '0 0 1rem 0' }}>
+                <p style={{ fontSize: '0.85rem', color: '#334155', lineHeight: 1.5, background: '#f8fafc', border: '1px solid #e2e8f0', padding: '0.75rem', borderRadius: 8, margin: '0 0 1rem 0' }}>
                   {selected.description}
                 </p>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem', fontSize: '0.8rem' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.5rem', borderRadius: 6 }}>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '0.5rem', borderRadius: 6 }}>
                     <div className="admin-td-muted" style={{ fontSize: '0.7rem' }}>Category</div>
-                    <strong style={{ color: '#fff', textTransform: 'capitalize' }}>{selected.category}</strong>
+                    <strong style={{ color: '#0f172a', textTransform: 'capitalize' }}>{selected.category}</strong>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.5rem', borderRadius: 6 }}>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '0.5rem', borderRadius: 6 }}>
                     <div className="admin-td-muted" style={{ fontSize: '0.7rem' }}>Priority</div>
                     {getPriorityBadge(selected.priority)}
                   </div>
                 </div>
 
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.85rem', marginBottom: '1rem', fontSize: '0.8rem' }}>
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.85rem', marginBottom: '1rem', fontSize: '0.8rem' }}>
                   <div style={{ marginBottom: '0.4rem' }}>
                     <span className="admin-td-muted">Filed by:</span>{' '}
-                    <strong style={{ color: '#818cf8' }}>{selected.createdBy?.username}</strong>{' '}
-                    <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>({selected.createdBy?.email})</span>
+                    <strong style={{ color: '#0066ff' }}>{selected.createdBy?.username}</strong>{' '}
+                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>({selected.createdBy?.email})</span>
                   </div>
 
                   {selected.againstUser && (
-                    <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(239,68,68,0.1)', borderRadius: 8 }}>
+                    <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
                       <span className="admin-td-muted">Reported User:</span>{' '}
-                      <strong style={{ color: '#f87171' }}>{selected.againstUser?.username}</strong>
+                      <strong style={{ color: '#dc2626' }}>{selected.againstUser?.username}</strong>
                       <div style={{ marginTop: '0.35rem' }}>
                         <button
                           className="admin-btn admin-btn-info admin-btn-sm"
@@ -357,20 +357,20 @@ export default function AdminComplaints() {
                     </div>
                   )}
 
-                  <div style={{ marginTop: '0.5rem', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)' }}>
+                  <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#64748b' }}>
                     Created on {new Date(selected.createdAt).toLocaleString('en-IN')}
                   </div>
                 </div>
 
                 {selected.responses?.length > 0 && (
                   <div style={{ marginBottom: '1rem' }}>
-                    <h5 style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem' }}>
+                    <h5 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>
                       Updates ({selected.responses.length})
                     </h5>
                     {selected.responses.map((r, i) => (
-                      <div key={i} style={{ background: 'rgba(255,255,255,0.04)', padding: '0.6rem', borderRadius: 8, marginBottom: '0.4rem' }}>
-                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#fff' }}>{r.message}</p>
-                        <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.3rem' }}>
+                      <div key={i} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '0.6rem', borderRadius: 8, marginBottom: '0.4rem' }}>
+                        <p style={{ margin: 0, fontSize: '0.82rem', color: '#0f172a' }}>{r.message}</p>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.3rem' }}>
                           {r.respondedBy?.username} &bull; {new Date(r.createdAt).toLocaleDateString('en-IN')}
                         </div>
                       </div>
@@ -379,8 +379,8 @@ export default function AdminComplaints() {
                 )}
 
                 {selected.status !== 'resolved' && selected.status !== 'closed' && (
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.85rem' }}>
-                    <label style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: '0.4rem' }}>
+                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.85rem' }}>
+                    <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: 600, display: 'block', marginBottom: '0.4rem' }}>
                       Resolution Note / Reply
                     </label>
                     <textarea

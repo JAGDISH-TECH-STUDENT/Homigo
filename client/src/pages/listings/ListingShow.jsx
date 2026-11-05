@@ -22,6 +22,7 @@ function BookingForm({ listing, user, navigate }) {
     e.preventDefault();
     if (!user) { navigate('/login'); return; }
     if (!checkIn || !checkOut) { setError('Please select check-in and check-out dates'); return; }
+    if (new Date(checkOut) <= new Date(checkIn)) { setError('Check-out date must be after check-in date'); return; }
     
     setBookingLoading(true);
     setError('');
@@ -59,7 +60,7 @@ function BookingForm({ listing, user, navigate }) {
           email: user.email || ""
         },
         theme: {
-          color: "#5f60b9"
+          color: "#0066ff"
         }
       };
 
@@ -103,6 +104,7 @@ function BookingForm({ listing, user, navigate }) {
     e.preventDefault();
     if (!user) { navigate('/login'); return; }
     if (!checkIn || !checkOut) { setError('Please select check-in and check-out dates'); return; }
+    if (new Date(checkOut) <= new Date(checkIn)) { setError('Check-out date must be after check-in date'); return; }
     setBookingLoading(true);
     setError('');
     try {
@@ -124,41 +126,41 @@ function BookingForm({ listing, user, navigate }) {
   const grandTotal = subtotal + serviceFee;
 
   return (
-    <div className="card" style={{ position: 'sticky', top: 80, padding: '1.5rem' }}>
+    <div className="card" style={{ position: 'sticky', top: 90, padding: '1.75rem', borderRadius: '24px', boxShadow: '0 12px 35px rgba(0, 80, 200, 0.08)', border: '1px solid rgba(0, 102, 255, 0.1)' }}>
       {error && <FlashMessage message={error} type="error" />}
       {success && <FlashMessage message={success} type="success" />}
       
-      <p className="card-price" style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>
-        ₹{totalPrice?.toLocaleString('en-IN')} <span>/ night</span>
+      <p className="card-price" style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.25rem', color: '#0f172a' }}>
+        ₹{totalPrice?.toLocaleString('en-IN')} <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>/ night</span>
       </p>
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-        <button type="button" className={paymentMethod === 'checkout' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setPaymentMethod('checkout')}>
-          Card / UPI Checkout
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
+        <button type="button" className={paymentMethod === 'checkout' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setPaymentMethod('checkout')} style={{ flex: 1, borderRadius: 'var(--radius-full)', fontSize: '0.82rem' }}>
+          Card / UPI
         </button>
-        <button type="button" className={paymentMethod === 'qr' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setPaymentMethod('qr')}>
+        <button type="button" className={paymentMethod === 'qr' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setPaymentMethod('qr')} style={{ flex: 1, borderRadius: 'var(--radius-full)', fontSize: '0.82rem' }}>
           Pay with QR
         </button>
       </div>
 
       <form onSubmit={paymentMethod === 'qr' ? handleQrBooking : handleBooking}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: '1rem', background: 'rgba(255,255,255,0.04)' }}>
-          <div style={{ borderRight: '1px solid var(--border)', padding: '0.625rem 0.75rem' }}>
-            <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block', color: 'rgba(255,255,255,0.6)' }}>Check-in</label>
-            <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 2, background: 'transparent', color: '#fff', colorScheme: 'dark' }} required />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, border: '1px solid #e2e8f0', borderRadius: '14px', overflow: 'hidden', marginBottom: '1.25rem', background: '#f8fafc' }}>
+          <div style={{ borderRight: '1px solid #e2e8f0', padding: '0.625rem 0.85rem' }}>
+            <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', display: 'block', color: '#64748b' }}>Check-in</label>
+            <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 3, background: 'transparent', color: '#0f172a' }} required />
           </div>
-          <div style={{ padding: '0.625rem 0.75rem' }}>
-            <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', display: 'block', color: 'rgba(255,255,255,0.6)' }}>Check-out</label>
-            <input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} min={checkIn || new Date().toISOString().split('T')[0]} style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 2, background: 'transparent', color: '#fff', colorScheme: 'dark' }} required />
+          <div style={{ padding: '0.625rem 0.85rem' }}>
+            <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', display: 'block', color: '#64748b' }}>Check-out</label>
+            <input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} min={checkIn || new Date().toISOString().split('T')[0]} style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem', marginTop: 3, background: 'transparent', color: '#0f172a' }} required />
           </div>
         </div>
 
-        <div className="form-group" style={{ marginBottom: '1rem' }}>
-          <label>Guests</label>
-          <input type="number" className="form-control" min={1} max={listing?.maxGuests || 20} value={guests} onChange={e => setGuests(Number(e.target.value))} required />
+        <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+          <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155' }}>Guests</label>
+          <input type="number" className="form-control" min={1} max={listing?.maxGuests || 20} value={guests} onChange={e => setGuests(Number(e.target.value))} required style={{ borderRadius: '12px' }} />
         </div>
 
-        <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={bookingLoading || Boolean(qrBookingId)}>
+        <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%', borderRadius: 'var(--radius-full)', fontWeight: 700 }} disabled={bookingLoading || Boolean(qrBookingId)}>
           {bookingLoading ? 'Processing...' : paymentMethod === 'qr' ? 'Generate Payment QR' : 'Book Now'}
         </button>
       </form>
@@ -172,18 +174,18 @@ function BookingForm({ listing, user, navigate }) {
       )}
 
       {nights > 0 && (
-        <div style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
+        <div style={{ marginTop: '1.25rem', fontSize: '0.9rem', borderTop: '1px solid #f1f5f9', paddingTop: '1rem' }}>
           <div className="flex justify-between" style={{ padding: '0.35rem 0' }}>
             <span className="text-light">₹{totalPrice?.toLocaleString('en-IN')} x {nights} night{nights !== 1 ? 's' : ''}</span>
-            <span>₹{subtotal.toLocaleString('en-IN')}</span>
+            <span style={{ fontWeight: 600 }}>₹{subtotal.toLocaleString('en-IN')}</span>
           </div>
           <div className="flex justify-between" style={{ padding: '0.35rem 0' }}>
             <span className="text-light">Service fee (12%)</span>
-            <span>₹{serviceFee.toLocaleString('en-IN')}</span>
+            <span style={{ fontWeight: 600 }}>₹{serviceFee.toLocaleString('en-IN')}</span>
           </div>
-          <div className="flex justify-between" style={{ padding: '0.75rem 0 0', borderTop: '1px solid var(--border)', fontWeight: 700, marginTop: '0.5rem' }}>
+          <div className="flex justify-between" style={{ padding: '0.75rem 0 0', borderTop: '1px solid #e2e8f0', fontWeight: 800, marginTop: '0.5rem', fontSize: '1.05rem', color: '#0f172a' }}>
             <span>Total</span>
-            <span>₹{grandTotal.toLocaleString('en-IN')}</span>
+            <span style={{ color: '#0066ff' }}>₹{grandTotal.toLocaleString('en-IN')}</span>
           </div>
         </div>
       )}
@@ -202,8 +204,7 @@ export default function ListingShow() {
   const [success, setSuccess] = useState('');
 
   const [currentImage, setCurrentImage] = useState(0);
-  const [rotation, setRotation] = useState(0);
-  const [autoSlide, setAutoSlide] = useState(true);
+  const [isGalleryPaused, setIsGalleryPaused] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -211,13 +212,13 @@ export default function ListingShow() {
 
   useEffect(() => {
     const images = listing?.images || [];
-    if (autoSlide && images.length > 1) {
+    if (!isGalleryPaused && images.length > 1) {
       const interval = setInterval(() => {
         setCurrentImage(i => (i + 1) % images.length);
-      }, 3000);
+      }, 4000);
       return () => clearInterval(interval);
     }
-  }, [autoSlide, listing?.images]);
+  }, [isGalleryPaused, listing?.images]);
 
   useEffect(() => {
     if (!id) {
@@ -291,6 +292,7 @@ export default function ListingShow() {
 
   const images = listing.images || [];
   const host = listing.owner || {};
+  const activeImageIndex = images.length > 0 ? (currentImage % images.length) : 0;
 
   return (
     <div className="detail-page">
@@ -300,10 +302,11 @@ export default function ListingShow() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 className="detail-title" style={{ margin: '0 0 0.5rem 0' }}>{listing.title}</h1>
       </div>
-      <p className="detail-location" style={{ marginBottom: '0.5rem' }}>
+      <p className="detail-location" style={{ marginBottom: '0.75rem' }}>
+        <i className="fa-solid fa-location-dot" style={{ color: '#0066ff', marginRight: '0.4rem' }}></i>
         {listing.location}, {listing.country}
         {avgRating && (
-          <span className="star-rating" style={{ marginLeft: '1rem' }}>
+          <span className="star-rating" style={{ marginLeft: '1.25rem' }}>
             <i className="fa-solid fa-star star-filled"></i>
             <span className="rating-value">{avgRating}</span>
             <span className="text-light" style={{ fontSize: '0.85rem' }}>({reviewCount} review{reviewCount !== 1 ? 's' : ''})</span>
@@ -321,48 +324,51 @@ export default function ListingShow() {
       )}
 
       {images.length > 0 && (
-        <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+        <div 
+          style={{ 
+            position: 'relative', 
+            marginBottom: '1.5rem', 
+            borderRadius: 24, 
+            overflow: 'hidden',
+            boxShadow: '0 10px 30px rgba(0, 80, 200, 0.08)'
+          }}
+          onMouseEnter={() => setIsGalleryPaused(true)}
+          onMouseLeave={() => setIsGalleryPaused(false)}
+        >
           <img 
             className="detail-image" 
-            src={images[currentImage]?.url || images[currentImage]} 
+            src={images[activeImageIndex]?.url || (typeof images[activeImageIndex] === 'string' ? images[activeImageIndex] : '') || 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80'} 
             alt={listing.title} 
-                  fetchPriority={currentImage === 0 ? 'high' : 'auto'}
-                  decoding="async"
-            style={{ marginBottom: 0, transform: `rotate(${rotation}deg)`, transition: 'transform 0.3s ease' }} 
+            fetchPriority={activeImageIndex === 0 ? 'high' : 'auto'}
+            decoding="async"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80';
+            }}
+            style={{ marginBottom: 0, transition: 'opacity 0.4s ease' }} 
           />
           {images.length > 1 && (
-            <>
-              <button onClick={() => { setCurrentImage(i => (i - 1 + images.length) % images.length); setRotation(0); setAutoSlide(false); }} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '8px', background: 'rgba(17, 24, 39, 0.85)', backdropFilter: 'blur(8px)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}><i className="fa-solid fa-chevron-left"></i></button>
-              <button onClick={() => { setCurrentImage(i => (i + 1) % images.length); setRotation(0); setAutoSlide(false); }} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '8px', background: 'rgba(17, 24, 39, 0.85)', backdropFilter: 'blur(8px)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}><i className="fa-solid fa-chevron-right"></i></button>
-              <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
-                {images.map((_, i) => (<span key={i} onClick={() => { setCurrentImage(i); setRotation(0); setAutoSlide(false); }} style={{ width: 10, height: 10, borderRadius: '3px', cursor: 'pointer', background: i === currentImage ? '#818cf8' : 'rgba(255,255,255,0.3)', border: '1px solid rgba(0,0,0,0.3)' }} />))}
-              </div>
-            </>
+            <div 
+              className="hero-slider-dots"
+              style={{ 
+                position: 'absolute', 
+                bottom: 20, 
+                left: '50%', 
+                transform: 'translateX(-50%)', 
+                zIndex: 10,
+                marginTop: 0
+              }}
+            >
+              {images.map((_, i) => (
+                <span 
+                  key={i} 
+                  className={`hero-dot${i === activeImageIndex ? ' active' : ''}`}
+                  onClick={() => setCurrentImage(i)} 
+                  title={`Slide ${i + 1}`}
+                />
+              ))}
+            </div>
           )}
-          <button 
-            onClick={() => { setRotation(r => (r + 90) % 360); setAutoSlide(false); }} 
-            style={{ 
-              position: 'absolute', 
-              top: 12, 
-              right: 12, 
-              width: 40, 
-              height: 40, 
-              borderRadius: '8px', 
-              background: 'rgba(17, 24, 39, 0.85)', 
-              backdropFilter: 'blur(8px)',
-              color: '#fff',
-              border: '1px solid rgba(255,255,255,0.15)', 
-              cursor: 'pointer', 
-              fontSize: '1rem', 
-              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            title="Rotate image"
-          >
-            <i className="fa-solid fa-rotate-right"></i>
-          </button>
         </div>
       )}
 
@@ -442,8 +448,12 @@ export default function ListingShow() {
                     <div className="flex items-center gap-1">
                       <strong style={{ fontSize: '0.9rem' }}>{review.author?.username || 'User'}</strong>
                       <span style={{ fontSize: '0.9rem', display: 'flex', gap: '2px' }}>
-                  {[1, 2, 3, 4, 5].map(s => <span key={s} style={{ color: s <= review.rating ? '#fbbf24' : 'rgba(255,255,255,0.2)' }}>{s <= review.rating ? '★' : '☆'}</span>)}
-                </span>
+                        {[1, 2, 3, 4, 5].map(s => (
+                          <span key={s} style={{ color: s <= review.rating ? '#fbbf24' : '#cbd5e1' }}>
+                            {s <= review.rating ? '★' : '☆'}
+                          </span>
+                        ))}
+                      </span>
                     </div>
                     <span className="text-light" style={{ fontSize: '0.8rem' }}>{new Date(review.createdAt).toLocaleDateString()}</span>
                   </div>
@@ -453,20 +463,21 @@ export default function ListingShow() {
               );
             })}
 
-            {user ? (
+            {user && user.role === 'guest' ? (
               <form onSubmit={handleReview} style={{ marginTop: '1.5rem' }}>
-                <h3 style={{ marginBottom: '0.75rem' }}>Leave a Review</h3>
+                <h3 style={{ marginBottom: '0.75rem', color: '#0f172a' }}>Leave a Review</h3>
                 <div className="form-group">
-                  <label>Rating</label>
+                  <label style={{ color: '#334155', fontWeight: 600 }}>Rating</label>
                   <div style={{ fontSize: '1.5rem', cursor: 'pointer', display: 'flex', gap: '0.5rem' }}>
                   {[1, 2, 3, 4, 5].map(s => (
                     <span 
                       key={s} 
                       onClick={() => setReviewRating(s)}
                       style={{ 
-                        color: s <= reviewRating ? '#fbbf24' : 'rgba(255,255,255,0.2)',
+                        color: s <= reviewRating ? '#fbbf24' : '#cbd5e1',
                         fontSize: '1.5rem',
-                        fontWeight: 'bold'
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
                       }}
                     >
                       {s <= reviewRating ? '★' : '☆'}
@@ -475,21 +486,41 @@ export default function ListingShow() {
                 </div>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="review-comment">Comment</label>
+                  <label htmlFor="review-comment" style={{ color: '#334155', fontWeight: 600 }}>Comment</label>
                   <textarea id="review-comment" className="form-control" rows={3} value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder="Share your experience..." required />
                 </div>
-                <button type="submit" className="btn btn-primary" disabled={reviewLoading}>{reviewLoading ? 'Submitting...' : 'Submit Review'}</button>
+                <button type="submit" className="btn btn-primary" disabled={reviewLoading} style={{ borderRadius: 50, padding: '0.6rem 1.4rem', fontWeight: 600 }}>{reviewLoading ? 'Submitting...' : 'Submit Review'}</button>
               </form>
-            ) : <p className="text-light mt-2"><Link to="/login" style={{ color: 'var(--primary)' }}>Log in</Link> to leave a review.</p>}
+            ) : user && user.role === 'host' ? (
+              <div style={{ marginTop: '1.5rem', padding: '1rem 1.25rem', background: '#eff6ff', borderRadius: 14, border: '1px solid rgba(0, 102, 255, 0.12)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <i className="fa-solid fa-circle-info" style={{ color: '#0066ff', fontSize: '1.1rem' }}></i>
+                <p style={{ margin: 0, color: '#0f172a', fontSize: '0.9rem', fontWeight: 500 }}>
+                  Only logged-in guests can leave reviews on listings.
+                </p>
+              </div>
+            ) : <p className="text-light mt-2" style={{ color: '#64748b' }}><Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>Log in</Link> as a guest to leave a review.</p>}
           </div>
         </div>
 
-        {user && user.role !== 'host' && (
+        {user && user.role === 'guest' && (
           <BookingForm listing={listing} user={user} navigate={navigate} />
         )}
-        {(!user || user.role === 'host') && (
-          <div className="card" style={{ position: 'sticky', top: 80, padding: '1.5rem' }}>
-            <p className="text-light text-center">
+        {user && user.role === 'host' && (
+          <div className="card" style={{ position: 'sticky', top: 80, padding: '1.75rem 1.5rem', borderRadius: 20, border: '1px solid rgba(0, 102, 255, 0.08)', boxShadow: '0 8px 25px rgba(0, 80, 200, 0.05)', background: '#ffffff' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: 50, height: 50, borderRadius: '50%', background: '#eff6ff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                <i className="fa-solid fa-shield-halved" style={{ fontSize: '1.4rem', color: '#0066ff' }}></i>
+              </div>
+              <h4 style={{ color: '#0f172a', fontWeight: 700, margin: '0 0 0.4rem 0', fontSize: '1.05rem' }}>Host Account</h4>
+              <p style={{ color: '#64748b', fontSize: '0.88rem', margin: 0, lineHeight: 1.5 }}>
+                Bookings are restricted for host accounts. Only guests can make reservations.
+              </p>
+            </div>
+          </div>
+        )}
+        {!user && (
+          <div className="card" style={{ position: 'sticky', top: 80, padding: '1.75rem 1.5rem', borderRadius: 20, border: '1px solid rgba(0, 102, 255, 0.08)', boxShadow: '0 8px 25px rgba(0, 80, 200, 0.05)', background: '#ffffff' }}>
+            <p className="text-light text-center" style={{ margin: 0, color: '#64748b', fontSize: '0.92rem' }}>
               <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>Login</Link> as a guest to book this place
             </p>
           </div>

@@ -6,16 +6,22 @@ export default function BackButton() {
   const location = useLocation();
   const { user } = useAuth();
 
-  // Do not render on home page or inside /admin pages (admin has its own topbar back button)
-  if (location.pathname === '/' || location.pathname.startsWith('/admin')) {
+  // Do not render on home pages (/, /listings, /listings/search) or inside /admin pages
+  const isHomePage = location.pathname === '/' || location.pathname === '/listings' || location.pathname === '/listings/search';
+  if (isHomePage || location.pathname.startsWith('/admin')) {
     return null;
   }
 
   const handleBack = () => {
-    // Auth pages (/signup, /login, /forgot-password) should always navigate directly to home page (/)
-    const authPaths = ['/signup', '/login', '/forgot-password'];
-    if (authPaths.includes(location.pathname)) {
+    // Host Dashboard and auth pages (/signup, /login, /forgot-password) must always lead directly to home page (/)
+    const homePaths = ['/host/dashboard', '/signup', '/login', '/forgot-password'];
+    if (homePaths.includes(location.pathname)) {
       navigate('/');
+      return;
+    }
+
+    if (location.pathname === '/host/listings') {
+      navigate('/host/dashboard');
       return;
     }
 

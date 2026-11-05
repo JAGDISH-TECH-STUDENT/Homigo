@@ -97,6 +97,9 @@ module.exports.createBooking = async (req, res) => {
 };
 
 module.exports.getUserBookings = async (req, res) => {
+    if (req.user.role === 'host') {
+        return res.status(403).json({ error: "Host accounts cannot access bookings", bookings: [] });
+    }
     const bookings = await Booking.find({ user: req.user._id })
         .populate("listing")
         .sort({ createdAt: -1 });
@@ -104,6 +107,9 @@ module.exports.getUserBookings = async (req, res) => {
 };
 
 module.exports.getBookingDetails = async (req, res) => {
+    if (req.user.role === 'host') {
+        return res.status(403).json({ error: "Host accounts cannot access bookings" });
+    }
     const booking = await Booking.findById(req.params.bookingId)
         .populate("listing")
         .populate("user", "username email");

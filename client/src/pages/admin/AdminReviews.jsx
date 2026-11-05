@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
 import AdminSidebar from './AdminSidebar';
@@ -118,7 +118,7 @@ export default function AdminReviews() {
           </div>
           <div className="admin-header-actions-dark">
             <div style={{ position: 'relative' }}>
-              <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}></i>
+              <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.8rem' }}></i>
               <input
                 type="text"
                 className="admin-input-dark"
@@ -156,7 +156,7 @@ export default function AdminReviews() {
           <div className="admin-card-dark-header">
             <h3>
               User Feedback & Ratings
-              <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginLeft: '0.5rem', fontWeight: 400 }}>
+              <span style={{ fontSize: '0.78rem', color: '#94a3b8', marginLeft: '0.5rem', fontWeight: 400 }}>
                 ({filtered.length} {filtered.length === 1 ? 'review' : 'reviews'})
               </span>
             </h3>
@@ -177,7 +177,7 @@ export default function AdminReviews() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.4)' }}>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
                       <i className="fa-solid fa-comment-slash" style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block' }}></i>
                       No reviews found matching your search
                     </td>
@@ -189,14 +189,22 @@ export default function AdminReviews() {
                         <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#fbbf24', color: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>
                           {(r.author?.username || 'A')[0].toUpperCase()}
                         </div>
-                        <span style={{ fontWeight: 600, color: '#fff' }}>
+                        <span style={{ fontWeight: 600, color: '#0f172a' }}>
                           @{r.author?.username || 'Anonymous'}
                         </span>
                       </div>
                     </td>
                     <td>
-                      <div style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'rgba(255,255,255,0.85)' }} title={r.listing?.title}>
-                        {r.listing?.title || 'Unknown Property'}
+                      <div style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.listing?.title}>
+                        {r.listing?._id ? (
+                          <Link to={`/listings/${r.listing._id}`} style={{ color: '#0066ff', textDecoration: 'none', fontWeight: 600 }}>
+                            {r.listing.title}
+                          </Link>
+                        ) : (
+                          <span style={{ color: '#0f172a', fontWeight: 600 }}>
+                            {r.listing?.title || 'Unknown Property'}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td>
@@ -206,18 +214,18 @@ export default function AdminReviews() {
                             key={s}
                             className="fa-solid fa-star"
                             style={{
-                              color: s <= (r.rating || 0) ? '#fbbf24' : 'rgba(255,255,255,0.15)',
+                              color: s <= (r.rating || 0) ? '#fbbf24' : '#e2e8f0',
                               fontSize: '0.75rem'
                             }}
                           />
                         ))}
-                        <span style={{ marginLeft: '0.35rem', fontSize: '0.8rem', fontWeight: 600, color: '#fff' }}>
+                        <span style={{ marginLeft: '0.35rem', fontSize: '0.8rem', fontWeight: 700, color: '#0f172a' }}>
                           {r.rating}.0
                         </span>
                       </div>
                     </td>
                     <td>
-                      <p style={{ margin: 0, fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.4 }}>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#334155', lineHeight: 1.4 }}>
                         {r.comment}
                       </p>
                     </td>

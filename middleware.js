@@ -45,6 +45,16 @@ module.exports.isReviewAuthor = async (req, res, next) => {
     next();
 };
 
+module.exports.isGuest = (req, res, next) => {
+    if (!req.isAuthenticated() || req.user.blocked) {
+        return res.status(401).json({ error: "You must be logged in" });
+    }
+    if (req.user.role !== 'guest') {
+        return res.status(403).json({ error: "Only guests can perform this action" });
+    }
+    next();
+};
+
 module.exports.isHost = (req, res, next) => {
     if (!req.isAuthenticated()) {
         return res.status(401).json({ error: "You must be logged in" });

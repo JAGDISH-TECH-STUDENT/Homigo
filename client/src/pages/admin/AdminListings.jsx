@@ -153,7 +153,7 @@ export default function AdminListings() {
           </div>
           <div className="admin-header-actions-dark">
             <div style={{ position: 'relative' }}>
-              <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}></i>
+              <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.8rem' }}></i>
               <input
                 type="text"
                 className="admin-input-dark"
@@ -189,7 +189,7 @@ export default function AdminListings() {
           <div className="admin-card-dark-header">
             <h3>
               Listings Directory
-              <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginLeft: '0.5rem', fontWeight: 400 }}>
+              <span style={{ fontSize: '0.78rem', color: '#94a3b8', marginLeft: '0.5rem', fontWeight: 400 }}>
                 ({filtered.length} {filtered.length === 1 ? 'property' : 'properties'})
               </span>
             </h3>
@@ -211,7 +211,7 @@ export default function AdminListings() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.4)' }}>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
                       <i className="fa-solid fa-hotel" style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block' }}></i>
                       No listings match your search
                     </td>
@@ -221,30 +221,30 @@ export default function AdminListings() {
                   return (
                     <tr key={l._id}>
                       <td>
-                        <div style={{ width: 64, height: 44, borderRadius: 8, overflow: 'hidden', background: 'rgba(255,255,255,0.05)', flexShrink: 0 }}>
+                        <div style={{ width: 64, height: 44, borderRadius: 8, overflow: 'hidden', background: '#f1f5f9', flexShrink: 0 }}>
                           {imgUrl ? (
                             <img src={imgUrl} alt={l.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
-                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.2)' }}>
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
                               <i className="fa-solid fa-image"></i>
                             </div>
                           )}
                         </div>
                       </td>
                       <td>
-                        <div style={{ fontWeight: 600, color: '#fff', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.title}>
+                        <div style={{ fontWeight: 600, color: '#0f172a', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.title}>
                           {l.title}
                         </div>
-                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)' }}>ID: {l._id.slice(-6)}</div>
+                        <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>ID: {l._id.slice(-6)}</div>
                       </td>
                       <td>
                         <div className="admin-td-muted" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                          <i className="fa-solid fa-location-dot" style={{ fontSize: '0.7rem', color: '#818cf8' }}></i>
+                          <i className="fa-solid fa-location-dot" style={{ fontSize: '0.7rem', color: '#0066ff' }}></i>
                           <span>{l.location}{l.country ? `, ${l.country}` : ''}</span>
                         </div>
                       </td>
                       <td>
-                        <span style={{ fontWeight: 600, color: '#fff' }}>₹{l.price?.toLocaleString('en-IN')}</span>
+                        <span style={{ fontWeight: 700, color: '#0f172a' }}>₹{l.price?.toLocaleString('en-IN')}</span>
                       </td>
                       <td>
                         {l.active !== false ? (
@@ -259,10 +259,10 @@ export default function AdminListings() {
                       </td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: '#fff' }}>
+                          <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#0066ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: '#fff' }}>
                             {(l.owner?.username || 'O')[0].toUpperCase()}
                           </div>
-                          <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.8rem' }}>{l.owner?.username || 'N/A'}</span>
+                          <span style={{ color: '#0f172a', fontSize: '0.82rem', fontWeight: 500 }}>{l.owner?.username || 'N/A'}</span>
                         </div>
                       </td>
                       <td>

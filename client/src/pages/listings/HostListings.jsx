@@ -31,65 +31,268 @@ export default function HostListings() {
     }
   };
 
-  if (loading) return <div className="loading-spinner" />;
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <div className="loading-spinner" />
+      </div>
+    );
+  }
 
   return (
-    <div className="container" style={{ padding: '2rem 1.5rem' }}>
+    <div style={{
+      minHeight: 'calc(100vh - 80px)',
+      padding: '2rem 1.5rem 4rem'
+    }}>
       {error && <FlashMessage message={error} type="error" />}
       {success && <FlashMessage message={success} type="success" />}
 
-      <div className="page-header">
-        <h1>My Listings</h1>
-        <Link to="/listings/new" className="btn btn-primary">
-          <i className="fa-solid fa-plus"></i> New Listing
-        </Link>
-      </div>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '2rem',
+          flexWrap: 'wrap',
+          gap: '1.25rem'
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
+              <span style={{
+                background: '#eff6ff',
+                color: '#0066ff',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                letterSpacing: '0.5px',
+                padding: '0.25rem 0.75rem',
+                borderRadius: 50,
+                textTransform: 'uppercase'
+              }}>
+                Properties
+              </span>
+            </div>
+            <h1 style={{
+              fontSize: '2.1rem',
+              fontWeight: 800,
+              color: '#0f172a',
+              letterSpacing: '-0.5px',
+              margin: '0 0 0.25rem 0'
+            }}>
+              My Listings
+            </h1>
+            <p style={{ fontSize: '0.95rem', fontWeight: 500, color: '#64748b', margin: 0 }}>
+              Manage your property portfolio, edit information, or create new listings
+            </p>
+          </div>
 
-      {listings.length === 0 ? (
-        <div className="text-center" style={{ padding: '4rem 0' }}>
-          <h2>No listings yet</h2>
-          <p className="text-light mt-1">Create your first listing to start hosting.</p>
-          <Link to="/listings/new" className="btn btn-primary mt-2">Create Listing</Link>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Link
+              to="/host/dashboard"
+              style={{
+                padding: '0.65rem 1.25rem',
+                borderRadius: 50,
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                color: '#0066ff',
+                background: '#ffffff',
+                border: '1px solid rgba(0, 102, 255, 0.2)',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 2px 8px rgba(0, 80, 200, 0.04)',
+                transition: 'all 0.2s'
+              }}
+            >
+              <i className="fa-solid fa-chart-line"></i> Dashboard
+            </Link>
+
+            <Link
+              to="/listings/new"
+              style={{
+                padding: '0.65rem 1.4rem',
+                borderRadius: 50,
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                color: '#ffffff',
+                background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+                border: 'none',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 14px rgba(0, 102, 255, 0.3)',
+                transition: 'all 0.2s'
+              }}
+            >
+              <i className="fa-solid fa-plus"></i> New Listing
+            </Link>
+          </div>
         </div>
-      ) : (
-        <div className="listing-grid">
-          {listings.map(listing => {
-            const listingId = listing._id || listing.id;
-            return (
-              <div key={listingId} className="card">
-                <img
-                  className="card-img"
-                  src={listing.images?.[0]?.url || listing.images?.[0] || '/placeholder.jpg'}
-                  alt={listing.title}
-                />
-                <div className="card-body">
-                  <h3 className="card-title">{listing.title}</h3>
-                  <p className="card-text">{listing.location}, {listing.country}</p>
-                  <p className="card-price mt-1">
-                    ₹{listing.price?.toLocaleString('en-IN')} <span>/ night</span>
-                  </p>
-                  {listing.category && (
-                    <span className="badge badge-active mt-1" style={{ display: 'inline-block' }}>
-                      {listing.category}
-                    </span>
-                  )}
-                  <div className="flex gap-1 mt-2" style={{ flexWrap: 'wrap' }}>
-                    <Link to={`/listings/${listingId}`} className="btn btn-secondary btn-sm">View</Link>
-                    <Link to={`/listings/${listingId}/edit`} className="btn btn-outline btn-sm">Edit</Link>
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => handleDelete(listingId)}
-                      disabled={deletingId === listingId}
-                    >
-                      {deletingId === listingId ? 'Deleting...' : 'Delete'}
-                    </button>
+
+        {listings.length === 0 ? (
+          <div style={{
+            background: '#ffffff',
+            borderRadius: 24,
+            padding: '4rem 2rem',
+            textAlign: 'center',
+            border: '1px solid rgba(0, 102, 255, 0.08)',
+            boxShadow: '0 10px 30px rgba(0, 80, 200, 0.05)'
+          }}>
+            <div style={{
+              width: 72,
+              height: 72,
+              borderRadius: '50%',
+              background: '#eff6ff',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1rem'
+            }}>
+              <i className="fa-solid fa-hotel" style={{ fontSize: '1.8rem', color: '#0066ff' }}></i>
+            </div>
+            <h2 style={{ color: '#0f172a', fontWeight: 800, fontSize: '1.35rem', marginBottom: '0.4rem' }}>
+              No listings yet
+            </h2>
+            <p style={{ color: '#64748b', fontSize: '0.95rem', maxWidth: 420, margin: '0 auto 1.75rem auto' }}>
+              Start sharing your property with travelers worldwide and earn revenue.
+            </p>
+            <Link
+              to="/listings/new"
+              style={{
+                padding: '0.75rem 1.6rem',
+                borderRadius: 50,
+                fontWeight: 600,
+                fontSize: '0.92rem',
+                color: '#ffffff',
+                background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 14px rgba(0, 102, 255, 0.3)'
+              }}
+            >
+              <i className="fa-solid fa-plus"></i> Create Your First Listing
+            </Link>
+          </div>
+        ) : (
+          <div className="listing-grid">
+            {listings.map(listing => {
+              const listingId = listing._id || listing.id;
+              return (
+                <div key={listingId} className="luxury-card">
+                  <div className="luxury-card-img-wrap">
+                    <img
+                      className="luxury-card-img"
+                      src={listing.images?.[0]?.url || listing.images?.[0] || '/placeholder.jpg'}
+                      alt={listing.title}
+                    />
+                    {listing.category && (
+                      <span className="luxury-card-badge">
+                        {listing.category}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="luxury-card-body">
+                    <Link to={`/listings/${listingId}`} style={{ textDecoration: 'none' }}>
+                      <h3 className="luxury-card-title" title={listing.title}>
+                        {listing.title}
+                      </h3>
+                    </Link>
+
+                    <div className="luxury-card-location">
+                      <i className="fa-solid fa-location-dot"></i>
+                      <span>{listing.location}, {listing.country}</span>
+                    </div>
+
+                    <div style={{ marginTop: '0.75rem', marginBottom: '1rem' }}>
+                      <div className="luxury-card-price">
+                        ₹{listing.price?.toLocaleString('en-IN')}{' '}
+                        <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#94a3b8' }}>/ night</span>
+                      </div>
+                    </div>
+
+                    <div style={{
+                      display: 'flex',
+                      gap: '0.5rem',
+                      paddingTop: '0.9rem',
+                      borderTop: '1px solid rgba(0, 102, 255, 0.08)',
+                      alignItems: 'center'
+                    }}>
+                      <Link
+                        to={`/listings/${listingId}`}
+                        style={{
+                          flex: 1,
+                          padding: '0.45rem 0',
+                          textAlign: 'center',
+                          borderRadius: 50,
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          color: '#0066ff',
+                          background: '#eff6ff',
+                          textDecoration: 'none',
+                          border: '1px solid rgba(0, 102, 255, 0.15)',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        View
+                      </Link>
+
+                      <Link
+                        to={`/listings/${listingId}/edit`}
+                        style={{
+                          flex: 1,
+                          padding: '0.45rem 0',
+                          textAlign: 'center',
+                          borderRadius: 50,
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          color: '#475569',
+                          background: '#f8fafc',
+                          textDecoration: 'none',
+                          border: '1px solid #e2e8f0',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        Edit
+                      </Link>
+
+                      <button
+                        onClick={() => handleDelete(listingId)}
+                        disabled={deletingId === listingId}
+                        style={{
+                          padding: '0.45rem 0.85rem',
+                          borderRadius: 50,
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          color: '#ef4444',
+                          background: '#fff',
+                          border: '1px solid rgba(239, 68, 68, 0.25)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = '#fef2f2';
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = '#fff';
+                        }}
+                        title="Delete listing"
+                      >
+                        <i className="fa-regular fa-trash-can"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+

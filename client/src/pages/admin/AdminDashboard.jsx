@@ -41,9 +41,9 @@ export default function AdminDashboard() {
 
     const total = (data.guests || 0) + (data.hosts || 0) + (data.admins || 0);
     const segments = [
-      { value: data.guests || 0, color: '#818cf8' },
-      { value: data.hosts || 0, color: '#34d399' },
-      { value: data.admins || 0, color: '#fbbf24' },
+      { value: data.guests || 0, color: '#0066ff' },
+      { value: data.hosts || 0, color: '#10b981' },
+      { value: data.admins || 0, color: '#f59e0b' },
     ];
 
     const cx = size / 2, cy = size / 2, r = 44, lineWidth = 12;
@@ -52,7 +52,7 @@ export default function AdminDashboard() {
     // Background circle
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = lineWidth;
     ctx.stroke();
 
@@ -69,13 +69,13 @@ export default function AdminDashboard() {
     });
 
     // Center text
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 20px Plus Jakarta Sans, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(total, cx, cy - 6);
     ctx.font = '10px Plus Jakarta Sans, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillStyle = '#64748b';
     ctx.fillText('Total', cx, cy + 10);
   }, [data]);
 
@@ -165,8 +165,8 @@ export default function AdminDashboard() {
     ctx.lineTo(w, h);
     ctx.closePath();
     const grad = ctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, 'rgba(99, 102, 241, 0.35)');
-    grad.addColorStop(1, 'rgba(99, 102, 241, 0.02)');
+    grad.addColorStop(0, 'rgba(0, 102, 255, 0.25)');
+    grad.addColorStop(1, 'rgba(0, 102, 255, 0.01)');
     ctx.fillStyle = grad;
     ctx.fill();
 
@@ -183,7 +183,7 @@ export default function AdminDashboard() {
         ctx.bezierCurveTo(cpX, prevY, cpX, y, x, y);
       }
     });
-    ctx.strokeStyle = '#818cf8';
+    ctx.strokeStyle = '#0066ff';
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
         <AdminSidebar />
         <div className="admin-content">
           <div className="admin-loading-container">
-            <h2 style={{ color: '#fff' }}>Access denied</h2>
+            <h2 style={{ color: '#0f172a' }}>Access denied</h2>
           </div>
         </div>
       </div>
@@ -240,11 +240,11 @@ export default function AdminDashboard() {
   const adminPct = totalUsers > 0 ? Math.max(0, 100 - guestPct - hostPct) : 0;
 
   const statCards = [
-    { label: 'Total Users', value: data.totalUsers, icon: 'fa-users', color: '#818cf8', bg: 'linear-gradient(135deg, rgba(129,140,248,0.2), rgba(129,140,248,0.05))', change: '+12%', up: true },
-    { label: 'Total Listings', value: data.totalListings, icon: 'fa-building', color: '#34d399', bg: 'linear-gradient(135deg, rgba(52,211,153,0.2), rgba(52,211,153,0.05))', change: '+0%', up: true },
-    { label: 'Total Bookings', value: data.totalBookings, icon: 'fa-calendar-check', color: '#f472b6', bg: 'linear-gradient(135deg, rgba(244,114,182,0.2), rgba(244,114,182,0.05))', change: '-50%', up: false },
-    { label: 'Total Reviews', value: data.totalReviews, icon: 'fa-star', color: '#fbbf24', bg: 'linear-gradient(135deg, rgba(251,191,36,0.2), rgba(251,191,36,0.05))', change: '+50%', up: true },
-    { label: 'Avg. Price/Night', value: '₹' + (data.avgListingPrice || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 }), icon: 'fa-rupee-sign', color: '#60a5fa', bg: 'linear-gradient(135deg, rgba(96,165,250,0.2), rgba(96,165,250,0.05))', change: '+8%', up: true },
+    { label: 'Total Users', value: data.totalUsers, icon: 'fa-users', color: '#0066ff', bg: '#eff6ff', change: '+12%', up: true },
+    { label: 'Total Listings', value: data.totalListings, icon: 'fa-building', color: '#10b981', bg: '#ecfdf5', change: '+0%', up: true },
+    { label: 'Total Bookings', value: data.totalBookings, icon: 'fa-calendar-check', color: '#ec4899', bg: '#fdf2f8', change: '-50%', up: false },
+    { label: 'Total Reviews', value: data.totalReviews, icon: 'fa-star', color: '#f59e0b', bg: '#fffbeb', change: '+50%', up: true },
+    { label: 'Avg. Price/Night', value: '₹' + (data.avgListingPrice || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 }), icon: 'fa-rupee-sign', color: '#0284c7', bg: '#f0f9ff', change: '+8%', up: true },
   ];
 
   const getInitial = (name) => name ? name.charAt(0).toUpperCase() : '?';
@@ -259,8 +259,8 @@ export default function AdminDashboard() {
     const timePart = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
     return (
       <div className="admin-joined-cell">
-        <div className="admin-joined-date">{datePart}</div>
-        <div className="admin-joined-time">{yearPart}, {timePart}</div>
+        <div className="admin-joined-date">{datePart} {yearPart}</div>
+        <div className="admin-joined-time">{timePart}</div>
       </div>
     );
   };
@@ -340,13 +340,13 @@ export default function AdminDashboard() {
               <Link to="/admin/users" className="admin-view-all">View All <i className="fa-solid fa-arrow-right"></i></Link>
             </div>
             <div className="admin-table-container">
-              <table className="admin-table-dark">
+              <table className="admin-table-dark admin-table-compact">
                 <thead>
                   <tr>
                     <th>Username</th>
                     <th>Email</th>
                     <th>Role</th>
-                    <th style={{ minWidth: '110px' }}>Joined</th>
+                    <th>Joined</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -357,7 +357,7 @@ export default function AdminDashboard() {
                           <div className="admin-avatar-circle" style={{ background: getAvatarColor(u.username) }}>
                             {getInitial(u.username)}
                           </div>
-                          <span style={{ fontWeight: 500 }}>{u.username}</span>
+                          <span style={{ fontWeight: 600 }}>{u.username}</span>
                         </div>
                       </td>
                       <td>
@@ -442,7 +442,7 @@ export default function AdminDashboard() {
                 <tbody>
                   {(data.topListings || []).map((l, i) => (
                     <tr key={l._id}>
-                      <td style={{ fontWeight: 600, color: 'rgba(255,255,255,0.3)' }}>{i + 1}</td>
+                      <td style={{ fontWeight: 600, color: '#94a3b8' }}>{i + 1}</td>
                       <td style={{ fontWeight: 500 }}>{l.title}</td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>

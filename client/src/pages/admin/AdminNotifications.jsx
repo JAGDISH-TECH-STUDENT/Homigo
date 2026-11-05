@@ -117,15 +117,15 @@ export default function AdminNotifications() {
   const getTypeIcon = (type) => {
     switch (type) {
       case 'user':
-        return { icon: 'fa-user-plus', color: '#818cf8', bg: 'rgba(99, 102, 241, 0.15)', label: 'User' };
+        return { icon: 'fa-user-plus', color: '#0066ff', bg: '#e0f0fe', label: 'User' };
       case 'listing':
-        return { icon: 'fa-house-circle-check', color: '#34d399', bg: 'rgba(16, 185, 129, 0.15)', label: 'Listing' };
+        return { icon: 'fa-house-circle-check', color: '#059669', bg: '#d1fae5', label: 'Listing' };
       case 'review':
-        return { icon: 'fa-star', color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.15)', label: 'Review' };
+        return { icon: 'fa-star', color: '#d97706', bg: '#fef3c7', label: 'Review' };
       case 'complaint':
-        return { icon: 'fa-triangle-exclamation', color: '#f87171', bg: 'rgba(239, 68, 68, 0.15)', label: 'Complaint' };
+        return { icon: 'fa-triangle-exclamation', color: '#dc2626', bg: '#fee2e2', label: 'Complaint' };
       default:
-        return { icon: 'fa-bell', color: '#a5b4fc', bg: 'rgba(99, 102, 241, 0.1)', label: 'Alert' };
+        return { icon: 'fa-bell', color: '#0066ff', bg: '#e0f0fe', label: 'Alert' };
     }
   };
 
@@ -144,7 +144,7 @@ export default function AdminNotifications() {
           position: 'relative'
         }}
       >
-        <i className="fa-solid fa-bell" style={{ fontSize: '1rem', color: isOpen ? '#818cf8' : '#cbd5e1' }}></i>
+        <i className="fa-solid fa-bell" style={{ fontSize: '1rem', color: isOpen ? '#0066ff' : '#64748b' }}></i>
         {unreadCount > 0 && (
           <span className="admin-notif-badge">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -159,8 +159,8 @@ export default function AdminNotifications() {
           <div className="admin-notif-header">
             <div className="admin-notif-title-row">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <i className="fa-solid fa-bell" style={{ color: '#818cf8', fontSize: '0.9rem' }}></i>
-                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc' }}>
+                <i className="fa-solid fa-bell" style={{ color: '#0066ff', fontSize: '0.9rem' }}></i>
+                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
                   Notifications
                 </h4>
                 {unreadCount > 0 && (
@@ -263,9 +263,8 @@ export default function AdminNotifications() {
                         <span
                           className="admin-notif-tag"
                           style={{
-                            background: `${info.color}18`,
+                            background: info.bg,
                             color: info.color,
-                            borderColor: `${info.color}33`
                           }}
                         >
                           {info.label}
@@ -274,9 +273,8 @@ export default function AdminNotifications() {
                           <span
                             className="admin-notif-tag"
                             style={{
-                              background: notif.meta.priority === 'urgent' ? '#ef444422' : '#f59e0b22',
-                              color: notif.meta.priority === 'urgent' ? '#f87171' : '#fbbf24',
-                              borderColor: notif.meta.priority === 'urgent' ? '#ef444444' : '#f59e0b44'
+                              background: notif.meta.priority === 'urgent' ? '#fee2e2' : '#fef3c7',
+                              color: notif.meta.priority === 'urgent' ? '#dc2626' : '#d97706',
                             }}
                           >
                             {notif.meta.priority}
@@ -285,7 +283,7 @@ export default function AdminNotifications() {
                         {notif.meta?.rating && (
                           <span
                             className="admin-notif-tag"
-                            style={{ background: '#f59e0b1a', color: '#fbbf24', borderColor: '#f59e0b33' }}
+                            style={{ background: '#fef3c7', color: '#d97706' }}
                           >
                             ★ {notif.meta.rating}
                           </span>

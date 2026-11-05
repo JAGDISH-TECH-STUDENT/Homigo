@@ -181,7 +181,7 @@ export default function AdminAnalytics() {
                                   }}
                                   title={`${m.name || 'Month ' + m.month}: ₹${(m.revenue || 0).toLocaleString('en-IN')}`}
                                 />
-                                <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', marginTop: '0.5rem' }}>
+                                <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.5rem', fontWeight: 600 }}>
                                   {m.name || `M${m.month}`}
                                 </span>
                               </div>
@@ -191,7 +191,7 @@ export default function AdminAnalytics() {
                       );
                     })()
                   ) : (
-                    <div style={{ textAlign: 'center', padding: '3rem 0', color: 'rgba(255,255,255,0.4)' }}>
+                    <div style={{ textAlign: 'center', padding: '3rem 0', color: '#94a3b8' }}>
                       <i className="fa-solid fa-chart-line" style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block' }}></i>
                       No revenue data recorded for this duration
                     </div>
@@ -203,7 +203,7 @@ export default function AdminAnalytics() {
               <div className="admin-card-dark">
                 <div className="admin-card-dark-header">
                   <h3>
-                    <i className="fa-solid fa-pie-chart" style={{ color: '#34d399', marginRight: '0.5rem', fontSize: '0.9rem' }}></i>
+                    <i className="fa-solid fa-pie-chart" style={{ color: '#059669', marginRight: '0.5rem', fontSize: '0.9rem' }}></i>
                     Bookings Breakdown by Status
                   </h3>
                 </div>
@@ -212,28 +212,28 @@ export default function AdminAnalytics() {
                     Object.entries(charts?.bookingsByStatus || {}).map(([status, count], i) => {
                       const totalB = overview?.totalBookings || 1;
                       const pct = Math.round((count / totalB) * 100);
-                      const color = status === 'confirmed' ? '#34d399' : status === 'pending' ? '#fbbf24' : '#f87171';
+                      const color = status === 'confirmed' ? '#059669' : status === 'pending' ? '#d97706' : '#dc2626';
                       return (
                         <div key={status} style={{ marginBottom: '1.2rem' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                               <span style={{ width: 8, height: 8, borderRadius: '50%', background: color }}></span>
-                              <span style={{ textTransform: 'capitalize', fontWeight: 500, fontSize: '0.85rem', color: '#fff' }}>
+                              <span style={{ textTransform: 'capitalize', fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}>
                                 {status.replace('_', ' ')}
                               </span>
                             </div>
-                            <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
-                              <strong style={{ color: '#fff', marginRight: '0.3rem' }}>{count}</strong> ({pct}%)
+                            <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                              <strong style={{ color: '#0f172a', marginRight: '0.3rem' }}>{count}</strong> ({pct}%)
                             </span>
                           </div>
-                          <div style={{ width: '100%', height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ width: '100%', height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
                             <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 4, transition: 'width 0.4s' }}></div>
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <div style={{ textAlign: 'center', padding: '3rem 0', color: 'rgba(255,255,255,0.4)' }}>
+                    <div style={{ textAlign: 'center', padding: '3rem 0', color: '#94a3b8' }}>
                       No booking status metrics available
                     </div>
                   )}
@@ -246,7 +246,7 @@ export default function AdminAnalytics() {
               <div className="admin-card-dark">
                 <div className="admin-card-dark-header">
                   <h3>
-                    <i className="fa-solid fa-map-pin" style={{ color: '#f472b6', marginRight: '0.5rem', fontSize: '0.9rem' }}></i>
+                    <i className="fa-solid fa-map-pin" style={{ color: '#ec4899', marginRight: '0.5rem', fontSize: '0.9rem' }}></i>
                     Top Property Locations
                   </h3>
                 </div>
@@ -265,9 +265,9 @@ export default function AdminAnalytics() {
                       ) : (
                         (charts?.topLocations || []).map((l, i) => (
                           <tr key={l.location || i}>
-                            <td style={{ fontWeight: 600, color: 'rgba(255,255,255,0.3)', width: '40px' }}>{i + 1}</td>
-                            <td style={{ fontWeight: 500 }}>
-                              <i className="fa-solid fa-location-dot" style={{ fontSize: '0.7rem', color: '#818cf8', marginRight: '0.4rem' }}></i>
+                            <td style={{ fontWeight: 600, color: '#94a3b8', width: '40px' }}>{i + 1}</td>
+                            <td style={{ fontWeight: 600, color: '#0f172a' }}>
+                              <i className="fa-solid fa-location-dot" style={{ fontSize: '0.7rem', color: '#0066ff', marginRight: '0.4rem' }}></i>
                               {l.location || l._id || '-'}
                             </td>
                             <td style={{ textAlign: 'right' }}>
@@ -284,7 +284,7 @@ export default function AdminAnalytics() {
               <div className="admin-card-dark">
                 <div className="admin-card-dark-header">
                   <h3>
-                    <i className="fa-solid fa-trophy" style={{ color: '#fbbf24', marginRight: '0.5rem', fontSize: '0.9rem' }}></i>
+                    <i className="fa-solid fa-trophy" style={{ color: '#d97706', marginRight: '0.5rem', fontSize: '0.9rem' }}></i>
                     Most Popular Listings
                   </h3>
                 </div>
@@ -304,12 +304,12 @@ export default function AdminAnalytics() {
                       ) : (
                         (charts?.topListings || []).map((l, i) => (
                           <tr key={l._id || i}>
-                            <td style={{ fontWeight: 600, color: 'rgba(255,255,255,0.3)', width: '40px' }}>{i + 1}</td>
-                            <td style={{ fontWeight: 500, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.title}>
+                            <td style={{ fontWeight: 600, color: '#94a3b8', width: '40px' }}>{i + 1}</td>
+                            <td style={{ fontWeight: 600, color: '#0f172a', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.title}>
                               {l.title || 'Untitled'}
                             </td>
                             <td className="admin-td-muted">{l.location || 'N/A'}</td>
-                            <td style={{ color: '#818cf8', fontSize: '0.8rem' }}>@{l.owner || 'Unknown'}</td>
+                            <td style={{ color: '#0066ff', fontSize: '0.82rem', fontWeight: 600 }}>@{l.owner || 'Unknown'}</td>
                           </tr>
                         ))
                       )}

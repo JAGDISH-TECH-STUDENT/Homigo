@@ -197,7 +197,7 @@ export default function AdminUsers() {
           </div>
           <div className="admin-header-actions-dark">
             <div style={{ position: 'relative' }}>
-              <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}></i>
+              <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.8rem' }}></i>
               <input
                 type="text"
                 className="admin-input-dark"
@@ -235,7 +235,7 @@ export default function AdminUsers() {
           <div className="admin-card-dark-header">
             <h3>
               User Directory
-              <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginLeft: '0.5rem', fontWeight: 400 }}>
+              <span style={{ fontSize: '0.78rem', color: '#94a3b8', marginLeft: '0.5rem', fontWeight: 400 }}>
                 ({filtered.length} {filtered.length === 1 ? 'user' : 'users'})
               </span>
             </h3>
@@ -256,7 +256,7 @@ export default function AdminUsers() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.4)' }}>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
                       <i className="fa-solid fa-user-slash" style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block' }}></i>
                       No users match your criteria
                     </td>
@@ -269,8 +269,8 @@ export default function AdminUsers() {
                           {getInitial(u.username)}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 600, color: '#fff' }}>{u.username}</div>
-                          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)' }}>ID: {u._id.slice(-6)}</div>
+                          <div style={{ fontWeight: 600, color: '#0f172a' }}>{u.username}</div>
+                          <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>ID: {u._id.slice(-6)}</div>
                         </div>
                       </div>
                     </td>

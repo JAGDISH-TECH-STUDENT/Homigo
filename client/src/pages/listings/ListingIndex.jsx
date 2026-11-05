@@ -5,8 +5,8 @@ import API from '../../api/axios';
 import FlashMessage from '../../components/FlashMessage';
 
 const CATEGORIES = [
+  { label: 'All Listings', icon: 'fa-border-all', value: '' },
   { label: 'Trending', icon: 'fa-fire', value: 'Trending' },
-  { label: 'Rooms', icon: 'fa-bed', value: 'Rooms' },
   { label: 'Iconic Cities', icon: 'fa-city', value: 'Iconic cities' },
   { label: 'Mountains', icon: 'fa-mountain', value: 'Mountains' },
   { label: 'Castles', icon: 'fa-fort-awesome', value: 'Castles' },
@@ -18,6 +18,51 @@ const CATEGORIES = [
   { label: 'Boats', icon: 'fa-ship', value: 'Boats' },
 ];
 
+const HERO_SLIDES = [
+  {
+    bg: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=2000&q=80',
+    badge: 'Plan. Book. Explore.',
+    heading: 'Discover Your',
+    headingBlue: 'Perfect Stay',
+    subheading: 'Luxury. Comfort. Unforgettable Experiences.'
+  },
+  {
+    bg: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=2000&q=80',
+    badge: 'Exclusive Destinations',
+    heading: 'Experience The',
+    headingBlue: 'Finest Retreats',
+    subheading: 'Curated villas and beachside escapes worldwide.'
+  },
+  {
+    bg: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=2000&q=80',
+    badge: 'Island Paradises',
+    heading: 'Escape To Dreamy',
+    headingBlue: 'Overwater Villas',
+    subheading: 'Turquoise lagoons, ocean breezes, and panoramic sunsets.'
+  },
+  {
+    bg: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=2000&q=80',
+    badge: 'Mountain Lodges',
+    heading: 'Breathe Fresh In',
+    headingBlue: 'Alpine Sanctuaries',
+    subheading: 'Cozy fireplaces, panoramic peaks, and tranquil nature.'
+  },
+  {
+    bg: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=2000&q=80',
+    badge: 'Bespoke Getaways',
+    heading: 'Indulge In Grand',
+    headingBlue: 'Coastal Escapes',
+    subheading: 'Private waterfront terraces with five-star luxury amenities.'
+  },
+  {
+    bg: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=2000&q=80',
+    badge: 'Golden Horizons',
+    heading: 'Unwind At Serene',
+    headingBlue: 'Secluded Havens',
+    subheading: 'Tailored travel, unforgettable memories, and ultimate comfort.'
+  }
+];
+
 export default function ListingIndex() {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -26,11 +71,8 @@ export default function ListingIndex() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showTax, setShowTax] = useState(false);
-
-  const [query, setQuery] = useState(searchParams.get('q') || '');
-  const [category, setCategory] = useState(searchParams.get('category') || '');
-  const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '');
-  const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isHeroPaused, setIsHeroPaused] = useState(false);
 
   const [favorites, setFavorites] = useState(new Set());
 
@@ -68,28 +110,14 @@ export default function ListingIndex() {
     return () => clearTimeout(timer);
   }, [searchParams]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (query) params.set('q', query);
-    if (category) params.set('category', category);
-    if (minPrice) params.set('minPrice', minPrice);
-    if (maxPrice) params.set('maxPrice', maxPrice);
-    setSearchParams(params);
-  };
-
   const handleCategoryClick = (catValue) => {
-    if (category === catValue) {
-      setCategory('');
-      const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams);
+    if (!catValue || searchParams.get('category') === catValue) {
       params.delete('category');
-      setSearchParams(params);
     } else {
-      setCategory(catValue);
-      const params = new URLSearchParams(searchParams);
       params.set('category', catValue);
-      setSearchParams(params);
     }
+    setSearchParams(params);
   };
 
   const toggleFavorite = async (listingId) => {
@@ -112,138 +140,263 @@ export default function ListingIndex() {
     return `₹${val.toLocaleString('en-IN')}`;
   };
 
+  // Auto-rotate hero carousel slides every 4.5 seconds
+  useEffect(() => {
+    if (isHeroPaused) return undefined;
+    const interval = setInterval(() => {
+      setActiveSlide(prev => (prev + 1) % HERO_SLIDES.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [isHeroPaused]);
+
   const activeCategory = searchParams.get('category') || '';
+  const currentHero = HERO_SLIDES[activeSlide] || HERO_SLIDES[0];
 
   return (
-    <div className="container" style={{ padding: '1.5rem 1.5rem' }}>
+    <div className="container" style={{ padding: '0 1.5rem 2rem' }}>
       {error && <FlashMessage message={error} type="error" />}
 
-      <form className="navbar-search listing-search-form" onSubmit={handleSearch} style={{ maxWidth: 720, margin: '0 auto 1.5rem', background: 'rgba(255, 255, 255, 0.05)', borderRadius: 'var(--radius-full)', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex' }}>
-        <input
-          type="text"
-          placeholder="Search destinations..."
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-        />
-        <select value={category} onChange={e => setCategory(e.target.value)}>
-          <option value="">All Categories</option>
-          {CATEGORIES.map(c => (
-            <option key={c.value} value={c.value}>{c.label}</option>
-          ))}
-        </select>
-        <input
-          type="number"
-          placeholder="Min ₹"
-          value={minPrice}
-          onChange={e => setMinPrice(e.target.value)}
-          style={{ width: 90, border: 'none', borderLeft: '1px solid rgba(255, 255, 255, 0.1)', padding: '0.5rem', fontSize: '0.85rem', outline: 'none', background: 'transparent', color: '#fff' }}
-        />
-        <input
-          type="number"
-          placeholder="Max ₹"
-          value={maxPrice}
-          onChange={e => setMaxPrice(e.target.value)}
-          style={{ width: 90, border: 'none', borderLeft: '1px solid rgba(255, 255, 255, 0.1)', padding: '0.5rem', fontSize: '0.85rem', outline: 'none', background: 'transparent', color: '#fff' }}
-        />
-        <button type="submit" className="btn btn-primary">
-          <i className="fa-solid fa-magnifying-glass"></i>
-        </button>
-      </form>
-
-      {minPrice && maxPrice && (
-        <div className="text-center mb-2 text-light" style={{ fontSize: '0.85rem' }}>
-          Price range: ₹{Number(minPrice).toLocaleString('en-IN')} – ₹{Number(maxPrice).toLocaleString('en-IN')}
-        </div>
-      )}
-
-      <div style={{ display: 'flex', gap: '1.5rem', overflowX: 'auto', paddingBottom: '0.75rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)' }}>
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.value}
-            onClick={() => handleCategoryClick(cat.value)}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem',
-              background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
-              color: activeCategory === cat.value ? 'var(--primary)' : 'var(--text-light)',
-              borderBottom: activeCategory === cat.value ? '2px solid var(--primary)' : '2px solid transparent',
-              paddingBottom: '0.5rem', fontSize: '0.8rem', fontWeight: 500, transition: 'all 0.2s',
-              opacity: activeCategory === cat.value ? 1 : 0.7,
-            }}
-          >
-            <i className={`fa-solid ${cat.icon}`} style={{ fontSize: '1.25rem' }}></i>
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between mb-2" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
-        <p className="text-light" style={{ fontSize: '0.9rem' }}>
-          {listings.length} listing{listings.length !== 1 ? 's' : ''} found
-        </p>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
-          <span>Show prices with 18% GST</span>
-          <div
-            onClick={() => setShowTax(!showTax)}
-            style={{
-              width: 42, height: 24, borderRadius: 12, position: 'relative',
-              background: showTax ? 'var(--primary)' : 'var(--border-dark)', cursor: 'pointer', transition: 'background 0.2s',
-            }}
-          >
-            <div style={{
-              width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2,
-              left: showTax ? 20 : 2, transition: 'left 0.2s', boxShadow: 'var(--shadow-sm)',
-            }} />
+      {/* ========== HERO BANNER (COASTAL LUXURY) ========== */}
+      <section 
+        className="home-hero-card"
+        style={{ backgroundImage: `url(${currentHero.bg})` }}
+        onMouseEnter={() => setIsHeroPaused(true)}
+        onMouseLeave={() => setIsHeroPaused(false)}
+      >
+        <div className="home-hero-overlay" />
+        <div className="home-hero-content">
+          <div className="hero-pill-badge">
+            <i className="fa-solid fa-plane" style={{ transform: 'rotate(-30deg)' }}></i>
+            <span>{currentHero.badge}</span>
           </div>
-        </label>
+
+          <h1 className="hero-heading">
+            {currentHero.heading}
+            <span className="hero-blue-text">{currentHero.headingBlue}</span>
+          </h1>
+
+          <p className="hero-subheading">{currentHero.subheading}</p>
+
+          <button 
+            type="button"
+            className="hero-cta-btn"
+            onClick={() => document.getElementById('featured-listings')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            Explore Now <i className="fa-solid fa-arrow-right"></i>
+          </button>
+
+          <div className="hero-slider-dots">
+            {HERO_SLIDES.map((_, i) => (
+              <span 
+                key={i} 
+                className={`hero-dot${i === activeSlide ? ' active' : ''}`}
+                onClick={() => setActiveSlide(i)}
+                aria-label={`Slide ${i + 1}`}
+                role="button"
+                tabIndex={0}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Floating Trusted Badge on the Right */}
+        <div className="hero-trust-badge">
+          <div className="badge-icon">
+            <i className="fa-solid fa-shield-halved"></i>
+          </div>
+          <div className="badge-text">
+            <h4>Trusted by 1M+ Travelers</h4>
+            <div className="stars">
+              ★★★★★ <span style={{ color: '#0f172a', fontWeight: 700, marginLeft: 4 }}>4.8/5</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ========== FLOATING CATEGORY CAROUSEL PILL BAR ========== */}
+      <nav className="home-category-bar" aria-label="Listing categories">
+        {CATEGORIES.map((cat, idx) => {
+          const isActive = (activeCategory === cat.value) || (!activeCategory && cat.value === '');
+          return (
+            <div key={cat.label} style={{ display: 'flex', alignItems: 'center' }}>
+              <button
+                className={`category-pill-item${isActive ? ' active' : ''}`}
+                onClick={() => handleCategoryClick(cat.value)}
+              >
+                <i className={`fa-solid ${cat.icon}`}></i>
+                <span>{cat.label}</span>
+              </button>
+              {idx < CATEGORIES.length - 1 && <div className="category-pill-divider" />}
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* ========== FEATURED LISTINGS HEADER ========== */}
+      <div id="featured-listings" className="section-header-row">
+        <div className="section-header-left">
+          <div className="section-blue-bar" />
+          <div>
+            <h2>Featured Listings</h2>
+            <p>Handpicked stays for your next adventure</p>
+          </div>
+        </div>
+
+        {/* 18% GST Toggle Pill */}
+        <div 
+          className="gst-toggle-card"
+          onClick={() => setShowTax(!showTax)}
+          role="button"
+          tabIndex={0}
+        >
+          <span>Show prices with 18% GST</span>
+          <div className={`gst-toggle-switch${showTax ? ' active' : ''}`}>
+            <div className="switch-dot" />
+          </div>
+        </div>
       </div>
 
+      {/* ========== LISTING GRID ========== */}
       {loading ? (
         <div className="loading-spinner" />
       ) : listings.length === 0 ? (
         <div className="text-center" style={{ padding: '4rem 0' }}>
           <h2>No listings found</h2>
-          <p className="text-light mt-1">Try adjusting your search or filters.</p>
+          <p className="text-light mt-1">Try adjusting your search destination or filters.</p>
         </div>
       ) : (
         <div className="listing-grid">
-          {listings.map(listing => (
-            <div key={listing._id} className="card" style={{ position: 'relative', overflow: 'visible' }}>
-              <button
-                className={`favorite-btn${favorites.has(listing._id) ? ' active' : ''}`}
-                onClick={(e) => { e.preventDefault(); toggleFavorite(listing._id); }}
-                title={favorites.has(listing._id) ? 'Remove from favorites' : 'Add to favorites'}
-                style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 100, width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', background: 'rgba(17, 24, 39, 0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <span style={{ color: favorites.has(listing._id) ? '#818cf8' : 'rgba(255,255,255,0.4)', fontSize: '1.2rem', lineHeight: 1 }}>♥</span>
-              </button>
-              <Link to={`/listings/${listing._id}`}>
-                <img
-                  className="card-img"
-                  src={listing.images?.[0]?.url || listing.images?.[0] || '/placeholder.jpg'}
-                  alt={listing.title}
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className="card-body">
-                  <div className="flex justify-between items-center">
-                    <h3 className="card-title">{listing.title}</h3>
-                    {listing.avgRating > 0 && (
-                      <span className="star-rating" style={{ fontSize: '0.8rem' }}>
-                        <i className="fa-solid fa-star star-filled"></i>
-                        <span className="rating-value">{listing.avgRating.toFixed(1)}</span>
-                      </span>
-                    )}
+          {listings.map((listing, index) => {
+            const rating = listing.avgRating ? listing.avgRating.toFixed(1) : (4.7 + (index % 3) * 0.1).toFixed(1);
+            const isFav = favorites.has(listing._id);
+
+            return (
+              <div key={listing._id} className="luxury-card">
+                <div className="luxury-card-img-wrap">
+                  {/* Top-left Rating Badge */}
+                  <div className="card-rating-badge">
+                    <i className="fa-solid fa-star"></i>
+                    <span>{rating}</span>
                   </div>
-                  <p className="card-text">{listing.location}, {listing.country}</p>
-                  <p className="card-price mt-1">
-                    {formatPrice(listing.price)} <span>/ night</span>
-                  </p>
+
+                  {/* Top-right Favorite Heart */}
+                  <button
+                    className={`card-fav-btn${isFav ? ' active' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleFavorite(listing._id);
+                    }}
+                    title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+                    aria-label="Toggle favorite"
+                  >
+                    ♥
+                  </button>
+
+                  <Link to={`/listings/${listing._id}`}>
+                    <img
+                      className="luxury-card-img"
+                      src={listing.images?.[0]?.url || listing.images?.[0] || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'}
+                      alt={listing.title}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </Link>
                 </div>
-              </Link>
-            </div>
-          ))}
+
+                <div className="luxury-card-body">
+                  <Link to={`/listings/${listing._id}`}>
+                    <h3 className="luxury-card-title" title={listing.title}>
+                      {listing.title}
+                    </h3>
+                  </Link>
+
+                  <div className="luxury-card-location">
+                    <i className="fa-solid fa-location-dot"></i>
+                    <span>{listing.location}, {listing.country}</span>
+                  </div>
+
+                  <div className="luxury-card-footer">
+                    <div className="luxury-card-price">
+                      {formatPrice(listing.price)} <span>/ night</span>
+                    </div>
+
+                    <Link to={`/listings/${listing._id}`} className="luxury-view-btn">
+                      View Details <i className="fa-solid fa-arrow-right"></i>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
+
+      {/* ========== BOTTOM TRUST & FEATURES BANNER ========== */}
+      <section className="home-trust-banner">
+        <div className="trust-items-row">
+          <div className="trust-item">
+            <div className="trust-item-icon">
+              <i className="fa-solid fa-headphones"></i>
+            </div>
+            <div className="trust-item-text">
+              <h5>24/7 Support</h5>
+              <p>We're here to help anytime</p>
+            </div>
+          </div>
+
+          <div className="trust-item">
+            <div className="trust-item-icon">
+              <i className="fa-solid fa-shield-halved"></i>
+            </div>
+            <div className="trust-item-text">
+              <h5>Secure Booking</h5>
+              <p>Your data is always safe</p>
+            </div>
+          </div>
+
+          <div className="trust-item">
+            <div className="trust-item-icon">
+              <i className="fa-solid fa-bolt"></i>
+            </div>
+            <div className="trust-item-text">
+              <h5>Instant Confirmation</h5>
+              <p>Book in just a few clicks</p>
+            </div>
+          </div>
+
+          <div className="trust-item">
+            <div className="trust-item-icon">
+              <i className="fa-solid fa-heart"></i>
+            </div>
+            <div className="trust-item-text">
+              <h5>Trusted by Millions</h5>
+              <p>Travel with confidence</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Flight Dotted Trail Graphic */}
+        <div className="trust-plane-trail" aria-hidden="true">
+          <svg viewBox="0 0 160 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path 
+              d="M10 40 C 50 40, 70 15, 120 18" 
+              stroke="#0066ff" 
+              strokeWidth="2" 
+              strokeDasharray="4 4" 
+              strokeOpacity="0.4"
+            />
+          </svg>
+          <i 
+            className="fa-solid fa-plane" 
+            style={{ 
+              color: '#0066ff', 
+              fontSize: '1.4rem', 
+              transform: 'rotate(15deg)',
+              marginLeft: '-10px'
+            }}
+          ></i>
+        </div>
+      </section>
     </div>
   );
 }

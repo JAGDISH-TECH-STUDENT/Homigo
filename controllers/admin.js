@@ -405,10 +405,48 @@ module.exports.deleteBooking = async (req, res) => {
 };
 
 module.exports.renderReviews = async (req, res) => {
-    const reviews = await Review.find()
+    let reviews = await Review.find()
         .populate("author", "username email")
         .populate("listing", "title")
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .lean();
+
+    // If any reviews are missing their listing reference (e.g. older legacy reviews),
+    // find their parent listing via Listing.reviews array and backfill
+    const missingListingReviews = reviews.filter(r => !r.listing || !r.listing.title);
+    if (missingListingReviews.length > 0) {
+        const reviewIds = missingListingReviews.map(r => r._id);
+        const parentListings = await Listing.find({ reviews: { $in: reviewIds } })
+            .select('title reviews')
+            .lean();
+
+        const reviewToListingMap = {};
+        parentListings.forEach(l => {
+            (l.reviews || []).forEach(rId => {
+                reviewToListingMap[rId.toString()] = { _id: l._id, title: l.title };
+            });
+        });
+
+        const bulkOps = [];
+        reviews = reviews.map(r => {
+            if ((!r.listing || !r.listing.title) && reviewToListingMap[r._id.toString()]) {
+                const foundListing = reviewToListingMap[r._id.toString()];
+                bulkOps.push({
+                    updateOne: {
+                        filter: { _id: r._id },
+                        update: { $set: { listing: foundListing._id } }
+                    }
+                });
+                return { ...r, listing: foundListing };
+            }
+            return r;
+        });
+
+        if (bulkOps.length > 0) {
+            Review.bulkWrite(bulkOps).catch(err => console.error("Backfill review.listing error:", err));
+        }
+    }
+
     res.json({ reviews });
 };
 
@@ -451,6 +489,22 @@ module.exports.renderNotifications = async (req, res) => {
         ]);
 
         const notifs = [];
+
+        // Fill missing listing references for recentReviews if any
+        const missingNotifReviews = recentReviews.filter(r => !r.listing || !r.listing.title);
+        if (missingNotifReviews.length > 0) {
+            const rIds = missingNotifReviews.map(r => r._id);
+            const pListings = await Listing.find({ reviews: { $in: rIds } }).select('title reviews').lean();
+            const rMap = {};
+            pListings.forEach(l => {
+                (l.reviews || []).forEach(id => { rMap[id.toString()] = { _id: l._id, title: l.title }; });
+            });
+            recentReviews.forEach(r => {
+                if ((!r.listing || !r.listing.title) && rMap[r._id.toString()]) {
+                    r.listing = rMap[r._id.toString()];
+                }
+            });
+        }
 
         // 1. Users
         recentUsers.forEach(u => {

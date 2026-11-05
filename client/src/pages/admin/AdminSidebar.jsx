@@ -54,10 +54,10 @@ export default function AdminSidebar({ stats: propStats }) {
 
   return (
     <aside className="admin-sidebar">
-      <div className="admin-sidebar-brand">
-        <i className="fa-solid fa-house-chimney" style={{ color: '#818cf8', marginRight: '0.6rem' }}></i>
-        Homigo<span>Admin</span>
-      </div>
+      <Link to="/admin" className="admin-sidebar-brand">
+        <i className="fa-solid fa-house-chimney"></i>
+        <span className="brand-text">Homigo<span className="brand-accent">Admin</span></span>
+      </Link>
 
       <nav className="admin-nav">
         {navItems.map(item => (
@@ -116,7 +116,7 @@ export default function AdminSidebar({ stats: propStats }) {
           <span>Welcome back,</span>
           <strong>{user?.username || 'Admin'}</strong>
         </div>
-        <i className="fa-solid fa-chevron-down" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem' }}></i>
+        <i className="fa-solid fa-chevron-down" style={{ color: '#94a3b8', fontSize: '0.7rem' }}></i>
       </div>
     </aside>
   );

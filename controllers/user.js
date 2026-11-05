@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const Booking = require("../models/booking");
 
 module.exports.signUp = async (req, res, next) => {
     try {
@@ -53,6 +54,11 @@ module.exports.upgradeToHost = async (req, res, next) => {
         }
         req.user.role = 'host';
         await req.user.save();
+        // Once a guest becomes a host, their pending guest bookings are cancelled
+        await Booking.updateMany(
+            { user: req.user._id, status: 'pending' },
+            { status: 'cancelled' }
+        );
         res.json({ success: true, user: { _id: req.user._id, username: req.user.username, email: req.user.email, role: req.user.role } });
     } catch (e) {
         res.status(500).json({ error: e.message });
